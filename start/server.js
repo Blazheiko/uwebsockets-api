@@ -69,6 +69,7 @@ const configureHttp = (server) => {
 }
 const init = () => {
     process.title = configApp.appName;
+    logger.info('use module: uws_' + process.platform + '_' + process.arch + '_' + process.versions.modules + '.node')
 
     const server = uWS.App();
     configureWebsockets(server)
