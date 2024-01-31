@@ -15,6 +15,7 @@
   "dependencies": {
     "dotenv": "^16.4.1",
     "pino": "^8.17.2",
+    "qs": "^6.11.2",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.41.0"
   }
 }

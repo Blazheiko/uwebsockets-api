@@ -1,7 +1,9 @@
 import uWS from 'uWebSockets.js';
+import qs from "qs"
 import configApp  from '../config/app.js'
 import state from "../state/state.js";
 import { onMessage, onOpen, onClose, handleUpgrade } from "../services/wsHandler.js";
+import { getHeaders, readJson, extractParameters } from "./httpRequestHandlers.js"
 import logger from "../logger.js";
 import httpRoute from "../routes/httpRoute.js";
 const configureWebsockets = (server) => {
@@ -25,8 +27,8 @@ const setHttpHandler = async (res, req, method, route) => {
             const contentType = req.getHeader('content-type')
             const isJson = contentType.toLowerCase() === 'application/json'
             const httpData = {
-                params: {},
-                query: {},
+                params: extractParameters(route.url, req.getUrl()),
+                query: qs.parse(req.getQuery()),
                 payload: isJson ? await readJson(res) : null,
                 headers: getHeaders(req),
                 contentType,

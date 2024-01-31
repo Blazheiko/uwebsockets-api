@@ -30,5 +30,37 @@ const  readJson = ( res ) => {
         })
 
     })
-
 }
+const normalizePath = (path) => {
+    return path.startsWith('/') ? path.slice(1) : path;
+}
+
+const extractParameters = (template, path) => {
+    const normalizedTemplate = normalizePath(template);
+    const normalizedPath = normalizePath(path);
+
+    const templateParts = normalizedTemplate.split('/');
+    const pathParts = normalizedPath.split('/');
+    const params = {};
+
+    if (templateParts.length !== pathParts.length) {
+        throw new Error('Path does not match the template');
+    }
+
+    for (let i = 0; i < templateParts.length; i++) {
+        const templatePart = templateParts[i];
+        const pathPart = pathParts[i];
+
+        if (templatePart.startsWith(':')) {
+            const paramName = templatePart.slice(1);
+            params[paramName] = pathPart;
+        } else if (templatePart !== pathPart) {
+            throw new Error(`Path segment "${pathPart}" does not match the template segment "${templatePart}"`);
+        }
+    }
+
+    return params;
+}
+
+export { getHeaders, readJson, extractParameters }
+
