@@ -25,7 +25,7 @@ const setHttpHandler = async (res, req, method, route) => {
     if (state.listenSocket) {
         try {
             const contentType = req.getHeader('content-type')
-            const isJson = contentType.toLowerCase() === 'application/json'
+            const isJson = (method === 'post' && contentType.toLowerCase() === 'application/json')
             const httpData = {
                 params: extractParameters(route.url, req.getUrl()),
                 query: qs.parse(req.getQuery()),
@@ -34,7 +34,7 @@ const setHttpHandler = async (res, req, method, route) => {
                 contentType,
                 isJson,
             }
-            const result = await route.handler(httpData)
+            const result = await route.handler( httpData )
             if (!res.aborted) {
                 res.cork(() => {
                     if(isJson) res.writeHeader('content-type','application/json')
@@ -53,13 +53,15 @@ const setHttpHandler = async (res, req, method, route) => {
     }
 }
 const configureHttp = (server) => {
+    logger.info('configureHttp get')
     httpRoute.get.forEach(route =>{
         server.get(route.url, async (res, req)=>{
             await setHttpHandler(res, req,'get',route)
         })
     })
+    logger.info('configureHttp post')
     httpRoute.post.forEach(route =>{
-        server.get(route.url, async (res, req)=>{
+        server.post(route.url, async (res, req)=>{
             await setHttpHandler(res, req,'post', route)
         })
     })
