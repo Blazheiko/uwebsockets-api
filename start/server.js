@@ -1,6 +1,8 @@
 import uWS from 'uWebSockets.js';
 import configApp  from '../config/app.js'
-import {onMessage, onOpen, onClose, handleUpgrade, handleDrain} from "../services/wsHandler.js";
+import state from "../state/state.js";
+import { onMessage, onOpen, onClose, handleUpgrade } from "../services/wsHandler.js";
+import logger from "../logger.js";
 const configureWebsockets = (server) => {
     return server.ws('/websocket/:token', {
         compression: 0,
@@ -15,20 +17,47 @@ const configureWebsockets = (server) => {
     });
 }
 const configureHttp = (server) => {
+    server.get('/',(res, req)=>{
+        if (state.listenSocket) {
 
+        } else {
+
+            logger.warn('We just refuse if already shutting down')
+            res.close();
+        }
+    })
 }
 const init = () => {
+    process.title = configApp.appName;
 
     const server = uWS.App();
     configureWebsockets(server)
     configureHttp(server)
     server.listen(configApp.port, (token) => {
         if (token) {
-            console.log('Listening to port ' + configApp.port);
+            logger.info('Listening to port ' + configApp.port);
+            state.listenSocket = token
         } else {
-            console.log('Failed to listen to port ' + configApp.port);
+            logger.info('Failed to listen to port ' + configApp.port);
         }
     });
+    process.on('SIGINT', () => stop('SIGINT'));
+    process.on('SIGHUP', () => stop('SIGHUP'));
+    process.on('SIGTERM', () => stop('SIGTERM'));
+
+    process.on('uncaughtException', (err, origin)=> {
+        logger.error('event uncaughtException')
+        console.error(err)
+        stop('uncaughtException')
+    });
+}
+
+const stop = (type='handle') => {
+    logger.info('server stop type: '+ type)
+    
+
+    uWS.us_listen_socket_close(state.listenSocket);
+    state.listenSocket = null
 }
 
 export { init }

@@ -5,6 +5,8 @@
   "main": "start.js",
   "type": "module",
   "scripts": {
+    "dev": "node start.js | pino-pretty",
+    "prod": "node start.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
