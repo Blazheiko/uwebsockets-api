@@ -1,0 +1,15 @@
+{
+  "name": "comic-assistant-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "start.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Blazheiko",
+  "license": "ISC",
+  "dependencies": {
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.41.0"
+  }
+}
