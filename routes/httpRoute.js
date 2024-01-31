@@ -2,6 +2,7 @@ export default {
     get: [
         {
             url: '/',
+            handler: null,
             params:{},
             middleware: []
         }
@@ -10,6 +11,7 @@ export default {
         {
             url: '/',
             params:{},
+            handler: null,
             middleware: []
         }
 

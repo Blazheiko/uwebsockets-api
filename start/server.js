@@ -3,6 +3,7 @@ import configApp  from '../config/app.js'
 import state from "../state/state.js";
 import { onMessage, onOpen, onClose, handleUpgrade } from "../services/wsHandler.js";
 import logger from "../logger.js";
+import httpRoute from "../routes/httpRoute.js";
 const configureWebsockets = (server) => {
     return server.ws('/websocket/:token', {
         compression: 0,
@@ -16,16 +17,51 @@ const configureWebsockets = (server) => {
         close: (ws, code, message) => onClose(ws, code, message),
     });
 }
-const configureHttp = (server) => {
-    server.get('/',(res, req)=>{
-        if (state.listenSocket) {
 
-        } else {
+const setHttpHandler = async (res, req, method, route) => {
+    logger.info('setHttpHandler method:' + method )
+    if (state.listenSocket) {
+        try {
+            const contentType = req.getHeader('content-type')
+            const isJson = contentType.toLowerCase() === 'application/json'
+            const httpData = {
+                params: {},
+                query: {},
+                payload: isJson ? await readJson(res) : null,
+                headers: getHeaders(req),
+                contentType,
+                isJson,
+            }
+            const result = await route.handler(httpData)
+            if (!res.aborted) {
+                res.cork(() => {
+                    if(isJson) res.writeHeader('content-type','application/json')
+                    res.writeStatus('200').end(JSON.stringify(result));
+                });
+            }
 
-            logger.warn('We just refuse if already shutting down')
-            res.close();
+        }catch (e) {
+            res.cork(() => {
+                res.writeStatus('500').end('Server error');
+            });
         }
+    } else {
+        logger.warn('We just refuse if already shutting down')
+        res.close();
+    }
+}
+const configureHttp = (server) => {
+    httpRoute.get.forEach(route =>{
+        server.get(route.url, async (res, req)=>{
+            await setHttpHandler(res, req,'get',route)
+        })
     })
+    httpRoute.post.forEach(route =>{
+        server.get(route.url, async (res, req)=>{
+            await setHttpHandler(res, req,'post', route)
+        })
+    })
+
 }
 const init = () => {
     process.title = configApp.appName;
@@ -48,13 +84,14 @@ const init = () => {
     process.on('uncaughtException', (err, origin)=> {
         logger.error('event uncaughtException')
         console.error(err)
+        console.error(origin)
         stop('uncaughtException')
     });
 }
 
 const stop = (type='handle') => {
     logger.info('server stop type: '+ type)
-    
+
 
     uWS.us_listen_socket_close(state.listenSocket);
     state.listenSocket = null
