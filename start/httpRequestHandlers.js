@@ -2,7 +2,7 @@
 const getHeaders = (req) => {
     const headers = {}
     req.forEach((key, value) => {
-        headers[key.toLowerCase()] = value
+        headers[key.toLowerCase()] = value.trim()
     })
 
     return headers
@@ -62,5 +62,5 @@ const extractParameters = (template, path) => {
     return params;
 }
 
-export { getHeaders, readJson, extractParameters }
+export { getHeaders, readJson, extractParameters, normalizePath }
 

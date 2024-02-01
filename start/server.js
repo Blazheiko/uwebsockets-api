@@ -3,7 +3,7 @@ import qs from "qs"
 import configApp  from '../config/app.js'
 import state from "../state/state.js";
 import { onMessage, onOpen, onClose, handleUpgrade } from "../services/wsHandler.js";
-import { getHeaders, readJson, extractParameters } from "./httpRequestHandlers.js"
+import { getHeaders, readJson, extractParameters, normalizePath } from "./httpRequestHandlers.js"
 import logger from "../logger.js";
 import httpRoute from "../routes/httpRoute.js";
 const configureWebsockets = (server) => {
@@ -24,7 +24,7 @@ const setHttpHandler = async (res, req, method, route) => {
     logger.info('setHttpHandler method:' + method )
     if (state.listenSocket) {
         try {
-            const contentType = req.getHeader('content-type')
+            const contentType = req.getHeader('content-type').trim()
             const isJson = (method === 'post' && contentType.toLowerCase() === 'application/json')
             const httpData = {
                 params: extractParameters(route.url, req.getUrl()),
@@ -34,11 +34,22 @@ const setHttpHandler = async (res, req, method, route) => {
                 contentType,
                 isJson,
             }
-            const result = await route.handler( httpData )
+            const responseData = {
+                payload: {},
+                headers: [],
+                status: '200',
+            }
+            const result = await route.handler( httpData, {...responseData} )
             if (!res.aborted) {
                 res.cork(() => {
                     if(isJson) res.writeHeader('content-type','application/json')
-                    res.writeStatus('200').end(JSON.stringify(result));
+                    if(result?.headers?.length){
+                        result.headers.forEach(header => {
+                            res.writeHeader(header[0],header[1])
+                        })
+                    }
+                    res.writeStatus(result.status)
+                        .end(JSON.stringify(result.payload));
                 });
             }
 
@@ -55,13 +66,13 @@ const setHttpHandler = async (res, req, method, route) => {
 const configureHttp = (server) => {
     logger.info('configureHttp get')
     httpRoute.get.forEach(route =>{
-        server.get(route.url, async (res, req)=>{
+        server.get(`/api/${ normalizePath(route.url) }`, async (res, req)=>{
             await setHttpHandler(res, req,'get',route)
         })
     })
     logger.info('configureHttp post')
     httpRoute.post.forEach(route =>{
-        server.post(route.url, async (res, req)=>{
+        server.post(`/api/${ normalizePath(route.url) }`, async (res, req)=>{
             await setHttpHandler(res, req,'post', route)
         })
     })

@@ -3,24 +3,36 @@ export default {
     get: [
         {
             url: '/',
-            handler: ( httpData ) => httpData,
+            handler: ( httpData, responseData ) => {
+                responseData.payload = httpData
+                return responseData
+            },
             middleware: []
         },
         {
             url: '/token/:token/user/:userId',
-            handler: ( httpData ) => httpData,
+            handler: ( httpData, responseData ) => {
+                responseData.payload = httpData
+                return responseData
+            },
             middleware: []
         },
         {
             url: '/get-config',
-            handler: ( httpData ) => configApp,
+            handler: ( httpData,responseData ) => {
+                responseData.payload = configApp
+                return responseData
+            },
             middleware: []
         },
     ],
     post: [
         {
             url: '/',
-            handler: null,
+            handler: ( httpData,responseData ) => {
+                return responseData
+
+            },
             middleware: []
         }
 
