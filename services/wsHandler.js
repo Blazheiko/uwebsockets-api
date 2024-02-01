@@ -1,11 +1,13 @@
 import logger from "../logger.js";
 import wsApiHandler from "../api/ws/wsApiHandler.js";
+import { getUserByToken } from "../state/userStorage.js";
+import { generateSocketId } from "../utils/randomItem.js"
 
 const  handlePong = (ws) => {
-    ws.send(JSON.stringify({
+    ws.sendJson({
         event: 'pusher:pong',
         data: {},
-    }));
+    });
 }
 
 const onMessage = async (ws, wsMessage, isBinary) => {
@@ -18,7 +20,7 @@ const onMessage = async (ws, wsMessage, isBinary) => {
             return;
         }
         const result = await wsApiHandler(message)
-        ws.send(JSON.stringify( result ));
+        ws.sendJson( result );
 
     } catch (err) {
         logger.error('Error parse onMessage')
@@ -29,8 +31,55 @@ const onClose = (ws, code, message) => {
 
 }
 
+const  updateTimeout = (ws) => {
+    if(ws.timeout) clearTimeout(ws.timeout);
+
+    ws.timeout = setTimeout(() => {
+        try {
+            ws.end(4201);
+        } catch (e) {
+            logger.warn('error close ws by timeout')
+        }
+    }, 120_000);
+}
+
+
 const onOpen = (ws) => {
 
+    ws.sendJson = (data) => {
+        try {
+            ws.send(JSON.stringify(data));
+            updateTimeout(ws);
+        } catch (e) {
+            logger.error('Error sendJson')
+        }
+    }
+    ws.id = generateSocketId();
+
+    // if (this.server.closing) this.serverClosingHandler(ws)
+
+    const userData = ws.getUserData()
+    const user = getUserByToken(userData.token)
+    if(!user){
+        const errorMessage = {
+            event: 'service:error',
+            data: {
+                code: 4001,
+                message: `Token ${userData.token} does not exist.`,
+            },
+        };
+        // this.errorClientHandler(ws, errorMessage)
+        return ws.end(4001);
+    }
+    let broadcastMessage = {
+        event: 'service:connection_established',
+        data: JSON.stringify({
+            socket_id: ws.id,
+            activity_timeout: 30,
+        }),
+    };
+
+    ws.sendJson(broadcastMessage);
 }
 
 const ab2str = (buffer, encoding='utf8') =>  Buffer.from(buffer).toString(encoding)
@@ -56,7 +105,4 @@ const handleUpgrade = (res, req, context) => {
         context,
     );
 }
-const handleDrain = (ws) => {
-
-}
-export { onMessage,onOpen, onClose, handleUpgrade,handleDrain }
+export { onMessage,onOpen, onClose, handleUpgrade, generateSocketId }
