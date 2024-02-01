@@ -20,7 +20,7 @@ const onMessage = async (ws, wsMessage, isBinary) => {
             return;
         }
         const result = await wsApiHandler(message)
-        ws.sendJson( result );
+        if(result) ws.sendJson( result );
 
     } catch (err) {
         logger.error('Error parse onMessage')
