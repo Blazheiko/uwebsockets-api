@@ -1,3 +1,3 @@
 export default {
-    listenSocket: null,
-}
+  listenSocket: null,
+};

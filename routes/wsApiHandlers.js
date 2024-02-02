@@ -1,3 +1,3 @@
 export default {
-    'api:get-user': ['handler', ['middlewares']]
-}
+  'api:get-user': ['handler', ['middlewares']],
+};

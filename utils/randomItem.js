@@ -1,19 +1,20 @@
-const getRandomTest = ( len ) => {
-    let text = "";
-    let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+import crypto from 'node:crypto';
 
-    for (let i = 0; i < +len; i++)
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
+const getRandomTest = (len) => {
+  let text = '';
+  let possible =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-    return text;
-}
+  for (let i = 0; i < +len; i++)
+    text += possible.charAt(crypto.randomInt(0, possible.length));
+
+  return text;
+};
 
 const generateSocketId = () => {
-    const min = 0;
-    const max = 10000000000;
-    const randomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
+  const max = 10000000000;
 
-    return Date.now() + '.' + randomNumber(min, max);
-}
+  return Date.now() + '.' + crypto.randomInt(0, max);
+};
 
-export { getRandomTest, generateSocketId }
+export { getRandomTest, generateSocketId };

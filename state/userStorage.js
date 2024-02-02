@@ -1,14 +1,13 @@
-
-const authToken = new Map()
+const authToken = new Map();
 const getUserByToken = (token) => {
-    return authToken.get(token)
-}
+  return authToken.get(token);
+};
 const setUserByToken = (token, user) => {
-    authToken.set(token, user)
-}
+  authToken.set(token, user);
+};
 
-const deleteToken = (token) =>{
-    authToken.delete(token)
-}
+const deleteToken = (token) => {
+  authToken.delete(token);
+};
 
-export { getUserByToken, setUserByToken, deleteToken}
+export { getUserByToken, setUserByToken, deleteToken };
