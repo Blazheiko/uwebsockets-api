@@ -1,21 +1,21 @@
 import uWS from 'uWebSockets.js';
 import qs from 'qs';
 import configApp from '#config/app.js';
-import state from '#state/state.js';
+import state from '#app/state/state.js';
 import {
     onMessage,
     onOpen,
     onClose,
     handleUpgrade,
-} from '../services/wsHandler.js';
+} from '#app/services/wsHandler.js';
 import {
     getHeaders,
     readJson,
     extractParameters,
     normalizePath,
-} from './httpRequestHandlers.js';
-import logger from '../logger.js';
-import httpRoute from '../routes/httpRoute.js';
+} from '#start/httpRequestHandlers.js';
+import logger from '#logger';
+import httpRoute from '#routes/httpRoute.js';
 const configureWebsockets = (server) => {
     return server.ws('/websocket/:token', {
         compression: 0,

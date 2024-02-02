@@ -5,13 +5,11 @@
   "main": "start.js",
   "type": "module",
   "imports": {
-    "#api/*": "./api/*",
+    "#app/*": "./app/*",
     "#config/*": "./config/*",
     "#database/*": "./database/*",
     "#routes/*": "./routes/*",
-    "#services/*": "./services/*",
     "#start/*": "./start/*",
-    "#state/*": "./state/*",
     "#utils/*": "./utils/*",
     "#logger": "./logger.js"
   },

@@ -1,6 +1,6 @@
 import logger from '#logger';
-import wsApiHandler from '#api/ws/wsApiHandler.js';
-import { getUserByToken } from '#state/userStorage.js';
+import wsApiHandler from '#app/api/ws/wsApiHandler.js';
+import { getUserByToken } from '#app/state/userStorage.js';
 import { generateSocketId } from '#utils/randomItem.js';
 
 const handlePong = (ws) => {
