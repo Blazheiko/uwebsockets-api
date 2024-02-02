@@ -5,6 +5,7 @@
   "main": "start.js",
   "type": "module",
   "scripts": {
+    "lint": "eslint .",
     "dev": "node start.js | pino-pretty",
     "prod": "node start.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -17,5 +18,12 @@
     "pino": "^8.17.2",
     "qs": "^6.11.2",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.41.0"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.1.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.3",
+    "prettier": "^3.2.4"
   }
 }

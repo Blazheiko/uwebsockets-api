@@ -4,7 +4,7 @@ import logger from './logger.js'
 import * as server from "./start/server.js"
 
 logger.info( configApp )
-console.log({ configApp })
+// console.log({ configApp })
 
 server.init()
 

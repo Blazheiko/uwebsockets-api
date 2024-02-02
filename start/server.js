@@ -52,7 +52,6 @@ const setHttpHandler = async (res, req, method, route) => {
                         .end(JSON.stringify(result.payload));
                 });
             }
-
         }catch (e) {
             res.cork(() => {
                 res.writeStatus('500').end('Server error');

@@ -1,4 +1,4 @@
-const getRandomTest = (len) => {
+const getRandomTest = ( len ) => {
     let text = "";
     let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
