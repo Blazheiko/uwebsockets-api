@@ -9,6 +9,14 @@ const up = (knex) => {
         table.string('email', 255).notNullable();
         table.string('password', 255).notNullable();
         table.boolean('isAdmin').nullable();
+        table
+            .timestamp('created_at', { useTz: true })
+            .notNullable()
+            .defaultTo(knex.fn.now());
+        table
+            .timestamp('updated_at', { useTz: true })
+            .notNullable()
+            .defaultTo(knex.fn.now());
     });
 };
 
