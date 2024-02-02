@@ -1,7 +1,7 @@
 import uWS from 'uWebSockets.js';
 import qs from 'qs';
-import configApp from '../config/app.js';
-import state from '../state/state.js';
+import configApp from '#config/app.js';
+import state from '#state/state.js';
 import {
     onMessage,
     onOpen,

@@ -1,5 +1,5 @@
-import wsApiHandlers from '../../routes/wsApiHandlers.js';
-import logger from '../../logger.js';
+import wsApiHandlers from '#routes/wsApiHandlers.js';
+import logger from '#logger';
 
 export default async (message) => {
     try {

@@ -4,6 +4,17 @@
   "description": "",
   "main": "start.js",
   "type": "module",
+  "imports": {
+    "#api/*": "./api/*",
+    "#config/*": "./config/*",
+    "#database/*": "./database/*",
+    "#routes/*": "./routes/*",
+    "#services/*": "./services/*",
+    "#start/*": "./start/*",
+    "#state/*": "./state/*",
+    "#utils/*": "./utils/*",
+    "#logger": "./logger.js"
+  },
   "scripts": {
     "lint": "eslint .",
     "dev": "node start.js | pino-pretty",

@@ -1,4 +1,4 @@
-import configApp from '../config/app.js';
+import configApp from '#config/app.js';
 export default {
     get: [
         {
