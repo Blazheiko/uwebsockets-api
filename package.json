@@ -15,6 +15,8 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.4.1",
+    "knex": "^3.1.0",
+    "mysql2": "^3.9.1",
     "pino": "^8.17.2",
     "qs": "^6.11.2",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.41.0"
