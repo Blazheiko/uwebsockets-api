@@ -16,6 +16,7 @@ import {
 } from '#start/httpRequestHandlers.js';
 import logger from '#logger';
 import httpRoute from '#routes/httpRoute.js';
+import db from '#database/db.js';
 const configureWebsockets = (server) => {
     return server.ws('/websocket/:token', {
         compression: 0,
@@ -132,6 +133,9 @@ const stop = (type = 'handle') => {
 
     uWS.us_listen_socket_close(state.listenSocket);
     state.listenSocket = null;
+    db.destroy().then(() => {
+        logger.info('db connection destroy');
+    });
 };
 
 export { init };
