@@ -13,10 +13,10 @@ import {
     readJson,
     extractParameters,
     normalizePath,
-} from '#start/httpRequestHandlers.js';
+} from './httpRequestHandlers.js';
 import logger from '#logger';
 import db from '#database/db.js';
-import { getGetRoutes, getPostRoutes } from "#start/router.js";
+import { getGetRoutes, getPostRoutes } from "./router.js";
 
 const configureWebsockets = (server) => {
     return server.ws('/websocket/:token', {

@@ -1,10 +1,10 @@
 import 'dotenv/config';
 import vine from "@vinejs/vine";
 import logger from '#logger';
-import { init, stop } from '#start/server.js';
+import { init, stop } from './vendor/start/server.js';
 import configApp from '#config/app.js';
 import db from '#database/db.js';
-import redis from '#start/redis.js';
+import redis from './vendor/start/redis.js';
 import schemas from "#app/validate/schemas/schemas.js";
 import validators from "#app/validate/validators.js";
 import httpRoutes from "#app/routes.js";

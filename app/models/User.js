@@ -1,6 +1,6 @@
 import db from '#database/db.js';
 import { DateTime } from 'luxon';
-import { serializeModel } from '#utils/model.js';
+import { serializeModel } from '../../vendor/utils/model.js';
 
 const TABLE_NAME = 'users';
 const schema = {

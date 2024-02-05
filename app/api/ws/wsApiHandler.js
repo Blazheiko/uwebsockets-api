@@ -1,5 +1,8 @@
-import wsApiHandlers from '#routes/wsApiHandlers.js';
 import logger from '#logger';
+
+const wsApiHandlers = {
+    'api:get-user': ['handler', ['middlewares']],
+}
 
 export default async (message) => {
     try {

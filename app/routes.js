@@ -1,4 +1,4 @@
-import { router } from '#start/router.js';
+import { router } from '../vendor/start/router.js';
 
 export default () => {
     router.get('/',( httpData, responseData ) => {
