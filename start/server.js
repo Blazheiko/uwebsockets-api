@@ -15,8 +15,9 @@ import {
     normalizePath,
 } from '#start/httpRequestHandlers.js';
 import logger from '#logger';
-import httpRoute from '#routes/httpRoute.js';
 import db from '#database/db.js';
+import { getGetRoutes, getPostRoutes } from "#start/router.js";
+
 const configureWebsockets = (server) => {
     return server.ws('/websocket/:token', {
         compression: 0,
@@ -80,14 +81,14 @@ const setHttpHandler = async (res, req, method, route) => {
 };
 const configureHttp = (server) => {
     logger.info('configureHttp get');
-    httpRoute.get.forEach((route) => {
-        server.get(`/api/${normalizePath(route.url)}`, async (res, req) => {
+    getGetRoutes().forEach((route) => {
+        server.get(`/${normalizePath(route.url)}`, async (res, req) => {
             await setHttpHandler(res, req, 'get', route);
         });
     });
     logger.info('configureHttp post');
-    httpRoute.post.forEach((route) => {
-        server.post(`/api/${normalizePath(route.url)}`, async (res, req) => {
+    getPostRoutes().forEach((route) => {
+        server.post(`/${normalizePath(route.url)}`, async (res, req) => {
             await setHttpHandler(res, req, 'post', route);
         });
     });
@@ -101,17 +102,6 @@ const configureHttp = (server) => {
     });
 };
 const init = () => {
-    /* eslint-disable no-undef */
-    process.title = configApp.appName;
-    logger.info(
-        'use module: uws_' +
-            process.platform +
-            '_' +
-            process.arch +
-            '_' +
-            process.versions.modules +
-            '.node',
-    );
 
     const server = uWS.App();
     configureWebsockets(server);

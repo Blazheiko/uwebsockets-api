@@ -7,6 +7,7 @@ import db from '#database/db.js';
 import redis from '#start/redis.js';
 import schemas from "#app/validate/schemas/schemas.js";
 import validators from "#app/validate/validators.js";
+import httpRoutes from "#routes/httpRoutes.js";
 
 
 logger.info(configApp);
@@ -28,7 +29,19 @@ const compileValidateSchema = () => {
 
 const start = async () => {
     try {
+        /* eslint-disable no-undef */
+        process.title = configApp.appName;
+        logger.info(
+            'use module: uws_' +
+            process.platform +
+            '_' +
+            process.arch +
+            '_' +
+            process.versions.modules +
+            '.node',
+        );
         compileValidateSchema();
+        httpRoutes();
         await migratioDB();
         logger.info('migrate success');
         await testRedis();
