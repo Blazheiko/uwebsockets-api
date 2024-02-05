@@ -1,7 +1,7 @@
 import logger from '#logger';
 import wsApiHandler from '#app/api/ws/wsApiHandler.js';
 import { getUserByToken } from '#app/state/userStorage.js';
-import { generateSocketId } from '#utils/randomItem.js';
+import {generateUUID} from "metautil";
 
 const handlePong = (ws) => {
     ws.sendJson({
@@ -55,7 +55,7 @@ const onOpen = (ws) => {
             logger.error('Error sendJson');
         }
     };
-    ws.id = generateSocketId();
+    ws.UUID = generateUUID();
 
     // if (this.server.closing) this.serverClosingHandler(ws)
 
@@ -108,4 +108,4 @@ const handleUpgrade = (res, req, context) => {
         context,
     );
 };
-export { onMessage, onOpen, onClose, handleUpgrade, generateSocketId };
+export { onMessage, onOpen, onClose, handleUpgrade };

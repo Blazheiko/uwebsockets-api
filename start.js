@@ -7,7 +7,7 @@ import db from '#database/db.js';
 import redis from '#start/redis.js';
 import schemas from "#app/validate/schemas/schemas.js";
 import validators from "#app/validate/validators.js";
-import httpRoutes from "#routes/httpRoutes.js";
+import httpRoutes from "#app/routes.js";
 
 
 logger.info(configApp);
