@@ -8,9 +8,10 @@ export default {
                 return responseData;
             },
             middleware: [],
+            validator: 'register'
         },
         {
-            url: '/token/:token/user/:userId',
+            url: '/token/:token',
             handler: (httpData, responseData) => {
                 responseData.payload = httpData;
                 return responseData;

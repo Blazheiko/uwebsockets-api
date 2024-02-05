@@ -39,7 +39,7 @@ const normalizePath = (path) => {
 
 const extractParameters = (template, path) => {
     const normalizedTemplate = normalizePath(template);
-    const normalizedPath = normalizePath(path);
+    const normalizedPath = normalizePath(path.slice(4));
 
     const templateParts = normalizedTemplate.split('/');
     const pathParts = normalizedPath.split('/');

@@ -32,27 +32,27 @@ const configureWebsockets = (server) => {
 };
 
 const setHttpHandler = async (res, req, method, route) => {
-    logger.info('setHttpHandler method:' + method);
+    logger.info('Handler method:' + method);
     if (state.listenSocket) {
         try {
             const contentType = req.getHeader('content-type').trim();
             const isJson =
                 method === 'post' &&
                 contentType.toLowerCase() === 'application/json';
-            const httpData = {
+            const httpData = Object.freeze({
                 params: extractParameters(route.url, req.getUrl()),
                 query: qs.parse(req.getQuery()),
                 payload: isJson ? await readJson(res) : null,
                 headers: getHeaders(req),
                 contentType,
                 isJson,
-            };
+            });
             const responseData = {
                 payload: {},
                 headers: [],
                 status: '200',
             };
-            const result = await route.handler(httpData, { ...responseData });
+            const result = await route.handler(httpData, responseData );
             if (!res.aborted) {
                 res.cork(() => {
                     if (isJson)
@@ -68,6 +68,7 @@ const setHttpHandler = async (res, req, method, route) => {
                 });
             }
         } catch (e) {
+            logger.error(e)
             res.cork(() => {
                 res.writeStatus('500').end('Server error');
             });
@@ -89,6 +90,14 @@ const configureHttp = (server) => {
         server.post(`/api/${normalizePath(route.url)}`, async (res, req) => {
             await setHttpHandler(res, req, 'post', route);
         });
+    });
+    server.any('/*', (res, req) => {
+        res.cork(() => {
+
+            res.writeStatus('404');
+            res.end('404 error');
+        });
+
     });
 };
 const init = () => {

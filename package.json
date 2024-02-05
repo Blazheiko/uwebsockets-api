@@ -23,10 +23,12 @@
   "author": "Blazheiko",
   "license": "ISC",
   "dependencies": {
+    "@vinejs/vine": "^1.7.1",
     "dotenv": "^16.4.1",
     "ioredis": "^5.3.2",
     "knex": "^3.1.0",
     "luxon": "^3.4.4",
+    "metautil": "^5.2.0",
     "mysql2": "^3.9.1",
     "pino": "^8.17.2",
     "qs": "^6.11.2",
