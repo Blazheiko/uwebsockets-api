@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import logger from '#logger';
-import * as server from '#start/server.js';
+import { init, stop } from '#start/server.js';
 import configApp from '#config/app.js';
 import db from '#database/db.js';
 import redis from '#start/redis.js';
@@ -22,7 +22,7 @@ const start = async () => {
         await testRedis();
         logger.info('test redis success');
 
-        server.init();
+        init();
     } catch (err) {
         /* eslint-disable no-undef */
         console.error(err);
@@ -31,4 +31,14 @@ const start = async () => {
 };
 start().then(() => {
     logger.info('start success');
+    process.on('SIGINT', () => stop('SIGINT'));
+    process.on('SIGHUP', () => stop('SIGHUP'));
+    process.on('SIGTERM', () => stop('SIGTERM'));
+
+    process.on('uncaughtException', (err, origin) => {
+        logger.error('event uncaughtException');
+        console.error(err);
+        console.error(origin);
+        stop('uncaughtException');
+    });
 });

@@ -116,16 +116,6 @@ const init = () => {
         }
     });
     /* eslint-disable no-undef */
-    process.on('SIGINT', () => stop('SIGINT'));
-    process.on('SIGHUP', () => stop('SIGHUP'));
-    process.on('SIGTERM', () => stop('SIGTERM'));
-
-    process.on('uncaughtException', (err, origin) => {
-        logger.error('event uncaughtException');
-        console.error(err);
-        console.error(origin);
-        stop('uncaughtException');
-    });
 };
 
 const stop = (type = 'handle') => {
@@ -138,4 +128,4 @@ const stop = (type = 'handle') => {
     });
 };
 
-export { init };
+export { init, stop };
