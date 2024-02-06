@@ -1,14 +1,13 @@
 import 'dotenv/config';
-import vine from "@vinejs/vine";
+import vine from '@vinejs/vine';
 import logger from '#logger';
-import { init, stop } from './vendor/start/server.js';
+import { init, stop } from '#vendor/start/server.js';
 import configApp from '#config/app.js';
 import db from '#database/db.js';
-import redis from './vendor/start/redis.js';
-import schemas from "#app/validate/schemas/schemas.js";
-import validators from "#app/validate/validators.js";
-import httpRoutes from "#app/routes.js";
-
+import redis from '#vendor/start/redis.js';
+import schemas from '#app/validate/schemas/schemas.js';
+import validators from '#app/validate/validators.js';
+import httpRoutes from '#app/routes/httpRoutes.js';
 
 logger.info(configApp);
 // console.log({ configApp })
@@ -21,11 +20,11 @@ const testRedis = async () => {
 };
 
 const compileValidateSchema = () => {
-    const schemaKeys = Object.keys(schemas)
-    schemaKeys.forEach( key => {
-        validators[key]  = vine.compile(schemas[key])
-    })
-}
+    const schemaKeys = Object.keys(schemas);
+    schemaKeys.forEach((key) => {
+        validators[key] = vine.compile(schemas[key]);
+    });
+};
 
 const start = async () => {
     try {
@@ -33,12 +32,12 @@ const start = async () => {
         process.title = configApp.appName;
         logger.info(
             'use module: uws_' +
-            process.platform +
-            '_' +
-            process.arch +
-            '_' +
-            process.versions.modules +
-            '.node',
+                process.platform +
+                '_' +
+                process.arch +
+                '_' +
+                process.versions.modules +
+                '.node',
         );
         compileValidateSchema();
         httpRoutes();

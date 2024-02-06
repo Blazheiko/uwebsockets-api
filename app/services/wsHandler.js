@@ -1,7 +1,7 @@
 import logger from '#logger';
 import wsApiHandler from '#app/api/ws/wsApiHandler.js';
 import { getUserByToken } from '#app/state/userStorage.js';
-import {generateUUID} from "metautil";
+import { generateUUID } from 'metautil';
 
 const handlePong = (ws) => {
     ws.sendJson({

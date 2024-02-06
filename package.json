@@ -11,7 +11,8 @@
     "#routes/*": "./routes/*",
     "#start/*": "./start/*",
     "#utils/*": "./utils/*",
-    "#logger": "./logger.js"
+    "#logger": "./logger.js",
+    "#vendor/*": "./vendor/*"
   },
   "scripts": {
     "lint": "eslint .",

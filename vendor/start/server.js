@@ -16,7 +16,7 @@ import {
 } from './httpRequestHandlers.js';
 import logger from '#logger';
 import db from '#database/db.js';
-import { getGetRoutes, getPostRoutes } from "./router.js";
+import { getGetRoutes, getPostRoutes } from './router.js';
 
 const configureWebsockets = (server) => {
     return server.ws('/websocket/:token', {
@@ -53,7 +53,7 @@ const setHttpHandler = async (res, req, method, route) => {
                 headers: [],
                 status: '200',
             };
-            const result = await route.handler(httpData, responseData );
+            const result = await route.handler(httpData, responseData);
             if (!res.aborted) {
                 res.cork(() => {
                     if (isJson)
@@ -69,7 +69,7 @@ const setHttpHandler = async (res, req, method, route) => {
                 });
             }
         } catch (e) {
-            logger.error(e)
+            logger.error(e);
             res.cork(() => {
                 res.writeStatus('500').end('Server error');
             });
@@ -94,15 +94,12 @@ const configureHttp = (server) => {
     });
     server.any('/*', (res, req) => {
         res.cork(() => {
-
             res.writeStatus('404');
             res.end('404 error');
         });
-
     });
 };
 const init = () => {
-
     const server = uWS.App();
     configureWebsockets(server);
     configureHttp(server);

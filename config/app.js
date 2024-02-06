@@ -5,6 +5,7 @@ const config = Object.freeze({
     env: process.env.APP_ENV,
     url: process.env.APP_URL,
     port: Number(process.env.APP_PORT),
-    characters:'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+    characters:
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
 });
 export default config;

@@ -2,7 +2,7 @@ import logger from '#logger';
 
 const wsApiHandlers = {
     'api:get-user': ['handler', ['middlewares']],
-}
+};
 
 export default async (message) => {
     try {
