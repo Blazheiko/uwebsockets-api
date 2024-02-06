@@ -51,16 +51,20 @@ const router = {
             middleware: (middlewares) => {
                 groupRoutes.routes.forEach((route) => {
                     route.middlewares.concat(middlewares);
+                    if (route.isWs) wsRoutes[route.url] = route;
                     return groupRoutes;
                 });
             },
             prefix: (prefix) => {
                 groupRoutes.routes.forEach((route) => {
-                    route.url = `${normalizePath(prefix)}/${normalizePath(route.url)}`;
                     logger.info(route.url);
                     if (route.isWs) {
-                        logger.info('prefix ws route');
-                    }
+                        const oldKey = route.url;
+                        route.url = prefix + route.url;
+                        wsRoutes[route.url] = route;
+                        delete wsRoutes[oldKey];
+                    } else
+                        route.url = `${normalizePath(prefix)}/${normalizePath(route.url)}`;
                     return groupRoutes;
                 });
             },
@@ -72,5 +76,6 @@ const router = {
 
 const getGetRoutes = () => getRoutes;
 const getPostRoutes = () => postRoutes;
+const getWsRoutes = () => wsRoutes;
 
-export { router, getGetRoutes, getPostRoutes };
+export { router, getGetRoutes, getPostRoutes, getWsRoutes };

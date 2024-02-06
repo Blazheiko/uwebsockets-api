@@ -1,16 +1,16 @@
 import { router } from '#vendor/start/router.js';
 
 export default () => {
-    router.get('/', (httpData, responseData) => {
-        responseData.payload = httpData;
+    router.ws('test', (wsData, responseData) => {
+        responseData.payload = wsData;
         return responseData;
     });
     router
         .group([
-            router.get('/token/:token', (httpData, responseData) => {
-                responseData.payload = httpData;
+            router.ws('token', (wsData, responseData) => {
+                responseData.payload = wsData;
                 return responseData;
             }),
         ])
-        .prefix('/api');
+        .prefix('message:');
 };
