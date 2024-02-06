@@ -7,7 +7,7 @@ import {
     onOpen,
     onClose,
     handleUpgrade,
-} from '#app/services/wsHandler.js';
+} from '#vendor/start/wsHandler.js';
 import {
     getHeaders,
     readJson,

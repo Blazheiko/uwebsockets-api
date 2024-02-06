@@ -40,7 +40,6 @@ const router = {
     ws(event, handler) {
         const route = createRoute(event, handler);
         route.isWs = true;
-        // if (wsRoutes[event]) throw new Error('Double ws route');
         wsRoutes[event] = route;
 
         return route;

@@ -8,8 +8,8 @@ import redis from '#vendor/start/redis.js';
 import schemas from '#app/validate/schemas/schemas.js';
 import validators from '#app/validate/validators.js';
 import httpRoutes from '#app/routes/httpRoutes.js';
-import wsRoutes from "#app/routes/wsRoutes.js";
-import { getWsRoutes } from "#vendor/start/router.js";
+import wsRoutes from '#app/routes/wsRoutes.js';
+import { getWsRoutes } from '#vendor/start/router.js';
 
 logger.info(configApp);
 // console.log({ configApp })
@@ -44,8 +44,8 @@ const start = async () => {
         compileValidateSchema();
         httpRoutes();
         wsRoutes();
-        const WsRoutes = getWsRoutes();
-        logger.info(wsRoutes());
+        const wsRoutes = getWsRoutes();
+        logger.info(wsRoutes);
         await migratioDB();
         logger.info('migrate success');
         await testRedis();

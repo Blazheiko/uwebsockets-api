@@ -1,5 +1,5 @@
 import logger from '#logger';
-import wsApiHandler from '#app/api/ws/wsApiHandler.js';
+import wsApiHandler from '#vendor/wsApiHandler.js';
 import { getUserByToken } from '#app/state/userStorage.js';
 import { generateUUID } from 'metautil';
 

@@ -1,17 +1,15 @@
 import logger from '#logger';
-
-const wsApiHandlers = {
-    'api:get-user': ['handler', ['middlewares']],
-};
+import { getWsRoutes } from '#vendor/start/router.js';
+const wsRoutes = getWsRoutes();
 
 export default async (message) => {
     try {
-        if (wsApiHandlers[message.event]) {
-            const middlewares = wsApiHandlers[message.event][1];
+        if (wsRoutes[message.event]) {
+            const middlewares = wsRoutes[message.event].middlewares;
             if (middlewares && middlewares.length) {
                 // handle middlewares
             }
-            const handler = wsApiHandlers[message.event][0];
+            const handler = wsRoutes[message.event].handler;
             return await handler(message);
         }
     } catch (e) {
