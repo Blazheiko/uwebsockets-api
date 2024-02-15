@@ -1,5 +1,5 @@
 import logger from '#logger';
-import { normalizePath } from '#vendor/start/httpRequestHandlers.js';
+import { normalizePath } from '#vendor/httpRequestHandlers.js';
 
 const getRoutes = [];
 const postRoutes = [];

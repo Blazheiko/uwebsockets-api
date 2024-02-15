@@ -13,7 +13,7 @@ import {
     readJson,
     extractParameters,
     normalizePath,
-} from './httpRequestHandlers.js';
+} from '../httpRequestHandlers.js';
 import logger from '#logger';
 import db from '#database/db.js';
 import { getGetRoutes, getPostRoutes } from './router.js';

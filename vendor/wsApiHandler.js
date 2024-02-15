@@ -1,20 +1,31 @@
 import logger from '#logger';
 import { getWsRoutes } from '#vendor/start/router.js';
+
 const wsRoutes = getWsRoutes();
 
 export default async (message) => {
+    const responseData = {
+        payload: {},
+        id: message.id || 0,
+        status: 200,
+    };
     try {
         if (wsRoutes[message.event]) {
+            const payload = message.payload
+                ? Object.freeze({ ...message.payload })
+                : null;
             const middlewares = wsRoutes[message.event].middlewares;
             if (middlewares && middlewares.length) {
                 // handle middlewares
             }
             const handler = wsRoutes[message.event].handler;
-            return await handler(message);
+            return await handler(payload, responseData);
         }
     } catch (e) {
-        logger.info('error wsApiHandler');
+        logger.error('error wsApiHandler');
+        logger.error(e);
+        responseData.status = 500;
     }
 
-    return null;
+    return responseData;
 };
