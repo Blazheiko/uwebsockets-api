@@ -44,8 +44,8 @@ const start = async () => {
         compileValidateSchema();
         httpRoutes();
         wsRoutes();
-        const wsRoutes = getWsRoutes();
-        logger.info(wsRoutes);
+        // const wsRoutes = getWsRoutes();
+        // logger.info(getWsRoutes());
         await migratioDB();
         logger.info('migrate success');
         await testRedis();
