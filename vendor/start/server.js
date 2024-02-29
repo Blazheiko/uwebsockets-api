@@ -1,4 +1,5 @@
 import uWS from 'uWebSockets.js';
+import path from 'node:path';
 import qs from 'qs';
 import configApp from '#config/app.js';
 import state from '#app/state/state.js';
@@ -17,6 +18,38 @@ import {
 import logger from '#logger';
 import db from '#database/db.js';
 import { getGetRoutes, getPostRoutes } from './router.js';
+import { promises as fs } from 'node:fs';
+
+const MIME_TYPES = {
+    default: 'application/octet-stream',
+    html: 'text/html; charset=UTF-8',
+    js: 'application/javascript; charset=UTF-8',
+    json: 'application/json',
+    css: 'text/css',
+    png: 'image/png',
+    jpg: 'image/jpg',
+    gif: 'image/gif',
+    ico: 'image/x-icon',
+    svg: 'image/svg+xml',
+};
+const STATIC_PATH = path.join(process.cwd(), './public');
+
+const cache = new Map();
+
+const cacheFile = async (filePath) => {
+    const data = await fs.readFile(filePath, 'utf8');
+    const key = filePath.substring(STATIC_PATH.length);
+    cache.set(key, data);
+};
+
+const cacheDirectory = async (directoryPath) => {
+    const files = await fs.readdir(directoryPath, { withFileTypes: true });
+    for (const file of files) {
+        const filePath = path.join(directoryPath, file.name);
+        if (file.isDirectory()) cacheDirectory(filePath);
+        else cacheFile(filePath);
+    }
+};
 
 const configureWebsockets = (server) => {
     return server.ws('/websocket/:token', {
@@ -80,6 +113,10 @@ const setHttpHandler = async (res, req, method, route) => {
     }
 };
 const configureHttp = (server) => {
+    logger.info('cache Directory ' + STATIC_PATH);
+    cacheDirectory(STATIC_PATH).then(() => {
+        logger.info('Success cache Directory ' + STATIC_PATH);
+    });
     logger.info('configureHttp get');
     getGetRoutes().forEach((route) => {
         server.get(`/${normalizePath(route.url)}`, async (res, req) => {
@@ -94,8 +131,23 @@ const configureHttp = (server) => {
     });
     server.any('/*', (res, req) => {
         res.cork(() => {
-            res.writeStatus('404');
-            res.end('404 error');
+            const url = req.getUrl();
+            const ext = path.extname(url).substring(1).toLowerCase();
+            if (ext) {
+                const mimeType = MIME_TYPES[ext] || MIME_TYPES.html;
+                let data = cache.get(url);
+                let statusCode = '200';
+                if (!data) {
+                    statusCode = '404';
+                    data = cache.get('/404.html');
+                }
+                res.writeHeader('Content-Type', mimeType);
+                res.writeStatus(statusCode);
+                res.end(data);
+            } else {
+                res.writeStatus('404');
+                res.end('404 error');
+            }
         });
     });
 };
