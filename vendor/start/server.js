@@ -113,10 +113,13 @@ const setHttpHandler = async (res, req, method, route) => {
     }
 };
 const configureHttp = (server) => {
-    logger.info('cache Directory ' + STATIC_PATH);
-    cacheDirectory(STATIC_PATH).then(() => {
-        logger.info('Success cache Directory ' + STATIC_PATH);
-    });
+    if (configApp.serveStatic) {
+        logger.info('cache Directory ' + STATIC_PATH);
+        cacheDirectory(STATIC_PATH).then(() => {
+            logger.info('Success cache Directory ' + STATIC_PATH);
+        });
+    }
+
     logger.info('configureHttp get');
     getGetRoutes().forEach((route) => {
         server.get(`/${normalizePath(route.url)}`, async (res, req) => {
@@ -131,23 +134,24 @@ const configureHttp = (server) => {
     });
     server.any('/*', (res, req) => {
         res.cork(() => {
-            const url = req.getUrl();
-            const ext = path.extname(url).substring(1).toLowerCase();
-            if (ext) {
-                const mimeType = MIME_TYPES[ext] || MIME_TYPES.html;
-                let data = cache.get(url);
-                let statusCode = '200';
-                if (!data) {
-                    statusCode = '404';
-                    data = cache.get('/404.html');
+            let data = '404 error';
+            let statusCode = '404';
+            if (configApp.serveStatic) {
+                const url = req.getUrl();
+                const ext = path.extname(url).substring(1).toLowerCase();
+                if (ext) {
+                    const mimeType = MIME_TYPES[ext] || MIME_TYPES.html;
+                    data = cache.get(url);
+                    statusCode = '200';
+                    if (!data) {
+                        statusCode = '404';
+                        data = cache.get('/404.html');
+                    }
+                    res.writeHeader('Content-Type', mimeType);
                 }
-                res.writeHeader('Content-Type', mimeType);
-                res.writeStatus(statusCode);
-                res.end(data);
-            } else {
-                res.writeStatus('404');
-                res.end('404 error');
             }
+            res.writeStatus(statusCode);
+            res.end(data);
         });
     });
 };
