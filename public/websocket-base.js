@@ -140,13 +140,9 @@ class WebsocketBase {
         const route = arr[1];
         const cb = this.apiResolve[route];
         if (!cb) return;
+        clearTimeout(cb.timeout);
         delete this.apiResolve[route];
-        if (data.status === 200 && cb.resolve) {
-            clearTimeout(cb.timeout);
-            cb.resolve(data.payload);
-        } else {
-            const reject = cb.reject;
-            if (reject) reject();
-        }
+        if (data.status === 200 && cb.resolve) cb.resolve(data.payload);
+        else if (cb.reject) cb.reject();
     }
 }
