@@ -4,7 +4,7 @@ import logger from '#logger';
 import { init, stop } from '#vendor/start/server.js';
 import configApp from '#config/app.js';
 import db from '#database/db.js';
-import redis from '#vendor/start/redis.js';
+import redis from '#database/redis.js';
 import schemas from '#app/validate/schemas/schemas.js';
 import validators from '#app/validate/validators.js';
 import '#app/routes/httpRoutes.js';
