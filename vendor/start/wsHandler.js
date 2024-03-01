@@ -1,11 +1,11 @@
 import logger from '#logger';
 import wsApiHandler from '#vendor/wsApiHandler.js';
-import { getUserByToken } from '#app/state/userStorage.js';
 import { generateUUID } from 'metautil';
+import redis from '#database/redis.js';
 
 const handlePong = (ws) => {
     ws.sendJson({
-        event: 'pusher:pong',
+        event: 'service:pong',
         data: {},
     });
 };
@@ -60,8 +60,9 @@ const onOpen = (ws) => {
     // if (this.server.closing) this.serverClosingHandler(ws)
 
     const userData = ws.getUserData();
-    const user = getUserByToken(userData.token);
-    if (!user) {
+    // const user = getUserByToken(userData.token);
+    const token = redis.get(`auth:ws:${userData.token}`);
+    if (!token) {
         const errorMessage = {
             event: 'service:error',
             data: {
@@ -75,10 +76,10 @@ const onOpen = (ws) => {
     }
     let broadcastMessage = {
         event: 'service:connection_established',
-        data: JSON.stringify({
+        data: {
             socket_id: ws.id,
             activity_timeout: 30,
-        }),
+        },
     };
 
     ws.sendJson(broadcastMessage);

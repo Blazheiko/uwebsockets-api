@@ -67,7 +67,7 @@ const configureWebsockets = (server) => {
 };
 
 const setHttpHandler = async (res, req, method, route) => {
-    logger.info('Handler method:' + method);
+    // logger.info('Handler method:' + method);
     if (state.listenSocket) {
         try {
             const contentType = req.getHeader('content-type').trim();
