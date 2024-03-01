@@ -6,7 +6,7 @@ const wsRoutes = getWsRoutes();
 export default async (message) => {
     const responseData = {
         payload: {},
-        id: message.id || 0,
+        event: message.event,
         status: 200,
     };
     try {

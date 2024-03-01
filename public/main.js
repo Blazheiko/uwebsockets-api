@@ -13,6 +13,14 @@ const connectWS = (token) => {
         `ws://127.0.0.1:8082/websocket/${token}`,
     );
     console.log(WebSocketClient);
+    setTimeout(async () => {
+        try {
+            const test = await WebSocketClient.api('test');
+            console.log({ test });
+        } catch (e) {
+            console.error(e);
+        }
+    }, 10000);
 };
 
 init();

@@ -11,7 +11,7 @@ const handlePong = (ws) => {
 };
 
 const onMessage = async (ws, wsMessage, isBinary) => {
-    if (!isBinary) logger.info('isBinary', isBinary);
+    if (isBinary) logger.info('isBinary', isBinary);
     try {
         let message = null;
         if (wsMessage instanceof ArrayBuffer)
@@ -35,9 +35,10 @@ const onClose = (ws, code, message) => {
 
 const updateTimeout = (ws) => {
     /* eslint-disable no-undef */
-    if (ws.timeout) clearTimeout(ws.timeout);
+    clearTimeout(ws.timeout);
 
     ws.timeout = setTimeout(() => {
+        logger.warn('ws.end');
         try {
             ws.end(4201);
         } catch (e) {

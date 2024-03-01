@@ -1,4 +1,6 @@
 import { router } from '#vendor/start/router.js';
+import logger from '#logger';
+import WSApiController from '#app/Controllers/WSApiController.js';
 
 router.ws('test', (wsData, responseData) => {
     responseData.payload = wsData;
@@ -10,5 +12,6 @@ router
             responseData.payload = wsData;
             return responseData;
         }),
+        router.ws('test', WSApiController.test),
     ])
     .prefix('message:');

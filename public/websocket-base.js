@@ -2,6 +2,8 @@ class WebsocketBase {
     constructor(url, options = {}) {
         this.reconnectDelay = options.reconnectDelay || 5000;
         this.wsConnection = {};
+        this.apiResolve = {};
+        this.connectionEstablished = false
         this.initConnect(url);
     }
 
@@ -28,9 +30,16 @@ class WebsocketBase {
         // It could be useful to store the original messages from server for debug
         ws.onmessage = (message) => {
             console.log(`Websocket message:`);
-            console.log(JSON.parse(message.data));
-            if (message.data && message.data.event === 'service:pong') {
-                if (this.timerClose) clearTimeout(this.timerClose);
+            const data = JSON.parse(message.data);
+            console.log(data);
+            if (!data || !data.event) {
+                console.log('return');
+                return;
+            }
+            console.log(`Websocket event:${data.event}`);
+            if (data.event.includes('service:')) this.service(data);
+            else if (data.event.includes('message:')) {
+                this.message(data);
             }
         };
 
@@ -93,5 +102,38 @@ class WebsocketBase {
             return;
         }
         this.wsConnection.ws.send(JSON.stringify(payload));
+    }
+    async api(route, payload = {}) {
+        return new Promise((resolve, reject) => {
+            if (this.apiResolve[route]) reject();
+            this.send({
+                event: `message:${route}`,
+                payload,
+            });
+            this.apiResolve[route] = resolve;
+        });
+    }
+
+    service(data) {
+        const service = {
+            // 'service:pong'
+            pong: () => clearTimeout(this.timerClose),
+            connection_established: () => this.connectionEstablished = true,
+        };
+        if (data && data.event) {
+            const arr = data.event.split(':');
+            if (arr.length < 2) return;
+            const handler = service[arr[1]];
+            handler();
+        }
+    }
+    message(data) {
+        console.log('message handler');
+        const arr = data.event.split(':');
+        if (arr.length < 2) return;
+        const route = arr[1];
+        const resolve = this.apiResolve[route];
+        if (resolve) resolve(data.payload);
+        else console.error('!resolve');
     }
 }
