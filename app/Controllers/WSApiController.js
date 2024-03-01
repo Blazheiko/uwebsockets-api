@@ -7,4 +7,10 @@ export default {
 
         return responseData;
     },
+    error(wsData, responseData) {
+        logger.info('ws error');
+        throw new Error('Test error');
+
+        // return responseData;
+    },
 };

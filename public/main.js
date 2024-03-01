@@ -20,7 +20,15 @@ const connectWS = (token) => {
         } catch (e) {
             console.error(e);
         }
-    }, 10000);
+    }, 4000);
+    setTimeout(async () => {
+        try {
+            const test = await WebSocketClient.api('error');
+            console.log({ test });
+        } catch (e) {
+            console.error(e);
+        }
+    }, 4000);
 };
 
 init();

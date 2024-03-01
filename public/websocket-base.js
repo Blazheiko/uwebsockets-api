@@ -3,7 +3,7 @@ class WebsocketBase {
         this.reconnectDelay = options.reconnectDelay || 5000;
         this.wsConnection = {};
         this.apiResolve = {};
-        this.connectionEstablished = false
+        this.connectionEstablished = false;
         this.initConnect(url);
     }
 
@@ -110,7 +110,13 @@ class WebsocketBase {
                 event: `message:${route}`,
                 payload,
             });
-            this.apiResolve[route] = resolve;
+            this.apiResolve[route] = {
+                resolve,
+                reject,
+                timeout: setTimeout(() => {
+                    reject();
+                }, 5000),
+            };
         });
     }
 
@@ -118,7 +124,7 @@ class WebsocketBase {
         const service = {
             // 'service:pong'
             pong: () => clearTimeout(this.timerClose),
-            connection_established: () => this.connectionEstablished = true,
+            connection_established: () => (this.connectionEstablished = true),
         };
         if (data && data.event) {
             const arr = data.event.split(':');
@@ -132,8 +138,15 @@ class WebsocketBase {
         const arr = data.event.split(':');
         if (arr.length < 2) return;
         const route = arr[1];
-        const resolve = this.apiResolve[route];
-        if (resolve) resolve(data.payload);
-        else console.error('!resolve');
+        const cb = this.apiResolve[route];
+        if (!cb) return;
+        delete this.apiResolve[route];
+        if (data.status === 200 && cb.resolve) {
+            clearTimeout(cb.timeout);
+            cb.resolve(data.payload);
+        } else {
+            const reject = cb.reject;
+            if (reject) reject();
+        }
     }
 }

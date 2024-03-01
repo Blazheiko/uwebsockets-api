@@ -13,5 +13,6 @@ router
             return responseData;
         }),
         router.ws('test', WSApiController.test),
+        router.ws('error', WSApiController.error),
     ])
     .prefix('message:');
