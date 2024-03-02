@@ -25,6 +25,7 @@ export default async (message) => {
         logger.error('error wsApiHandler');
         logger.error(e);
         responseData.status = 500;
+        responseData.payload = { message: e.message };
     }
 
     return responseData;
