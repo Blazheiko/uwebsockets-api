@@ -1,7 +1,8 @@
 import uWS from 'uWebSockets.js';
 import path from 'node:path';
 import qs from 'qs';
-import configApp from '#config/app.js';
+import appConfig from '#config/app.js';
+import corsConfig from '#config/cors.js';
 import state from '#app/state/state.js';
 import {
     onMessage,
@@ -70,6 +71,12 @@ const setHttpHandler = async (res, req, method, route) => {
     // logger.info('Handler method:' + method);
     if (state.listenSocket) {
         try {
+            if (corsConfig.enabled && method === 'OPTIONS') {
+                res.cork(() => {
+                    setCorsHeader(res);
+                    res.writeStatus('200').end();
+                });
+            }
             const contentType = req.getHeader('content-type').trim();
             const isJson =
                 method === 'post' &&
@@ -97,9 +104,8 @@ const setHttpHandler = async (res, req, method, route) => {
                             res.writeHeader(header[0], header[1]);
                         });
                     }
-                    res.writeStatus(result.status).end(
-                        JSON.stringify(result.payload),
-                    );
+                    if (corsConfig.enabled) setCorsHeader(res, req);
+                    res.writeStatus(result.status).end(JSON.stringify(result.payload));
                 });
             }
         } catch (e) {
@@ -114,7 +120,7 @@ const setHttpHandler = async (res, req, method, route) => {
     }
 };
 const configureHttp = (server) => {
-    if (configApp.serveStatic) {
+    if (appConfig.serveStatic) {
         logger.info('cache Directory ' + STATIC_PATH);
         cacheDirectory(STATIC_PATH).then(() => {
             logger.info('Success cache Directory ' + STATIC_PATH);
@@ -137,7 +143,7 @@ const configureHttp = (server) => {
         res.cork(() => {
             let data = '404 error';
             let statusCode = '404';
-            if (configApp.serveStatic) {
+            if (appConfig.serveStatic) {
                 const url = req.getUrl();
                 const ext = path.extname(url).substring(1).toLowerCase();
                 if (ext) {
@@ -156,16 +162,34 @@ const configureHttp = (server) => {
         });
     });
 };
+
+const setCorsHeader = (res, req) => {
+    res.writeHeader('Access-Control-Allow-Origin', corsConfig.origin);
+    res.writeHeader('Access-Control-Allow-Methods', corsConfig.methods);
+    res.writeHeader('Access-Control-Max-Age', `${corsConfig.maxAge}`);
+    res.writeHeader(
+        'Access-Control-Expose-Headers',
+        `${corsConfig.exposeHeaders}`,
+    );
+    res.writeHeader('Access-Control-Allow-Headers', corsConfig.allowHeaders);
+    if (corsConfig.credentials) {
+        res.writeHeader('Access-Control-Allow-Credentials', 'true');
+    }
+    if (corsConfig.headers) {
+        const reqHeaders = req.getHeader('access-control-request-headers');
+        res.writeHeader('Access-Control-Allow-Headers', reqHeaders);
+    }
+};
 const init = () => {
     const server = uWS.App();
     configureWebsockets(server);
     configureHttp(server);
-    server.listen(configApp.port, (token) => {
+    server.listen(appConfig.port, (token) => {
         if (token) {
-            logger.info('Listening to port ' + configApp.port);
+            logger.info('Listening to port ' + appConfig.port);
             state.listenSocket = token;
         } else {
-            logger.info('Failed to listen to port ' + configApp.port);
+            logger.info('Failed to listen to port ' + appConfig.port);
         }
     });
     /* eslint-disable no-undef */
