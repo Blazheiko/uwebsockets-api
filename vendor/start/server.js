@@ -67,6 +67,61 @@ const configureWebsockets = (server) => {
     });
 };
 
+const parseCookies = (cookieHeader) => {
+    let list = {};
+
+    if (cookieHeader) {
+        cookieHeader.split(';').forEach((cookie) => {
+            let [key, value] = cookie.split('=').map((part) => part.trim());
+            if (value) {
+                try {
+                    list[key] = decodeURIComponent(value);
+                } catch (e) {
+                    logger.error(
+                        'Error decodeURIComponent for cookie value: ' + value,
+                    );
+                }
+            }
+        });
+    }
+
+    return list;
+};
+
+/*  example responseData.cookies
+|[
+|  {
+|      name: 'cookieOne',
+|      value: 'valueOne',
+|      path: '/',
+|      httpOnly: true,
+|      secure: true,
+|      expires:
+|      maxAge: 3600, // Max-Age in seconds
+|   },
+|]
+ */
+const setCookies = (res, cookies) => {
+    cookies.forEach((cookie) => {
+        let parts = [];
+        parts.push(`${cookie.name}=${encodeURIComponent(cookie.value)}`);
+        if (cookie.path) parts.push(`Path=${cookie.path}`);
+        if (cookie.expires) parts.push(`Expires=${cookie.expires.toUTCString()}`);
+        if (cookie.httpOnly) parts.push('HttpOnly');
+        if (cookie.secure) parts.push('Secure');
+        if (cookie.maxAge) parts.push(`Max-Age=${cookie.maxAge}`);
+        if (cookie.sameSite) parts.push(`SameSite=${cookie.sameSite}`);
+        const cookieString = parts.join('; ');
+        res.writeHeader('Set-Cookie', cookieString);
+    });
+};
+
+const setHeaders = (res, headers) => {
+    headers.forEach((header) => {
+        res.writeHeader(header.name, header.value);
+    });
+};
+
 const setHttpHandler = async (res, req, method, route) => {
     // logger.info('Handler method:' + method);
     if (state.listenSocket) {
@@ -77,6 +132,7 @@ const setHttpHandler = async (res, req, method, route) => {
                     res.writeStatus('200').end();
                 });
             }
+            let cookies = parseCookies(req.getHeader('cookie'));
             const contentType = req.getHeader('content-type').trim();
             const isJson =
                 method === 'post' &&
@@ -87,25 +143,26 @@ const setHttpHandler = async (res, req, method, route) => {
                 payload: isJson ? await readJson(res) : null,
                 headers: getHeaders(req),
                 contentType,
+                cookies,
                 isJson,
             });
             const responseData = {
                 payload: {},
-                headers: [],
+                headers: [], // [{name, value}]
+                cookies: [],
                 status: '200',
             };
             const result = await route.handler(httpData, responseData);
-            if (!res.aborted) {
+            if (result && !res.aborted) {
                 res.cork(() => {
                     if (isJson)
                         res.writeHeader('content-type', 'application/json');
-                    if (result?.headers?.length) {
-                        result.headers.forEach((header) => {
-                            res.writeHeader(header[0], header[1]);
-                        });
-                    }
+                    if (result.headers?.length) setHeaders(res, result.headers);
+                    if (result.cookies?.length) setCookies(res, result.cookies);
                     if (corsConfig.enabled) setCorsHeader(res, req);
-                    res.writeStatus(result.status).end(JSON.stringify(result.payload));
+                    res.writeStatus(result.status).end(
+                        JSON.stringify(result.payload),
+                    );
                 });
             }
         } catch (e) {

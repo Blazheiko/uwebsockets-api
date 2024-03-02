@@ -7,6 +7,13 @@ const init = () => {
             console.log(data);
             connectWS(data.token);
         });
+    fetch('http://127.0.0.1:8082/api/set-header-and-cookie')
+        .then((response) => {
+            return response.json();
+        })
+        .then((data) => {
+            console.log('set-header-and-cookie');
+        });
 };
 const connectWS = (token) => {
     const WebSocketClient = new WebsocketBase(
@@ -28,7 +35,8 @@ const connectWS = (token) => {
         } catch (e) {
             console.error(e);
         }
-    }, 4000);
+    }, 5000);
+
 };
 
 init();
