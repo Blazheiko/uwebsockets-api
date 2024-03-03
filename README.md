@@ -12,6 +12,8 @@ You can install `uWebSockets-api` clone project https://github.com/Blazheiko/uwe
 
 ### Usage Example
 
+Inspired by the frameworks `Laravel` and `AdonisJs`, `uWebSockets-api` aims to provide a similar experience in organizing project structure and route descriptions.
+
 routing http `app/routes/httpRoutes.js`
 
 ```js
