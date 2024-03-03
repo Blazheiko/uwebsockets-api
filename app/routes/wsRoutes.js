@@ -1,6 +1,5 @@
 import { router } from '#vendor/start/router.js';
-import logger from '#logger';
-import WSApiController from '#app/Controllers/WSApiController.js';
+import WSApiController from '#app/Controllers/ws/WSApiController.js';
 
 router.ws('test', (wsData, responseData) => {
     responseData.payload = wsData;

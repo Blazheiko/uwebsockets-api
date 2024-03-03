@@ -1,6 +1,6 @@
 import { getWsRoutes, router } from '#vendor/start/router.js';
-import MainController from '#app/Controllers/MainController.js';
-import logger from "#logger";
+import MainController from '#app/Controllers/http/MainController.js';
+import logger from '#logger';
 
 router.get('/', (httpData, responseData) => {
     responseData.payload = httpData;

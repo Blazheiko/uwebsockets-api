@@ -29,14 +29,14 @@ class WebsocketBase {
         // handle data message. Pass the data to the call back method from user
         // It could be useful to store the original messages from server for debug
         ws.onmessage = (message) => {
-            console.log(`Websocket message:`);
+            // console.log(`Websocket message:`);
             const data = JSON.parse(message.data);
-            console.log(data);
+            // console.log(data);
             if (!data || !data.event) {
                 console.log('return');
                 return;
             }
-            console.log(`Websocket event:${data.event}`);
+            // console.log(`Websocket event:${data.event}`);
             if (data.event.includes('service:')) this.service(data);
             else if (data.event.includes('message:')) {
                 this.message(data);
@@ -88,7 +88,7 @@ class WebsocketBase {
             console.warn('Ping only can be sent when connection is ready.');
             return;
         }
-        console.log('Send PING to the Websocket Server');
+        // console.log('Send PING to the Websocket Server');
         this.send({ event: 'service:ping' });
     }
 
