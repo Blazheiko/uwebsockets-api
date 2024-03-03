@@ -22,7 +22,7 @@
   },
   "keywords": [],
   "author": "Blazheiko",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@vinejs/vine": "^1.7.1",
     "dotenv": "^16.4.1",
