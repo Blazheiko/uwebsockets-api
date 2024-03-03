@@ -32,6 +32,7 @@ router.group([
     return responseData;
   }),
 ])
+  .middleware([testMiddleware])
   .prefix('/api');
 
 ```
