@@ -90,10 +90,6 @@ class WebsocketBase {
         }
         console.log('Send PING to the Websocket Server');
         this.send({ event: 'service:ping' });
-        if (this.timerClose) clearTimeout(this.timerClose);
-        this.timerClose = setTimeout(() => {
-            this.disconnect();
-        }, 10000);
     }
 
     send(payload) {
@@ -101,6 +97,10 @@ class WebsocketBase {
             console.warn('Send only can be sent when connection is ready.');
             return;
         }
+        if (this.timerClose) clearTimeout(this.timerClose);
+        this.timerClose = setTimeout(() => {
+            this.disconnect();
+        }, 10000);
         this.wsConnection.ws.send(JSON.stringify(payload));
     }
     async api(route, payload = {}) {

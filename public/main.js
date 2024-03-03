@@ -1,42 +1,64 @@
-const init = () => {
-    fetch('http://127.0.0.1:8082/api/init')
-        .then((response) => {
-            return response.json();
-        })
-        .then((data) => {
-            console.log(data);
-            connectWS(data.token);
-        });
-    fetch('http://127.0.0.1:8082/api/set-header-and-cookie')
-        .then((response) => {
-            return response.json();
-        })
-        .then((data) => {
-            console.log('set-header-and-cookie');
-        });
+const init = async () => {
+    const data = await Api.http('GET', '/api/init');
+    connectWS(data.token);
+    const res = await Api.http('GET', '/api/set-header-and-cookie');
+    console.log({ res });
 };
+
+const api = {
+    http: async (method, route, body = {}) => {
+        try {
+            const BASE_URL = 'http://127.0.0.1:8082';
+            const init = {
+                method,
+            };
+            if (method.toLowerCase() !== 'get') init.body = body;
+            const response = await fetch(`${BASE_URL}${route}`, init);
+            const result = await response.json();
+            console.log(result);
+            return result;
+        } catch (error) {
+            console.error('Error: ' + route);
+            console.error(error);
+            return null;
+        }
+    },
+    ws: async (route, body = {}) => {
+        if (!WebSocketClient) return null;
+        try {
+            const result = await WebSocketClient.api(route, body);
+            console.log({ result });
+            return result;
+        } catch (e) {
+            console.error(e);
+            return null;
+        }
+    },
+};
+
+const errorHttpHandler = (error) => {
+    alert('Error fech');
+};
+const errorWsHandler = (error) => {
+    alert('Error ws');
+};
+
+let WebSocketClient = null;
 const connectWS = (token) => {
-    const WebSocketClient = new WebsocketBase(
+    WebSocketClient = new WebsocketBase(
         `ws://127.0.0.1:8082/websocket/${token}`,
     );
     console.log(WebSocketClient);
     setTimeout(async () => {
-        try {
-            const test = await WebSocketClient.api('test');
-            console.log({ test });
-        } catch (e) {
-            console.error(e);
-        }
+        const test = await Api.ws('test');
+        console.log({ test });
     }, 4000);
     setTimeout(async () => {
-        try {
-            const test = await WebSocketClient.api('error');
-            console.log({ test });
-        } catch (e) {
-            console.error(e);
-        }
+        const error = await Api.ws('error');
+        console.log({ error });
     }, 5000);
-
 };
-
-init();
+window.Api = api;
+init().then(()=>{
+    console.log('init success');
+});
