@@ -49,10 +49,11 @@ const router = {
             routes: initRoutes,
             middleware: (middlewares) => {
                 groupRoutes.routes.forEach((route) => {
-                    route.middlewares.concat(middlewares);
+                    route.middlewares = route.middlewares.concat(middlewares);
+                    // console.log(route.middlewares);
                     if (route.isWs) wsRoutes[route.url] = route;
-                    return groupRoutes;
                 });
+                return groupRoutes;
             },
             prefix: (prefix) => {
                 groupRoutes.routes.forEach((route) => {
@@ -64,8 +65,8 @@ const router = {
                         delete wsRoutes[oldKey];
                     } else
                         route.url = `${normalizePath(prefix)}/${normalizePath(route.url)}`;
-                    return groupRoutes;
                 });
+                return groupRoutes;
             },
         };
 

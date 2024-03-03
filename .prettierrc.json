@@ -2,7 +2,7 @@
   "singleQuote": true,
   "jsxSingleQuote": true,
   "arrowParens": "always",
-  "max-len": ["error", 160, 2],
+  "max-len": ["error", 200, 2],
   "tabWidth": 4,
   "useTabs": false
 }

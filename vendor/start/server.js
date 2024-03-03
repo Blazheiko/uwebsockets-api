@@ -106,7 +106,8 @@ const setCookies = (res, cookies) => {
         let parts = [];
         parts.push(`${cookie.name}=${encodeURIComponent(cookie.value)}`);
         if (cookie.path) parts.push(`Path=${cookie.path}`);
-        if (cookie.expires) parts.push(`Expires=${cookie.expires.toUTCString()}`);
+        if (cookie.expires)
+            parts.push(`Expires=${cookie.expires.toUTCString()}`);
         if (cookie.httpOnly) parts.push('HttpOnly');
         if (cookie.secure) parts.push('Secure');
         if (cookie.maxAge) parts.push(`Max-Age=${cookie.maxAge}`);
@@ -120,6 +121,13 @@ const setHeaders = (res, headers) => {
     headers.forEach((header) => {
         res.writeHeader(header.name, header.value);
     });
+};
+
+const executeMiddlewares = async (middlewares, httpData, responseData) => {
+    for (const middleware of middlewares) {
+        if (typeof middleware === 'function')
+            await middleware(httpData, responseData);
+    }
 };
 
 const setHttpHandler = async (res, req, method, route) => {
@@ -148,10 +156,18 @@ const setHttpHandler = async (res, req, method, route) => {
             });
             const responseData = {
                 payload: {},
+                middlewareData: {},
                 headers: [], // [{name, value}]
                 cookies: [],
                 status: '200',
             };
+            if (route.middlewares?.length) {
+                await executeMiddlewares(
+                    route.middlewares,
+                    httpData,
+                    responseData,
+                );
+            }
             const result = await route.handler(httpData, responseData);
             if (result && !res.aborted) {
                 res.cork(() => {
@@ -185,6 +201,7 @@ const configureHttp = (server) => {
     }
 
     logger.info('configureHttp get');
+    console.log(getGetRoutes());
     getGetRoutes().forEach((route) => {
         server.get(`/${normalizePath(route.url)}`, async (res, req) => {
             await setHttpHandler(res, req, 'get', route);

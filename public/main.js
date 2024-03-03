@@ -3,6 +3,8 @@ const init = async () => {
     connectWS(data.token);
     const res = await Api.http('GET', '/api/set-header-and-cookie');
     console.log({ res });
+    const middleware = await Api.http('GET', '/api/test-middleware');
+    console.log({ middleware });
 };
 
 const api = {

@@ -18,7 +18,7 @@ routing http `app/routes/httpRoutes.js`
 
 ```js
 import { router } from '#vendor/start/router.js';
-import MainController from '#app/Controllers/http/MainController.js';
+import MainController from '#app/controllers/http/MainController.js';
 import logger from '#logger';
 
 router.get('/', (httpData, responseData) => {
@@ -40,7 +40,7 @@ routing ws `app/routes/wsRoutes.js`
 
 ```js
 import { router } from '#vendor/start/router.js';
-import WSApiController from '#app/Controllers/ws/WSApiController.js';
+import WSApiController from '#app/controllers/ws/WSApiController.js';
 
 router.group([
   router.ws('test', WSApiController.test),
@@ -52,7 +52,7 @@ router.group([
 
 #### License
 
-uWebSockets-api is released under the MIT License.
+`uWebSockets-api` is released under the MIT License.
 
 ##### Support and Contribution
 
