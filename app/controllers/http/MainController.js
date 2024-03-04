@@ -5,10 +5,10 @@ import logger from '#logger';
 import User from '#app/models/User.js';
 
 export default {
-    init(httpData, responseData) {
+    async init(httpData, responseData) {
         const token = generateToken(configApp.key, configApp.characters, 32);
         const time = Date.now();
-        redis.setex(`auth:ws:${token}`, 3600, time);
+        await redis.setex(`auth:ws:${token}`, 3600, time);
         responseData.payload = { token, time };
         return responseData;
     },
@@ -16,12 +16,13 @@ export default {
         logger.info('saveUser');
         const { payload } = httpData;
         // console.log({payload});
-        // const user = await User.create({
-        //     name: payload.username,
-        //     email: payload.email,
-        //     password: payload.password,
-        // });
-        responseData.payload = { status: 'ok' };
+        const user = await User.create({
+            name: payload.name,
+            email: payload.email,
+            password: payload.password,
+        });
+        // console.log(user);
+        responseData.payload = { status: 'ok', user };
         return responseData;
     },
 };

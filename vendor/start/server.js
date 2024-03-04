@@ -151,18 +151,25 @@ const setHttpHandler = async (res, req, method, route) => {
                     res.writeStatus('200').end();
                 });
             }
-            let cookies = parseCookies(req.getHeader('cookie'));
+            res.onAborted(() => {
+                res.aborted = true;
+            });
+
+            const cookies = parseCookies(req.getHeader('cookie'));
             const contentType = req.getHeader('content-type').trim();
+            const url = req.getUrl();
+            const query = qs.parse(req.getQuery());
+            const headers = getHeaders(req);
             const isJson =
                 method === 'post' &&
                 contentType.toLowerCase() === 'application/json';
             let jsonData = null;
             if (isJson) jsonData = await readJson(res);
             const httpData = Object.freeze({
-                params: extractParameters(route.url, req.getUrl()),
-                query: qs.parse(req.getQuery()),
+                params: extractParameters(route.url, url),
                 payload: jsonData,
-                headers: getHeaders(req),
+                query,
+                headers,
                 contentType,
                 cookies,
                 isJson,
@@ -189,7 +196,7 @@ const setHttpHandler = async (res, req, method, route) => {
                         res.writeHeader('content-type', 'application/json');
                     if (result.headers?.length) setHeaders(res, result.headers);
                     if (result.cookies?.length) setCookies(res, result.cookies);
-                    if (corsConfig.enabled) setCorsHeader(res, req);
+                    if (corsConfig.enabled) setCorsHeader(res);
                     res.writeStatus(result.status).end(
                         JSON.stringify(result.payload),
                     );
@@ -223,8 +230,8 @@ const configureHttp = (server) => {
     });
     logger.info('configureHttp post');
     getPostRoutes().forEach((route) => {
-        server.post(`/${normalizePath(route.url)}`, async (res, req) => {
-            await setHttpHandler(res, req, 'post', route);
+        server.post(`/${normalizePath(route.url)}`, (res, req) => {
+            setHttpHandler(res, req, 'post', route).then();
         });
     });
     server.any('/*', (res, req) => {
@@ -251,7 +258,7 @@ const configureHttp = (server) => {
     });
 };
 
-const setCorsHeader = (res, req) => {
+const setCorsHeader = (res) => {
     res.writeHeader('Access-Control-Allow-Origin', corsConfig.origin);
     res.writeHeader('Access-Control-Allow-Methods', corsConfig.methods);
     res.writeHeader('Access-Control-Max-Age', `${corsConfig.maxAge}`);
@@ -264,8 +271,9 @@ const setCorsHeader = (res, req) => {
         res.writeHeader('Access-Control-Allow-Credentials', 'true');
     }
     if (corsConfig.headers) {
-        const reqHeaders = req.getHeader('access-control-request-headers');
-        res.writeHeader('Access-Control-Allow-Headers', reqHeaders);
+        //TODO
+        // const reqHeaders = req.getHeader('access-control-request-headers');
+        // res.writeHeader('Access-Control-Allow-Headers', reqHeaders);
     }
 };
 const init = () => {

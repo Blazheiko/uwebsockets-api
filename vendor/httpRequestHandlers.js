@@ -1,4 +1,4 @@
-import logger from "#logger";
+import logger from '#logger';
 
 const getHeaders = (req) => {
     const headers = {};
@@ -13,28 +13,33 @@ const readJson = (res) => {
     logger.info('readJson');
     return new Promise((resolve, reject) => {
         let buffer = null;
+        // resolve({
+        //     name: 'Alex',
+        //     email: 'test@email',
+        //     password: '123456789',
+        // });
         res.onData((ab, isLast) => {
             /* eslint-disable no-undef */
-            resolve({});
-            // let chunk = Buffer.from(ab);
-            // if (isLast) {
-            //     let json = null;
-            //     try {
-            //         if (buffer)
-            //             json = JSON.parse(
-            //                 Buffer.concat([buffer, chunk]).toString(),
-            //             );
-            //         else json = JSON.parse(Buffer.concat([chunk]).toString());
-            //     } catch (e) {
-            //         return reject('error parse json');
-            //     }
-            //     logger.info('end parse json');
-            //
-            //     return resolve(json);
-            // } else {
-            //     if (buffer) buffer = Buffer.concat([buffer, chunk]);
-            //     else buffer = Buffer.concat([chunk]);
-            // }
+
+            let chunk = Buffer.from(ab);
+            if (isLast) {
+                let json = null;
+                try {
+                    if (buffer)
+                        json = JSON.parse(
+                            Buffer.concat([buffer, chunk]).toString(),
+                        );
+                    else json = JSON.parse(chunk.toString());
+                } catch (e) {
+                    return reject('error parse json');
+                }
+                logger.info('end parse json');
+
+                return resolve(json);
+            } else {
+                if (buffer) buffer = Buffer.concat([buffer, chunk]);
+                else buffer = Buffer.concat([chunk]);
+            }
         });
     });
 };

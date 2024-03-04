@@ -1,12 +1,19 @@
 const init = async () => {
-    const data = await Api.http('GET', '/api/init');
-    connectWS(data.token);
-    const res = await Api.http('GET', '/api/set-header-and-cookie');
-    console.log({ res });
-    const middleware = await Api.http('GET', '/api/test-middleware');
-    console.log({ middleware });
-    const user = await Api.http('POST', '/api/save-user',
-      { username: 'Alex', email: 'test@email', password: '123456789' });
+    // const data = await Api.http('GET', '/api/init');
+    // connectWS(data.token);
+    // const res = await Api.http('GET', '/api/set-header-and-cookie');
+    // console.log({ res });
+    // const middleware = await Api.http('GET', '/api/test-middleware');
+    // console.log({ middleware });
+    const user = await Api.http(
+        'POST',
+        '/api/save-user',
+        JSON.stringify({
+            name: 'Alex',
+            email: 'test@email',
+            password: '123456789',
+        }),
+    );
     console.log({ user });
 };
 
@@ -67,6 +74,6 @@ const connectWS = (token) => {
     // }, 5000);
 };
 window.Api = api;
-init().then(()=>{
+init().then(() => {
     console.log('init success');
 });
