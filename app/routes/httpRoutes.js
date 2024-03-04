@@ -15,6 +15,7 @@ router
             responseData.payload = httpData;
             return responseData;
         }),
+        router.post('/save-user', MainController.saveUser), //.validate('register'),
         router.get('/get-ws-route', (httpData, responseData) => {
             responseData.payload = getWsRoutes();
             return responseData;

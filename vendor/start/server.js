@@ -156,10 +156,12 @@ const setHttpHandler = async (res, req, method, route) => {
             const isJson =
                 method === 'post' &&
                 contentType.toLowerCase() === 'application/json';
+            let jsonData = null;
+            if (isJson) jsonData = await readJson(res);
             const httpData = Object.freeze({
                 params: extractParameters(route.url, req.getUrl()),
                 query: qs.parse(req.getQuery()),
-                payload: isJson ? await readJson(res) : null,
+                payload: jsonData,
                 headers: getHeaders(req),
                 contentType,
                 cookies,

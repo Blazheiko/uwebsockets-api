@@ -5,11 +5,12 @@ import { init, stop } from '#vendor/start/server.js';
 import configApp from '#config/app.js';
 import db from '#database/db.js';
 import redis from '#database/redis.js';
-import schemas from '#app/validate/schemas/schemas.js';
+// import kernelSchemas from '#app/validate/kernel.js';
+import schemas from '#app/validate/schemas/UserSchemas.js';
 import validators from '#app/validate/validators.js';
 import '#app/routes/httpRoutes.js';
 import '#app/routes/wsRoutes.js';
-import { getWsRoutes } from '#vendor/start/router.js';
+// import { getWsRoutes } from '#vendor/start/router.js';
 
 logger.info(configApp);
 // console.log({ configApp })

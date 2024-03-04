@@ -1,6 +1,7 @@
 import db from '#database/db.js';
 import { DateTime } from 'luxon';
 import { serializeModel } from '#vendor/utils/model.js';
+import logger from "#logger";
 
 const TABLE_NAME = 'users';
 const schema = {
@@ -12,16 +13,19 @@ const schema = {
 const required = ['name', 'password', 'email'];
 const hidden = ['password'];
 export default {
-    create(payload) {
+    async create(payload) {
+        logger.info('create user')
         if (!payload || typeof payload !== 'object')
-            throw new Error('Payload must be object');
+            return new Error('Payload must be object');
         const keys = Object.keys(payload);
         required.forEach((field) => {
             if (!keys.includes(field))
-                throw new Error(`Field ${field} required`);
+                return new Error(`Field ${field} required`);
         });
-        return db.table(TABLE_NAME).insert({
-            ...payload,
+        return await db.table(TABLE_NAME).insert({
+            name: payload.username,
+            password: payload.password,
+            email: payload.email,
             created_at: DateTime.now().toISO(),
             updated_at: DateTime.now().toISO(),
         });

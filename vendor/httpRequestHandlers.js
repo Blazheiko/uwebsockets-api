@@ -1,3 +1,5 @@
+import logger from "#logger";
+
 const getHeaders = (req) => {
     const headers = {};
     req.forEach((key, value) => {
@@ -8,28 +10,31 @@ const getHeaders = (req) => {
 };
 
 const readJson = (res) => {
+    logger.info('readJson');
     return new Promise((resolve, reject) => {
-        let buffer;
+        let buffer = null;
         res.onData((ab, isLast) => {
             /* eslint-disable no-undef */
-            let chunk = Buffer.from(ab);
-            if (isLast) {
-                let json = null;
-                try {
-                    if (buffer)
-                        json = JSON.parse(
-                            Buffer.concat([buffer, chunk]).toString(),
-                        );
-                    else json = JSON.parse(chunk.toString());
-                } catch (e) {
-                    return reject('error parse json');
-                }
-
-                return resolve(json);
-            } else {
-                if (buffer) buffer = Buffer.concat([buffer, chunk]);
-                else buffer = Buffer.concat([chunk]);
-            }
+            resolve({});
+            // let chunk = Buffer.from(ab);
+            // if (isLast) {
+            //     let json = null;
+            //     try {
+            //         if (buffer)
+            //             json = JSON.parse(
+            //                 Buffer.concat([buffer, chunk]).toString(),
+            //             );
+            //         else json = JSON.parse(Buffer.concat([chunk]).toString());
+            //     } catch (e) {
+            //         return reject('error parse json');
+            //     }
+            //     logger.info('end parse json');
+            //
+            //     return resolve(json);
+            // } else {
+            //     if (buffer) buffer = Buffer.concat([buffer, chunk]);
+            //     else buffer = Buffer.concat([chunk]);
+            // }
         });
     });
 };

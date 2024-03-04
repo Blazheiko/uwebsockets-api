@@ -5,6 +5,9 @@ const init = async () => {
     console.log({ res });
     const middleware = await Api.http('GET', '/api/test-middleware');
     console.log({ middleware });
+    const user = await Api.http('POST', '/api/save-user',
+      { username: 'Alex', email: 'test@email', password: '123456789' });
+    console.log({ user });
 };
 
 const api = {
@@ -13,6 +16,9 @@ const api = {
             const BASE_URL = 'http://127.0.0.1:8082';
             const init = {
                 method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             };
             if (method.toLowerCase() !== 'get') init.body = body;
             const response = await fetch(`${BASE_URL}${route}`, init);
@@ -51,14 +57,14 @@ const connectWS = (token) => {
         `ws://127.0.0.1:8082/websocket/${token}`,
     );
     console.log(WebSocketClient);
-    setTimeout(async () => {
-        const test = await Api.ws('test');
-        console.log({ test });
-    }, 4000);
-    setTimeout(async () => {
-        const error = await Api.ws('error');
-        console.log({ error });
-    }, 5000);
+    // setTimeout(async () => {
+    //     const test = await Api.ws('test');
+    //     console.log({ test });
+    // }, 4000);
+    // setTimeout(async () => {
+    //     const error = await Api.ws('error');
+    //     console.log({ error });
+    // }, 5000);
 };
 window.Api = api;
 init().then(()=>{
