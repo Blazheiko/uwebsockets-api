@@ -24,7 +24,7 @@ router
                 responseData.payload = responseData.middlewareData;
                 return responseData;
             })
-            .middleware([testMiddleware]),
+            .middleware(['test1']),
         router.get('/set-header-and-cookie', (httpData, responseData) => {
             logger.info('set-header-and-cookie');
             responseData.headers.push({ name: 'test-header', value: 'test' });
@@ -39,5 +39,5 @@ router
             return responseData;
         }),
     ])
-    .middleware([testMiddleware2])
+    .middleware(['test2'])
     .prefix('/api');

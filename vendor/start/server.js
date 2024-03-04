@@ -20,6 +20,7 @@ import logger from '#logger';
 import db from '#database/db.js';
 import { getGetRoutes, getPostRoutes } from './router.js';
 import { promises as fs } from 'node:fs';
+import middlewaresKernel from '#app/middlewares/kernel.js';
 
 const MIME_TYPES = {
     default: 'application/octet-stream',
@@ -124,12 +125,6 @@ const setHeaders = (res, headers) => {
 };
 
 const executeMiddlewares = async (middlewares, httpData, responseData) => {
-    // let result = null;
-    // for (const middleware of middlewares) {
-    //     if (typeof middleware === 'function')
-    //         result = await middleware(httpData, responseData);
-    // }
-    // return result;
     const stack = middlewares.slice();
     const next = async (error) => {
         if (error) {
@@ -137,11 +132,11 @@ const executeMiddlewares = async (middlewares, httpData, responseData) => {
             logger.error(error);
             return;
         }
-        const middleware = stack.shift();
-
-        if (middleware) {
-            await middleware(httpData, responseData, next);
-        }
+        const middlewareName = stack.shift();
+        if (!middlewareName) return;
+        const middleware = middlewaresKernel[middlewareName];
+        if (!middleware) return;
+        await middleware(httpData, responseData, next);
     };
     await next();
 };
