@@ -124,10 +124,26 @@ const setHeaders = (res, headers) => {
 };
 
 const executeMiddlewares = async (middlewares, httpData, responseData) => {
-    for (const middleware of middlewares) {
-        if (typeof middleware === 'function')
-            await middleware(httpData, responseData);
-    }
+    // let result = null;
+    // for (const middleware of middlewares) {
+    //     if (typeof middleware === 'function')
+    //         result = await middleware(httpData, responseData);
+    // }
+    // return result;
+    const stack = middlewares.slice();
+    const next = async (error) => {
+        if (error) {
+            logger.error('Middleware error:');
+            logger.error(error);
+            return;
+        }
+        const middleware = stack.shift();
+
+        if (middleware) {
+            await middleware(httpData, responseData, next);
+        }
+    };
+    await next();
 };
 
 const setHttpHandler = async (res, req, method, route) => {
@@ -161,6 +177,7 @@ const setHttpHandler = async (res, req, method, route) => {
                 cookies: [],
                 status: '200',
             };
+            let result = null;
             if (route.middlewares?.length) {
                 await executeMiddlewares(
                     route.middlewares,
@@ -168,7 +185,7 @@ const setHttpHandler = async (res, req, method, route) => {
                     responseData,
                 );
             }
-            const result = await route.handler(httpData, responseData);
+            result = await route.handler(httpData, responseData);
             if (result && !res.aborted) {
                 res.cork(() => {
                     if (isJson)
@@ -201,7 +218,7 @@ const configureHttp = (server) => {
     }
 
     logger.info('configureHttp get');
-    console.log(getGetRoutes());
+    // console.log(getGetRoutes());
     getGetRoutes().forEach((route) => {
         server.get(`/${normalizePath(route.url)}`, async (res, req) => {
             await setHttpHandler(res, req, 'get', route);
