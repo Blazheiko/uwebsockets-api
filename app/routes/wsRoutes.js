@@ -13,5 +13,6 @@ router
         }),
         router.ws('test', WSApiController.test),
         router.ws('error', WSApiController.error),
+        router.ws('save-user', WSApiController.saveUser),
     ])
-    .prefix('message:');
+    .prefix('api:');

@@ -29,7 +29,7 @@ class WebsocketBase {
         // handle data message. Pass the data to the call back method from user
         // It could be useful to store the original messages from server for debug
         ws.onmessage = (message) => {
-            // console.log(`Websocket message:`);
+            // console.log(`Websocket api:`);
             const data = JSON.parse(message.data);
             // console.log(data);
             if (!data || !data.event) {
@@ -38,8 +38,8 @@ class WebsocketBase {
             }
             // console.log(`Websocket event:${data.event}`);
             if (data.event.includes('service:')) this.service(data);
-            else if (data.event.includes('message:')) {
-                this.message(data);
+            else if (data.event.includes('api:')) {
+                this.messageHandler(data);
             }
         };
 
@@ -107,7 +107,7 @@ class WebsocketBase {
         return new Promise((resolve, reject) => {
             if (this.apiResolve[route]) reject();
             this.send({
-                event: `message:${route}`,
+                event: `api:${route}`,
                 payload,
             });
             this.apiResolve[route] = {
@@ -133,7 +133,7 @@ class WebsocketBase {
             handler();
         }
     }
-    message(data) {
+    messageHandler(data) {
         console.log('message handler');
         const arr = data.event.split(':');
         if (arr.length < 2) return;
@@ -143,6 +143,11 @@ class WebsocketBase {
         clearTimeout(cb.timeout);
         delete this.apiResolve[route];
         if (data.status === 200 && cb.resolve) cb.resolve(data.payload);
-        else if (cb.reject) cb.reject(data.payload);
+        else if (cb.reject)
+            cb.reject({
+                status: data.status,
+                message: data?.payload?.message,
+                messages: data?.payload?.messages,
+            });
     }
 }

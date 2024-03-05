@@ -27,12 +27,13 @@ router.get('/', (httpData, responseData) => {
 });
 router.group([
   router.get('/init', MainController.init),
+  router.post('/save-user', MainController.saveUser).validate('register'),
   router.get('/token/:token', (httpData, responseData) => {
     responseData.payload = { test: 'test payload' };
     return responseData;
   }),
 ])
-  .middleware([testMiddleware])
+  .middleware(['test2'])
   .prefix('/api');
 
 ```

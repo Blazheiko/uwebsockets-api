@@ -64,10 +64,14 @@ const connectWS = (token) => {
         `ws://127.0.0.1:8082/websocket/${token}`,
     );
     console.log(WebSocketClient);
-    // setTimeout(async () => {
-    //     const test = await Api.ws('test');
-    //     console.log({ test });
-    // }, 4000);
+    setTimeout(async () => {
+        const wsUser = await Api.ws('save-user', {
+            name: 'WS name',
+            email: 'test@gmail.com',
+            password: '123456789',
+        });
+        console.log({ wsUser });
+    }, 4000);
     // setTimeout(async () => {
     //     const error = await Api.ws('error');
     //     console.log({ error });

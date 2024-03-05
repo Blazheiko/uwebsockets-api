@@ -1,7 +1,6 @@
 import uWS from 'uWebSockets.js';
 import path from 'node:path';
 import qs from 'qs';
-import vine from '@vinejs/vine';
 import appConfig from '#config/app.js';
 import corsConfig from '#config/cors.js';
 import state from '#app/state/state.js';
@@ -21,8 +20,9 @@ import logger from '#logger';
 import db from '#database/db.js';
 import { getGetRoutes, getPostRoutes } from './router.js';
 import { promises as fs } from 'node:fs';
-import middlewaresKernel from '#app/middlewares/kernel.js';
+//import middlewaresKernel from '#app/middlewares/kernel.js';
 import validators from '#vendor/start/validators.js';
+import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
 
 const MIME_TYPES = {
     default: 'application/octet-stream',
@@ -126,22 +126,22 @@ const setHeaders = (res, headers) => {
     });
 };
 
-const executeMiddlewares = async (middlewares, httpData, responseData) => {
-    const stack = middlewares.slice();
-    const next = async (error) => {
-        if (error) {
-            logger.error('Middleware error:');
-            logger.error(error);
-            return;
-        }
-        const middlewareName = stack.shift();
-        if (!middlewareName) return;
-        const middleware = middlewaresKernel[middlewareName];
-        if (!middleware) return;
-        await middleware(httpData, responseData, next);
-    };
-    await next();
-};
+// const executeMiddlewares = async (middlewares, httpData, responseData) => {
+//     const stack = middlewares.slice();
+//     const next = async (error) => {
+//         if (error) {
+//             logger.error('Middleware error:');
+//             logger.error(error);
+//             return;
+//         }
+//         const middlewareName = stack.shift();
+//         if (!middlewareName) return;
+//         const middleware = middlewaresKernel[middlewareName];
+//         if (!middleware) return;
+//         await middleware(httpData, responseData, next);
+//     };
+//     await next();
+// };
 
 const setHttpHandler = async (res, req, method, route) => {
     // logger.info('Handler method:' + method);
