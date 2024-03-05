@@ -1,5 +1,5 @@
 import logger from '#logger';
-import User from "#app/models/User.js";
+import User from '#app/models/User.js';
 
 export default {
     test(wsData, responseData) {

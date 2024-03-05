@@ -142,7 +142,7 @@ class WebsocketBase {
         if (!cb) return;
         clearTimeout(cb.timeout);
         delete this.apiResolve[route];
-        if (data.status === 200 && cb.resolve) cb.resolve(data.payload);
+        if (data.status === 200 && cb.resolve) cb.resolve(data);
         else if (cb.reject)
             cb.reject({
                 status: data.status,

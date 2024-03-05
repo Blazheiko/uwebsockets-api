@@ -26,6 +26,13 @@ const onMessage = async (ws, wsMessage, isBinary) => {
     } catch (err) {
         logger.error('Error parse onMessage');
         logger.error(err);
+        if (err.code === 'E_VALIDATION_ERROR') {
+            ws.sendJson({
+                status: '422',
+                message: 'Validation failure',
+                messages: err.messages,
+            });
+        }
     }
 };
 const onClose = (ws, code, message) => {

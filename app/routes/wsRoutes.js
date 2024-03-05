@@ -12,7 +12,7 @@ router
             return responseData;
         }),
         router.ws('test', WSApiController.test),
-        router.ws('error', WSApiController.error),
-        router.ws('save-user', WSApiController.saveUser),
+        router.ws('error', WSApiController.error).middleware('test2'),
+        router.ws('save-user', WSApiController.saveUser).validate('register'),
     ])
     .prefix('api:');

@@ -1,6 +1,7 @@
 import logger from '#logger';
 import { getWsRoutes } from '#vendor/start/router.js';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
+import validators from "#vendor/start/validators.js";
 
 const wsRoutes = getWsRoutes();
 
@@ -13,9 +14,13 @@ export default async (message) => {
     try {
         const route = wsRoutes[message.event];
         if (route) {
-            const payload = message.payload
+            let payload = message.payload
                 ? Object.freeze({ ...message.payload })
                 : null;
+            if (route.validator) {
+                const validator = validators[route.validator];
+                if (validator) payload = await validator.validate(payload);
+            }
             const wsData = {
                 middlewareData: {},
                 status: '200',

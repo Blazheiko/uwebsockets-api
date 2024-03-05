@@ -66,7 +66,7 @@ const connectWS = (token) => {
     console.log(WebSocketClient);
     setTimeout(async () => {
         const wsUser = await Api.ws('save-user', {
-            name: 'WS name',
+            // name: 'WS name',
             email: 'test@gmail.com',
             password: '123456789',
         });
