@@ -10,9 +10,11 @@ This wrapper simplifies the usage of `uWebSockets.js` by offering more convenien
 
 You can install `uWebSockets-api` clone project https://github.com/Blazheiko/uwebsockets-api.git
 
-### Usage Example
+## Usage Example
 
 Inspired by the frameworks `Laravel` and `AdonisJs`, `uWebSockets-api` aims to provide a similar experience in organizing project structure and route descriptions.
+
+Create .env file following the .env.example
 
 routing http `app/routes/httpRoutes.js`
 
@@ -52,10 +54,24 @@ router.group([
 
 ```
 
-#### License
+## Modules used
+
+Query Builder `database/db.js` [khex](https://knexjs.org/guide/)
+
+Redis client `database/redis.js` [ioredis](https://github.com/redis/ioredis)
+
+Validator `app/validate/schemas/schemas.js` [VineJS](https://vinejs.dev/docs/introduction)
+
+Logger `logger.js` [pino](https://github.com/pinojs/pino)
+
+Library for working with dates and times [Luxon](https://github.com/moment/luxon#readme)
+
+Utils [Metarhia utilities](https://github.com/metarhia/metautil)
+
+## License
 
 `uWebSockets-api` is released under the MIT License.
 
-##### Support and Contribution
+## Support and Contribution
 
 If you have questions or suggestions, please create an issue in our GitHub repository. We also welcome your pull requests with improvements and corrections.
