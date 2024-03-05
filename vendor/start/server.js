@@ -1,6 +1,7 @@
 import uWS from 'uWebSockets.js';
 import path from 'node:path';
 import qs from 'qs';
+import vine from '@vinejs/vine';
 import appConfig from '#config/app.js';
 import corsConfig from '#config/cors.js';
 import state from '#app/state/state.js';
@@ -21,6 +22,7 @@ import db from '#database/db.js';
 import { getGetRoutes, getPostRoutes } from './router.js';
 import { promises as fs } from 'node:fs';
 import middlewaresKernel from '#app/middlewares/kernel.js';
+import validators from '#vendor/start/validators.js';
 
 const MIME_TYPES = {
     default: 'application/octet-stream',
@@ -163,11 +165,17 @@ const setHttpHandler = async (res, req, method, route) => {
             const isJson =
                 method === 'post' &&
                 contentType.toLowerCase() === 'application/json';
-            let jsonData = null;
-            if (isJson) jsonData = await readJson(res);
+            let payload = null;
+            if (isJson) {
+                payload = await readJson(res);
+                if (route.validator) {
+                    const validator = validators[route.validator];
+                    if (validator) payload = await validator.validate(payload);
+                }
+            }
             const httpData = Object.freeze({
                 params: extractParameters(route.url, url),
-                payload: jsonData,
+                payload,
                 query,
                 headers,
                 contentType,
@@ -181,6 +189,7 @@ const setHttpHandler = async (res, req, method, route) => {
                 cookies: [],
                 status: '200',
             };
+
             let result = null;
             if (route.middlewares?.length) {
                 await executeMiddlewares(
@@ -205,6 +214,14 @@ const setHttpHandler = async (res, req, method, route) => {
         } catch (e) {
             logger.error(e);
             res.cork(() => {
+                if (e.code === 'E_VALIDATION_ERROR') {
+                    res.writeStatus('422').end(
+                        JSON.stringify({
+                            message: 'Validation failure',
+                            messages: e.messages,
+                        }),
+                    );
+                }
                 res.writeStatus('500').end('Server error');
             });
         }

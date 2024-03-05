@@ -1,16 +1,16 @@
 const init = async () => {
-    // const data = await Api.http('GET', '/api/init');
-    // connectWS(data.token);
-    // const res = await Api.http('GET', '/api/set-header-and-cookie');
-    // console.log({ res });
-    // const middleware = await Api.http('GET', '/api/test-middleware');
-    // console.log({ middleware });
+    const data = await Api.http('GET', '/api/init');
+    connectWS(data.token);
+    const res = await Api.http('GET', '/api/set-header-and-cookie');
+    console.log({ res });
+    const middleware = await Api.http('GET', '/api/test-middleware');
+    console.log({ middleware });
     const user = await Api.http(
         'POST',
         '/api/save-user',
         JSON.stringify({
-            name: 'Alex',
-            email: 'test@email',
+            name: 'New name',
+            email: 'test@gmail.com',
             password: '123456789',
         }),
     );
