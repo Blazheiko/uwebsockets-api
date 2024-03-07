@@ -1,9 +1,10 @@
+import { env } from "node:process";
 export default {
     /* eslint-disable no-undef */
-    client: process.env.DB_CONNECTION,
-    host: process.env.MYSQL_HOST,
-    port: process.env.MYSQL_PORT,
-    user: process.env.MYSQL_USER,
-    password: process.env.MYSQL_PASSWORD,
-    database: process.env.MYSQL_DB_NAME,
+    client: env.DB_CONNECTION,
+    host: env.MYSQL_HOST,
+    port: env.MYSQL_PORT,
+    user: env.MYSQL_USER,
+    password: env.MYSQL_PASSWORD,
+    database: env.MYSQL_DB_NAME,
 };
