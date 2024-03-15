@@ -1,4 +1,4 @@
-import process from "node:process";
+import process from 'node:process';
 import 'dotenv/config';
 import vine from '@vinejs/vine';
 import logger from '#logger';

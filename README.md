@@ -10,11 +10,16 @@ This wrapper simplifies the usage of `uWebSockets.js` by offering more convenien
 
 You can install `uWebSockets-api` clone project https://github.com/Blazheiko/uwebsockets-api.git
 
+Install dependencies `npm install`
+
+Create `.env` file following the `.env.example`
+
+Start server `node start.js`
+
 ## Usage Example
 
 Inspired by the frameworks `Laravel` and `AdonisJs`, `uWebSockets-api` aims to provide a similar experience in organizing project structure and route descriptions.
 
-Create .env file following the .env.example
 
 routing http `app/routes/httpRoutes.js`
 
