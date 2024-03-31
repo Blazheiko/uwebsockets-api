@@ -63,62 +63,82 @@ const start = async () => {
     }
 };
 
-const restart = () => {
+const removeListeners = () => {
     process.removeListener('SIGINT', stopSIGINT);
     process.removeListener('SIGHUP', stopSIGHUP);
     process.removeListener('SIGTERM', stopSIGTERM);
     process.removeListener('uncaughtException', stopUncaughtException);
+};
+
+const stopHandler = (type) => {
+    stop(type);
+    removeListeners();
+};
+
+let timerRestart = null;
+const restart = () => {
     stop('restart');
-    setTimeout(() => {
+    if (timerRestart) clearTimeout(timerRestart);
+    timerRestart = setTimeout(() => {
         start().then(() => {
             logger.info('restart success');
         });
-    }, 200);
+    }, 1000);
 };
 const stopSIGINT = () => {
     logger.info('stop SIGINT');
-    stop('SIGINT');
+    stopHandler('SIGINT');
+    process.exit(1);
 };
 const stopSIGHUP = () => {
     logger.info('stop SIGHUP');
-    stop('SIGHUP');
+    stopHandler('SIGHUP');
+    process.exit(1);
 };
 const stopSIGTERM = () => {
     logger.info('stop SIGTERM');
-    stop('SIGTERM');
+    stopHandler('SIGTERM');
+    process.exit(1);
 };
 const stopUncaughtException = (err, origin) => {
     logger.error('event uncaughtException');
     console.error(err);
     console.error(origin);
-    stop('uncaughtException');
+    stopHandler('uncaughtException');
+    process.exit(1);
 };
+let isWatch = false;
 start().then(() => {
     logger.info('start success');
     const watchEnv = ['dev', 'development', 'local'];
-    if (watchEnv.includes(configApp.env)) {
+    if (!isWatch && watchEnv.includes(configApp.env)) {
         const watcher = chokidar.watch(process.cwd(), {
             ignored: [
                 `${process.cwd()}/node_modules`,
-                `${process.cwd()}/start.js`,
+                `${process.cwd()}/.git`,
+                `${process.cwd()}/.idea`,
             ],
-            persistent: false,
+            usePolling: false,
+            persistent: true,
             stabilityThreshold: 2000,
             awaitWriteFinish: true,
         });
-
-        watcher
-            .on('add', (path) => {
+        logger.info('watcher start');
+        isWatch = true;
+        setTimeout(() => {
+            watcher.on('add', (path) => {
                 logger.info(`File ${path} has been added`);
                 restart();
-            })
-            .on('change', (path) => {
-                logger.info(`File ${path} has been changed`);
+            });
+            watcher.on('change', (path) => {
+                logger.info(`File ${path} has been change`);
                 restart();
-            })
-            .on('unlink', (path) => {
+            });
+            watcher.on('unlink', (path) => {
                 logger.info(`File ${path} has been removed`);
                 restart();
             });
+        }, 1000);
     }
 });
+//test
