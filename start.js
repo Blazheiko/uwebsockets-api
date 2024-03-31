@@ -116,7 +116,9 @@ start().then(() => {
             ignored: [
                 `${process.cwd()}/node_modules`,
                 `${process.cwd()}/.git`,
+                `${process.cwd()}/.gitignore`,
                 `${process.cwd()}/.idea`,
+                `${process.cwd()}/README.md`,
             ],
             usePolling: false,
             persistent: true,
@@ -141,4 +143,3 @@ start().then(() => {
         }, 1000);
     }
 });
-//test
