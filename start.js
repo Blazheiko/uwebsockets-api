@@ -1,4 +1,5 @@
 import process from 'node:process';
+import chokidar from 'chokidar';
 import 'dotenv/config';
 import vine from '@vinejs/vine';
 import logger from '#logger';
@@ -50,23 +51,74 @@ const start = async () => {
         await testRedis();
         logger.info('test redis success');
 
-        init();
+        await init();
+        process.on('SIGINT', stopSIGINT);
+        process.on('SIGHUP', stopSIGHUP);
+        process.on('SIGTERM', stopSIGTERM);
+        process.on('uncaughtException', stopUncaughtException);
     } catch (err) {
         /* eslint-disable no-undef */
         console.error(err);
         process.exit(1);
     }
 };
+
+const restart = () => {
+    process.removeListener('SIGINT', stopSIGINT);
+    process.removeListener('SIGHUP', stopSIGHUP);
+    process.removeListener('SIGTERM', stopSIGTERM);
+    process.removeListener('uncaughtException', stopUncaughtException);
+    stop('restart');
+    setTimeout(() => {
+        start().then(() => {
+            logger.info('restart success');
+        });
+    }, 200);
+};
+const stopSIGINT = () => {
+    logger.info('stop SIGINT');
+    stop('SIGINT');
+};
+const stopSIGHUP = () => {
+    logger.info('stop SIGHUP');
+    stop('SIGHUP');
+};
+const stopSIGTERM = () => {
+    logger.info('stop SIGTERM');
+    stop('SIGTERM');
+};
+const stopUncaughtException = (err, origin) => {
+    logger.error('event uncaughtException');
+    console.error(err);
+    console.error(origin);
+    stop('uncaughtException');
+};
 start().then(() => {
     logger.info('start success');
-    process.on('SIGINT', () => stop('SIGINT'));
-    process.on('SIGHUP', () => stop('SIGHUP'));
-    process.on('SIGTERM', () => stop('SIGTERM'));
+    const watchEnv = ['dev', 'development', 'local'];
+    if (watchEnv.includes(configApp.env)) {
+        const watcher = chokidar.watch(process.cwd(), {
+            ignored: [
+                `${process.cwd()}/node_modules`,
+                `${process.cwd()}/start.js`,
+            ],
+            persistent: false,
+            stabilityThreshold: 2000,
+            awaitWriteFinish: true,
+        });
 
-    process.on('uncaughtException', (err, origin) => {
-        logger.error('event uncaughtException');
-        console.error(err);
-        console.error(origin);
-        stop('uncaughtException');
-    });
+        watcher
+            .on('add', (path) => {
+                logger.info(`File ${path} has been added`);
+                restart();
+            })
+            .on('change', (path) => {
+                logger.info(`File ${path} has been changed`);
+                restart();
+            })
+            .on('unlink', (path) => {
+                logger.info(`File ${path} has been removed`);
+                restart();
+            });
+    }
 });
