@@ -1,5 +1,4 @@
 import process from 'node:process';
-import chokidar from 'chokidar';
 import 'dotenv/config';
 import vine from '@vinejs/vine';
 import logger from '#logger';
@@ -11,6 +10,7 @@ import schemas from '#app/validate/schemas/schemas.js';
 import validators from '#vendor/start/validators.js';
 import '#app/routes/httpRoutes.js';
 import '#app/routes/wsRoutes.js';
+import watcher from '#vendor/start/watcher.js';
 // import { getWsRoutes } from '#vendor/start/router.js';
 
 logger.info(configApp);
@@ -30,7 +30,7 @@ const compileValidateSchema = () => {
     });
 };
 
-const start = async () => {
+const start = async (isRestart) => {
     try {
         /* eslint-disable no-undef */
         process.title = configApp.appName;
@@ -46,7 +46,7 @@ const start = async () => {
         compileValidateSchema();
         // const wsRoutes = getWsRoutes();
         // logger.info(wsRoutes);
-        await migratioDB();
+        if (!isRestart) await migratioDB();
         logger.info('migrate success');
         await testRedis();
         logger.info('test redis success');
@@ -76,11 +76,12 @@ const stopHandler = (type) => {
 };
 
 let timerRestart = null;
+
 const restart = () => {
     stop('restart');
     if (timerRestart) clearTimeout(timerRestart);
     timerRestart = setTimeout(() => {
-        start().then(() => {
+        start(true).then(() => {
             logger.info('restart success');
         });
     }, 1000);
@@ -108,38 +109,11 @@ const stopUncaughtException = (err, origin) => {
     process.exit(1);
 };
 let isWatch = false;
-start().then(() => {
+start(false).then(() => {
     logger.info('start success');
     const watchEnv = ['dev', 'development', 'local'];
     if (!isWatch && watchEnv.includes(configApp.env)) {
-        const watcher = chokidar.watch(process.cwd(), {
-            ignored: [
-                `${process.cwd()}/node_modules`,
-                `${process.cwd()}/.git`,
-                `${process.cwd()}/.gitignore`,
-                `${process.cwd()}/.idea`,
-                `${process.cwd()}/README.md`,
-            ],
-            usePolling: false,
-            persistent: true,
-            stabilityThreshold: 2000,
-            awaitWriteFinish: true,
-        });
-        logger.info('watcher start');
+        watcher(restart);
         isWatch = true;
-        setTimeout(() => {
-            watcher.on('add', (path) => {
-                logger.info(`File ${path} has been added`);
-                restart();
-            });
-            watcher.on('change', (path) => {
-                logger.info(`File ${path} has been change`);
-                restart();
-            });
-            watcher.on('unlink', (path) => {
-                logger.info(`File ${path} has been removed`);
-                restart();
-            });
-        }, 1000);
     }
 });
