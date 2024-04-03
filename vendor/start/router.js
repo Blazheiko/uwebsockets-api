@@ -3,12 +3,14 @@ import { normalizePath } from '#vendor/httpRequestHandlers.js';
 
 const getRoutes = [];
 const postRoutes = [];
+const listRoutes = [];
 const wsRoutes = {};
 
-const createRoute = (url, handler) => {
-    const route = {
-        url: url,
-        handler: handler,
+const createRoute = (method, route) => {
+    return {
+        method,
+        url: route.url,
+        handler: route.handler,
         middlewares: [],
         validator: '',
         isWs: false,
@@ -21,10 +23,11 @@ const createRoute = (url, handler) => {
             return route;
         },
     };
-
-    return route;
 };
 const router = {
+    addRoute(method, route) {
+        listRoutes.push(createRoute(method, route));
+    },
     get(url, handler) {
         const route = createRoute(url, handler);
         getRoutes.push(route);
@@ -73,9 +76,43 @@ const router = {
         return groupRoutes;
     },
 };
+const METHODS = ['get', 'post', 'del', 'put', 'patch'];
+
+const routeHandler = (route) => {
+    if (route.group) {
+        routesHandler(route.group);
+        return;
+    }
+    if (!route.url || !route.method || !route.handler) {
+        logger.error('Error handle route');
+        return;
+    }
+    let method = route.method.toLocaleLowerCase();
+    method = method === 'delete' ? 'del' : route.method;
+    if (!METHODS.includes(method)) {
+        logger.error(`Error handle. Method ${method} do not support`);
+        return;
+    }
+
+    router.addRoute(method, route);
+};
+
+const routesHandler = (routeList) => {
+    routeList.forEach((route) => {
+        routeHandler(route);
+    });
+};
 
 const getGetRoutes = () => getRoutes;
 const getPostRoutes = () => postRoutes;
 const getWsRoutes = () => wsRoutes;
+const getListRoutes = () => listRoutes;
 
-export { router, getGetRoutes, getPostRoutes, getWsRoutes };
+export {
+    router,
+    getGetRoutes,
+    getPostRoutes,
+    getWsRoutes,
+    getListRoutes,
+    routesHandler,
+};

@@ -18,8 +18,7 @@ import {
     normalizePath,
 } from '../httpRequestHandlers.js';
 import logger from '#logger';
-import db from '#database/db.js';
-import { getGetRoutes, getPostRoutes } from './router.js';
+import { getListRoutes } from './router.js';
 import { promises as fs } from 'node:fs';
 //import middlewaresKernel from '#app/middlewares/kernel.js';
 import validators from '#vendor/start/validators.js';
@@ -144,11 +143,13 @@ const setHeaders = (res, headers) => {
 //     await next();
 // };
 
-const setHttpHandler = async (res, req, method, route) => {
+const setHttpHandler = async (res, req, route) => {
     // logger.info('Handler method:' + method);
+    const method = route.method;
     if (state.listenSocket) {
         try {
-            if (corsConfig.enabled && method === 'OPTIONS') {
+            if (corsConfig.enabled && method === 'options') {
+                //'OPTIONS'
                 res.cork(() => {
                     setCorsHeader(res);
                     res.writeStatus('200').end();
@@ -241,17 +242,26 @@ const configureHttp = (server) => {
 
     logger.info('configureHttp get');
     // console.log(getGetRoutes());
-    getGetRoutes().forEach((route) => {
-        server.get(`/${normalizePath(route.url)}`, async (res, req) => {
-            await setHttpHandler(res, req, 'get', route);
-        });
+    getListRoutes().forEach((route) => {
+        console.log(route);
+        server[route.method](
+            `/${normalizePath(route.url)}`,
+            async (res, req) => {
+                await setHttpHandler(res, req, route);
+            },
+        );
     });
-    logger.info('configureHttp post');
-    getPostRoutes().forEach((route) => {
-        server.post(`/${normalizePath(route.url)}`, (res, req) => {
-            setHttpHandler(res, req, 'post', route).then();
-        });
-    });
+    // getGetRoutes().forEach((route) => {
+    //     server.get(`/${normalizePath(route.url)}`, async (res, req) => {
+    //         await setHttpHandler(res, req, 'get', route);
+    //     });
+    // });
+    // logger.info('configureHttp post');
+    // getPostRoutes().forEach((route) => {
+    //     server.post(`/${normalizePath(route.url)}`, (res, req) => {
+    //         setHttpHandler(res, req, 'post', route).then();
+    //     });
+    // });
     server.any('/*', (res, req) => {
         res.cork(() => {
             let data = '404 error';
@@ -314,7 +324,6 @@ const stop = (type = 'handle') => {
 
     uWS.us_listen_socket_close(state.listenSocket);
     state.listenSocket = null;
-
 };
 
 export { init, stop };

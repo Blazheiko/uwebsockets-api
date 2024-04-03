@@ -8,9 +8,12 @@ import db from '#database/db.js';
 import redis from '#database/redis.js';
 import schemas from '#app/validate/schemas/schemas.js';
 import validators from '#vendor/start/validators.js';
-import '#app/routes/httpRoutes.js';
-import '#app/routes/wsRoutes.js';
+// import '#app/routes/httpRoutes.js';
+// import '#app/routes/wsRoutes.js';
 import watcher from '#vendor/start/watcher.js';
+import httpRoutes from '#app/routes/httpRoutes.js';
+import { routesHandler } from '#vendor/start/router.js';
+
 // import { getWsRoutes } from '#vendor/start/router.js';
 
 logger.info(configApp);
@@ -50,6 +53,7 @@ const start = async (isRestart) => {
         logger.info('migrate success');
         await testRedis();
         logger.info('test redis success');
+        routesHandler(httpRoutes);
 
         await init();
         process.on('SIGINT', stopSIGINT);

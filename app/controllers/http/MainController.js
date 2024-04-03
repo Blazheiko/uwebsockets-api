@@ -5,6 +5,14 @@ import logger from '#logger';
 import User from '#app/models/User.js';
 
 export default {
+    async index(httpData, responseData) {
+        responseData.payload = httpData;
+        return responseData;
+    },
+    async testMiddleware(httpData, responseData) {
+        responseData.payload = responseData.middlewareData;
+        return responseData;
+    },
     async init(httpData, responseData) {
         const token = generateToken(configApp.key, configApp.characters, 32);
         const time = Date.now();
