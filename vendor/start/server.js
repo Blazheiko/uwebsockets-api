@@ -243,7 +243,7 @@ const configureHttp = (server) => {
     logger.info('configureHttp get');
     // console.log(getGetRoutes());
     getListRoutes().forEach((route) => {
-        console.log(route);
+        // console.log(route);
         server[route.method](
             `/${normalizePath(route.url)}`,
             async (res, req) => {

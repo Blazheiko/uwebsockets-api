@@ -17,19 +17,19 @@ export default [
         url: '/test-middleware',
         method: 'get',
         handler: MainController.testMiddleware,
-        middleware: ['test1'],
+        middlewares: ['test1'],
     },
-    // {
-    //     group: [
-    //         {
-    //             url: '/init',
-    //             method: 'get',
-    //             handler: MainController.init,
-    //         },
-    //     ],
-    //     middleware: ['test2'],
-    //     prefix: '/api',
-    // },
+    {
+        group: [
+            {
+                url: '/api/init',
+                method: 'get',
+                handler: MainController.init,
+            },
+        ],
+        middlewares: ['test2'],
+        prefix: '/api',
+    },
 ];
 
 // router.get('/', (httpData, responseData) => {
