@@ -95,7 +95,6 @@ const routesHandler = (routeList) => {
     parseRouteList.forEach((route) => {
         routeHandler(route);
     });
-    console.log('routesHandler');
     console.log(listRoutes);
 };
 
