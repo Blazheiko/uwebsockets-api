@@ -146,7 +146,7 @@ const setHttpHandler = async (res, req, route) => {
             if (isJson) {
                 payload = await readJson(res);
                 if (route.validator) {
-                    logger.info('validator: ' + route.validator);
+                    // logger.info('validator: ' + route.validator);
                     const validator = validators[route.validator];
                     if (validator) payload = await validator.validate(payload);
                 }
@@ -190,11 +190,11 @@ const setHttpHandler = async (res, req, route) => {
                 });
             }
         } catch (e) {
-            logger.error('catch server error');
-            logger.error(e);
+            // logger.error('catch server error');
+            // logger.error(e);
             res.cork(() => {
                 if (e.code === 'E_VALIDATION_ERROR') {
-                    logger.error('E_VALIDATION_ERROR');
+                    // logger.error('E_VALIDATION_ERROR');
                     res.writeStatus('422').end(
                         JSON.stringify({
                             message: 'Validation failure',
@@ -232,8 +232,8 @@ const configureHttp = (server) => {
     });
 
     server.any('/*', (res, req) => {
-        logger.info(req.getMethod());
-        logger.info(req.getUrl());
+        // logger.info(req.getMethod());
+        // logger.info(req.getUrl());
         if (corsConfig.enabled && req.getMethod() === 'options') {
             //'OPTIONS' method === 'OPTIONS'
             res.cork(() => {

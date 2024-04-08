@@ -6,8 +6,8 @@ import validators from '#vendor/start/validators.js';
 const wsRoutes = getWsRoutes();
 
 export default async (message) => {
-    logger.info('ws API Handler');
-    logger.info(message);
+    // logger.info('ws API Handler');
+    // logger.info(message);
     const responseData = {
         payload: {},
         event: message.event,
@@ -38,10 +38,10 @@ export default async (message) => {
         }
         responseData.status = 404;
     } catch (e) {
-        logger.error('error wsApiHandler');
-        logger.error(e);
+        // logger.error('error wsApiHandler');
+        // logger.error(e);
         if (e.code === 'E_VALIDATION_ERROR') {
-            logger.error('WS E_VALIDATION_ERROR');
+            // logger.error('WS E_VALIDATION_ERROR');
             responseData.status = 422;
             responseData.payload = {
                 message: 'Validation failure',
