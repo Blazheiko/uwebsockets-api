@@ -3,7 +3,6 @@ import MainController from '#app/controllers/http/MainController.js';
 // import logger from '#logger';
 
 export default [
-
     {
         url: '/save-user',
         method: 'post',

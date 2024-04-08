@@ -9,7 +9,7 @@ const init = async () => {
         'POST',
         '/api/save-user',
         JSON.stringify({
-            names: 'New name',
+            name: 'New name',
             email: 'test@gmail.com',
             password: '123456789',
         }),
@@ -83,7 +83,7 @@ const connectWS = (token) => {
     console.log(WebSocketClient);
     setTimeout(async () => {
         const wsUser = await Api.ws('save-user', {
-            // name: 'WS name',
+            names: 'WS name',
             email: 'test@gmail.com',
             password: '123456789',
         });

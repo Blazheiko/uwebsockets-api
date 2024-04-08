@@ -53,9 +53,9 @@ const start = async (isRestart) => {
         logger.info('migrate success');
         await testRedis();
         logger.info('test redis success');
-        routesHandler(httpRoutes);
-        routesHandler(wsRoutes);
-        console.log(getListRoutes());
+        routesHandler(httpRoutes, false);
+        routesHandler(wsRoutes, true);
+        // console.log(getListRoutes());
         console.log(getWsRoutes());
 
         await init();
