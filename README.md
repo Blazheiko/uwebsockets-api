@@ -24,38 +24,63 @@ Inspired by the frameworks `Laravel` and `AdonisJs`, `uWebSockets-api` aims to p
 routing http `app/routes/httpRoutes.js`
 
 ```js
-import { router } from '#vendor/start/router.js';
 import MainController from '#app/controllers/http/MainController.js';
-import logger from '#logger';
 
-router.get('/', (httpData, responseData) => {
-  responseData.payload = httpData;
-  return responseData;
-});
-router.group([
-  router.get('/init', MainController.init),
-  router.post('/save-user', MainController.saveUser).validate('register'),
-  router.get('/token/:token', (httpData, responseData) => {
-    responseData.payload = { test: 'test payload' };
-    return responseData;
-  }),
-])
-  .middleware(['test2'])
-  .prefix('/api');
+export default [
+  {
+    url: '/test-middleware',
+    method: 'get',
+    handler: MainController.testMiddleware,
+    middlewares: ['test1'],
+  },
+  {
+    group: [
+      {
+        url: '/init',
+        method: 'get',
+        handler: MainController.init,
+      },
+      {
+        url: '/save-user',
+        method: 'post',
+        handler: MainController.saveUser,
+        validator: 'register',
+      },
+    ],
+    middlewares: ['test2'],
+    prefix: '/api',
+  },
+];
 
 ```
 
 routing ws `app/routes/wsRoutes.js`
 
 ```js
-import { router } from '#vendor/start/router.js';
 import WSApiController from '#app/controllers/ws/WSApiController.js';
 
-router.group([
-  router.ws('test', WSApiController.test),
-  router.ws('error', WSApiController.error),
-])
-  .prefix('message:');
+export default [
+  {
+    group: [
+      {
+        url: 'test',
+        handler: WSApiController.test,
+      },
+      {
+        url: 'error',
+        handler: WSApiController.error,
+        middleware: 'test2',
+      },
+      {
+        url: 'save-user',
+        handler: WSApiController.saveUser,
+        validator: 'register',
+      },
+    ],
+    prefix: 'api:',
+  },
+];
+
 
 ```
 

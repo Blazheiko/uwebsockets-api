@@ -1,6 +1,4 @@
-// import { getWsRoutes, router } from '#vendor/start/router.js';
 import MainController from '#app/controllers/http/MainController.js';
-// import logger from '#logger';
 
 export default [
     {
