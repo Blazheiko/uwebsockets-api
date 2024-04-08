@@ -11,9 +11,9 @@ import validators from '#vendor/start/validators.js';
 // import '#app/routes/httpRoutes.js';
 // import '#app/routes/wsRoutes.js';
 import watcher from '#vendor/start/watcher.js';
+import { getListRoutes, getWsRoutes, routesHandler } from "#vendor/start/router.js";
 import httpRoutes from '#app/routes/httpRoutes.js';
-import { routesHandler } from '#vendor/start/router.js';
-
+import wsRoutes from '#app/routes/wsRoutes.js';
 // import { getWsRoutes } from '#vendor/start/router.js';
 
 logger.info(configApp);
@@ -54,6 +54,9 @@ const start = async (isRestart) => {
         await testRedis();
         logger.info('test redis success');
         routesHandler(httpRoutes);
+        routesHandler(wsRoutes);
+        console.log(getListRoutes());
+        console.log(getWsRoutes());
 
         await init();
         process.on('SIGINT', stopSIGINT);
@@ -107,8 +110,10 @@ const stopSIGTERM = () => {
 };
 const stopUncaughtException = (err, origin) => {
     logger.error('event uncaughtException');
-    console.error(err);
-    console.error(origin);
+    logger.error(err);
+    logger.error(origin);
+    // console.error(err);
+    // console.error(origin);
     stopHandler('uncaughtException');
     process.exit(1);
 };

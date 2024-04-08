@@ -1,7 +1,7 @@
 import logger from '#logger';
 import { getWsRoutes } from '#vendor/start/router.js';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
-import validators from "#vendor/start/validators.js";
+import validators from '#vendor/start/validators.js';
 
 const wsRoutes = getWsRoutes();
 
@@ -37,7 +37,7 @@ export default async (message) => {
             // if (middlewares && middlewares.length) {
             //     // handle middlewares
             // }
-            const handler = wsRoutes[message.event].handler;
+            const handler = route.handler;
             return await handler(wsData, responseData);
         }
     } catch (e) {

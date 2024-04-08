@@ -9,11 +9,12 @@ const init = async () => {
         'POST',
         '/api/save-user',
         JSON.stringify({
-            name: 'New name',
+            names: 'New name',
             email: 'test@gmail.com',
             password: '123456789',
         }),
     );
+
     console.log({ user });
 };
 
@@ -27,14 +28,30 @@ const api = {
                     'Content-Type': 'application/json',
                 },
             };
-            if (method.toLowerCase() !== 'get') init.body = body;
+            if (
+                method.toLowerCase() !== 'get' &&
+                method.toLowerCase() !== 'delete'
+            )
+                init.body = body;
             const response = await fetch(`${BASE_URL}${route}`, init);
-            const result = await response.json();
-            console.log(result);
-            return result;
+
+            if (!response.ok && response.status === 422) {
+                console.log('!response.ok && response.status === 422');
+                const errorData = await response.json();
+                console.log({ errorData });
+                return errorData;
+            }
+            if (!response.ok) {
+                console.log('!response.ok');
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+
+            console.log({ data });
+            return data;
         } catch (error) {
             console.error('Error: ' + route);
-            console.error(error);
+            console.error({ error });
             return null;
         }
     },

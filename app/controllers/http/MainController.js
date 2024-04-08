@@ -9,15 +9,29 @@ export default {
         responseData.payload = httpData;
         return responseData;
     },
-    async testMiddleware(httpData, responseData) {
-        responseData.payload = responseData.middlewareData;
-        return responseData;
-    },
     async init(httpData, responseData) {
         const token = generateToken(configApp.key, configApp.characters, 32);
         const time = Date.now();
         await redis.setex(`auth:ws:${token}`, 3600, time);
         responseData.payload = { token, time };
+        return responseData;
+    },
+    async setHeaderAndCookie(httpData, responseData) {
+        logger.info('set-header-and-cookie');
+        responseData.headers.push({ name: 'test-header', value: 'test' });
+        responseData.cookies.push({
+            name: 'cookieTest',
+            value: 'test',
+            path: '/',
+            httpOnly: true,
+            secure: true,
+            maxAge: 3600,
+        });
+        return responseData;
+    },
+    async testMiddleware(httpData, responseData) {
+        logger.info('testMiddleware');
+        responseData.payload = responseData.middlewareData;
         return responseData;
     },
     async saveUser(httpData, responseData) {

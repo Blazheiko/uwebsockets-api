@@ -130,13 +130,6 @@ const setHttpHandler = async (res, req, route) => {
     const method = route.method;
     if (state.listenSocket) {
         try {
-            if (corsConfig.enabled && method === 'options') {
-                //'OPTIONS'
-                res.cork(() => {
-                    setCorsHeader(res);
-                    res.writeStatus('200').end();
-                });
-            }
             res.onAborted(() => {
                 res.aborted = true;
             });
@@ -153,6 +146,7 @@ const setHttpHandler = async (res, req, route) => {
             if (isJson) {
                 payload = await readJson(res);
                 if (route.validator) {
+                    logger.info('validator: ' + route.validator);
                     const validator = validators[route.validator];
                     if (validator) payload = await validator.validate(payload);
                 }
@@ -196,17 +190,20 @@ const setHttpHandler = async (res, req, route) => {
                 });
             }
         } catch (e) {
+            logger.error('catch server error');
             logger.error(e);
             res.cork(() => {
                 if (e.code === 'E_VALIDATION_ERROR') {
+                    logger.error('E_VALIDATION_ERROR');
                     res.writeStatus('422').end(
                         JSON.stringify({
                             message: 'Validation failure',
                             messages: e.messages,
                         }),
                     );
+                } else {
+                    res.writeStatus('500').end('Server error');
                 }
-                res.writeStatus('500').end('Server error');
             });
         }
     } else {
@@ -235,26 +232,45 @@ const configureHttp = (server) => {
     });
 
     server.any('/*', (res, req) => {
-        res.cork(() => {
-            let data = '404 error';
-            let statusCode = '404';
-            if (appConfig.serveStatic) {
-                const url = req.getUrl();
-                const ext = path.extname(url).substring(1).toLowerCase();
-                if (ext) {
-                    const mimeType = MIME_TYPES[ext] || MIME_TYPES.html;
-                    data = cache.get(url);
-                    statusCode = '200';
-                    if (!data) {
-                        statusCode = '404';
-                        data = cache.get('/404.html');
+        logger.info(req.getMethod());
+        logger.info(req.getUrl());
+        if (corsConfig.enabled && req.getMethod() === 'options') {
+            //'OPTIONS' method === 'OPTIONS'
+            res.cork(() => {
+                setCorsHeader(res);
+                res.writeStatus('200').end();
+            });
+        } else {
+            res.cork(() => {
+                let data = '404 error';
+                let statusCode = '404';
+                if (appConfig.serveStatic) {
+                    const url = req.getUrl();
+
+                    const ext =
+                        url === '/' || url === ''
+                            ? 'html'
+                            : path.extname(url).substring(1).toLowerCase();
+                    if (ext) {
+                        const mimeType = MIME_TYPES[ext] || MIME_TYPES.html;
+                        data =
+                            (url === '/' || url === '') &&
+                            cache.has('/index.html')
+                                ? cache.get('/index.html')
+                                : cache.get(url);
+                        // data = cache.get(url);
+                        statusCode = '200';
+                        if (!data) {
+                            statusCode = '404';
+                            data = cache.get('/404.html');
+                        }
+                        res.writeHeader('Content-Type', mimeType);
                     }
-                    res.writeHeader('Content-Type', mimeType);
                 }
-            }
-            res.writeStatus(statusCode);
-            res.end(data);
-        });
+                res.writeStatus(statusCode);
+                res.end(data);
+            });
+        }
     });
 };
 

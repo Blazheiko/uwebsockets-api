@@ -1,8 +1,6 @@
 import logger from '#logger';
 import { normalizePath } from '#vendor/httpRequestHandlers.js';
 
-const getRoutes = [];
-const postRoutes = [];
 const listRoutes = [];
 const wsRoutes = {};
 
@@ -13,7 +11,7 @@ const createRoute = (method, route) => {
         handler: route.handler,
         middlewares: route.middlewares ? route.middlewares : [],
         validator: route.validator ? route.validator : '',
-        isWs: false,
+        // isWs: false,
         // middleware: (middlewares) => {
         //     route.middlewares = middlewares;
         //     return route;
@@ -82,20 +80,22 @@ const routeHandler = (route) => {
     if (route.group) throw new Error('Error parse routes, route include group');
     if (!route.url || !route.method || !route.handler)
         throw new Error(`Error parse routes. invalid route`);
-    let method = route.method.toLocaleLowerCase();
+    let method = 'ws';
+    if (route.method) method = route.method.toLocaleLowerCase();
     method = method === 'delete' ? 'del' : route.method;
-    if (!METHODS.includes(method))
+    if (method !== 'ws' && !METHODS.includes(method))
         throw new Error(`Error parse routes, route include method: ${method}`);
 
-    listRoutes.push(createRoute(method, route));
+    if (method === 'ws') wsRoutes[route.url] = createRoute(method, route);
+    else listRoutes.push(createRoute(method, route));
 };
 
 const routesHandler = (routeList) => {
+    logger.info('routes Handler start');
     const parseRouteList = parseGroups(routeList, '', []);
     parseRouteList.forEach((route) => {
         routeHandler(route);
     });
-    console.log(listRoutes);
 };
 
 const parseGroups = (routeList, prefix, middlewares) => {
@@ -117,25 +117,19 @@ const parseGroups = (routeList, prefix, middlewares) => {
                         parseRouteList.push(item);
                 });
             }
-        } else {
+        } else if (route.url && route.handler) {
             if (prefix) {
-                routeList.forEach((route) => {
-                    route.url = `${prefix}/${normalizePath(route.url)}`;
-                });
+                route.url = `${prefix}/${normalizePath(route.url)}`;
             }
             if (middlewares && middlewares.length) {
-                routeList.forEach((route) => {
-                    if (!route.middlewares || !Array.isArray(route.middlewares))
-                        route.middlewares = [];
-                    if (
-                        middlewares &&
-                        Array.isArray(middlewares) &&
-                        middlewares.length
-                    )
-                        route.middlewares = middlewares.concat(
-                            route.middlewares,
-                        );
-                });
+                if (!route.middlewares || !Array.isArray(route.middlewares))
+                    route.middlewares = [];
+                if (
+                    middlewares &&
+                    Array.isArray(middlewares) &&
+                    middlewares.length
+                )
+                    route.middlewares = middlewares.concat(route.middlewares);
             }
             parseRouteList.push(route);
         }
@@ -143,15 +137,7 @@ const parseGroups = (routeList, prefix, middlewares) => {
     return parseRouteList;
 };
 
-const getGetRoutes = () => getRoutes;
-const getPostRoutes = () => postRoutes;
 const getWsRoutes = () => wsRoutes;
 const getListRoutes = () => listRoutes;
 
-export {
-    getGetRoutes,
-    getPostRoutes,
-    getWsRoutes,
-    getListRoutes,
-    routesHandler,
-};
+export { getWsRoutes, getListRoutes, routesHandler };
