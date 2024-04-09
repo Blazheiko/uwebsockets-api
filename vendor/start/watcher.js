@@ -8,6 +8,8 @@ export default (restart) => {
             `${process.cwd()}/node_modules`,
             `${process.cwd()}/README.md`,
             `${process.cwd()}/dev.js`,
+            `${process.cwd()}/.gitignore`,
+            `${process.cwd()}/.git`,
             `${process.cwd()}/vendor/start/watcher.js`,
         ],
         ///[\/\\]\./,
