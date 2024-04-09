@@ -14,7 +14,9 @@ Install dependencies `npm install`
 
 Create `.env` file following the `.env.example`
 
-Start server `node start.js`
+Start server `node start.js` || `npm run prod`
+
+Starting the server in development mode `node dev.js` || `npm run dev`
 
 ## Usage Example
 
