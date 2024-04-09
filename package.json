@@ -16,7 +16,7 @@
   },
   "scripts": {
     "lint": "eslint .",
-    "dev": "node start.js",
+    "dev": "node dev.js",
     "prod": "node start.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

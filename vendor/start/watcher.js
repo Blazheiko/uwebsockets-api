@@ -6,16 +6,17 @@ export default (restart) => {
     const watcher = chokidar.watch(process.cwd(), {
         ignored: [
             `${process.cwd()}/node_modules`,
-            /[\/\\]\./,
             `${process.cwd()}/README.md`,
+            `${process.cwd()}/dev.js`,
+            `${process.cwd()}/vendor/start/watcher.js`,
         ],
+        ///[\/\\]\./,
         usePolling: false,
         persistent: true,
         stabilityThreshold: 2000,
         awaitWriteFinish: true,
     });
     logger.info('watcher start');
-
     // eslint-disable-next-line no-undef
     setTimeout(() => {
         watcher.on('add', (path) => {

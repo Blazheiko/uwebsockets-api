@@ -3,6 +3,21 @@ import wsApiHandler from '#vendor/wsApiHandler.js';
 import { generateUUID } from 'metautil';
 import redis from '#database/redis.js';
 
+const wsStorage = new Set();
+
+const closeAllWs = () => {
+    for (const ws of wsStorage) {
+        // eslint-disable-next-line no-undef
+        if (ws?.timeout) clearTimeout(ws.timeout);
+        try {
+            ws.end(4201);
+        } catch (e) {
+            logger.warn('closeAllWs error');
+        }
+    }
+    wsStorage.clear();
+};
+
 const handlePong = (ws) => {
     ws.sendJson({
         event: 'service:pong',
@@ -38,6 +53,9 @@ const onMessage = async (ws, wsMessage, isBinary) => {
 const onClose = (ws, code, message) => {
     logger.info('onClose code:', code);
     logger.info('onClose message:', message);
+    // eslint-disable-next-line no-undef
+    if (ws?.timeout) clearTimeout(ws.timeout);
+    wsStorage.delete(ws);
 };
 
 const updateTimeout = (ws) => {
@@ -91,6 +109,7 @@ const onOpen = (ws) => {
     };
 
     ws.sendJson(broadcastMessage);
+    wsStorage.add(ws);
 };
 
 const ab2str = (buffer, encoding = 'utf8') =>
@@ -117,4 +136,4 @@ const handleUpgrade = (res, req, context) => {
         context,
     );
 };
-export { onMessage, onOpen, onClose, handleUpgrade };
+export { onMessage, onOpen, onClose, handleUpgrade, closeAllWs };

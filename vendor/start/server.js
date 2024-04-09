@@ -10,7 +10,8 @@ import {
     onOpen,
     onClose,
     handleUpgrade,
-} from '#vendor/start/wsHandler.js';
+    closeAllWs,
+} from "#vendor/start/wsHandler.js";
 import {
     getHeaders,
     readJson,
@@ -292,6 +293,7 @@ const setCorsHeader = (res) => {
         // res.writeHeader('Access-Control-Allow-Headers', reqHeaders);
     }
 };
+// let server = null;
 const init = () => {
     const server = uWS.App();
     configureWebsockets(server);
@@ -309,7 +311,7 @@ const init = () => {
 
 const stop = (type = 'handle') => {
     logger.info('server stop type: ' + type);
-
+    closeAllWs();
     uWS.us_listen_socket_close(state.listenSocket);
     state.listenSocket = null;
 };

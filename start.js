@@ -1,4 +1,5 @@
 import process from 'node:process';
+import { isMainThread, parentPort } from 'node:worker_threads';
 import 'dotenv/config';
 import vine from '@vinejs/vine';
 import logger from '#logger';
@@ -10,8 +11,7 @@ import schemas from '#app/validate/schemas/schemas.js';
 import validators from '#vendor/start/validators.js';
 // import '#app/routes/httpRoutes.js';
 // import '#app/routes/wsRoutes.js';
-import watcher from '#vendor/start/watcher.js';
-import { getListRoutes, getWsRoutes, routesHandler } from "#vendor/start/router.js";
+import { getWsRoutes, routesHandler } from '#vendor/start/router.js';
 import httpRoutes from '#app/routes/httpRoutes.js';
 import wsRoutes from '#app/routes/wsRoutes.js';
 // import { getWsRoutes } from '#vendor/start/router.js';
@@ -19,7 +19,7 @@ import wsRoutes from '#app/routes/wsRoutes.js';
 logger.info(configApp);
 // console.log({ configApp })
 
-const migratioDB = async () => {
+const migrationDB = async () => {
     await db.migrate.up({ directory: './database/migrations' });
 };
 const testRedis = async () => {
@@ -33,7 +33,7 @@ const compileValidateSchema = () => {
     });
 };
 
-const start = async (isRestart) => {
+const start = async () => {
     try {
         /* eslint-disable no-undef */
         process.title = configApp.appName;
@@ -49,7 +49,7 @@ const start = async (isRestart) => {
         compileValidateSchema();
         // const wsRoutes = getWsRoutes();
         // logger.info(wsRoutes);
-        if (!isRestart) await migratioDB();
+        await migrationDB();
         logger.info('migrate success');
         await testRedis();
         logger.info('test redis success');
@@ -82,17 +82,6 @@ const stopHandler = (type) => {
     removeListeners();
 };
 
-let timerRestart = null;
-
-const restart = () => {
-    stop('restart');
-    if (timerRestart) clearTimeout(timerRestart);
-    timerRestart = setTimeout(() => {
-        start(true).then(() => {
-            logger.info('restart success');
-        });
-    }, 1000);
-};
 const stopSIGINT = () => {
     logger.info('stop SIGINT');
     stopHandler('SIGINT');
@@ -117,12 +106,23 @@ const stopUncaughtException = (err, origin) => {
     stopHandler('uncaughtException');
     process.exit(1);
 };
-let isWatch = false;
-start(false).then(() => {
+
+start().then(() => {
     logger.info('start success');
-    const watchEnv = ['dev', 'development', 'local'];
-    if (!isWatch && watchEnv.includes(configApp.env)) {
-        watcher(restart);
-        isWatch = true;
+    if (!isMainThread) {
+        parentPort.postMessage('start success');
+        parentPort.on('message', (message) => {
+            if (message.command === 'shutdown') {
+                logger.info('message.command === shutdown');
+                stop('MainThread');
+                removeListeners();
+                setTimeout(() => {
+                    parentPort.close().then(() => {
+                        logger.info('parentPort.close');
+                        //process.exit(0);
+                    });
+                }, 100);
+            }
+        });
     }
 });
