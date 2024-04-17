@@ -11,7 +11,7 @@ import schemas from '#app/validate/schemas/schemas.js';
 import validators from '#vendor/start/validators.js';
 // import '#app/routes/httpRoutes.js';
 // import '#app/routes/wsRoutes.js';
-import { getWsRoutes, routesHandler } from '#vendor/start/router.js';
+import { getListRoutes, getWsRoutes, routesHandler } from "#vendor/start/router.js";
 import httpRoutes from '#app/routes/httpRoutes.js';
 import wsRoutes from '#app/routes/wsRoutes.js';
 // import { getWsRoutes } from '#vendor/start/router.js';
@@ -54,9 +54,9 @@ const start = async () => {
         await testRedis();
         logger.info('test redis success');
         routesHandler(httpRoutes, false);
+        console.log(getListRoutes());
         routesHandler(wsRoutes, true);
         // console.log(getListRoutes());
-        console.log(getWsRoutes());
 
         await init();
         process.on('SIGINT', stopSIGINT);

@@ -6,6 +6,7 @@ export default [
             {
                 url: 'test',
                 handler: WSApiController.test,
+                description: '',
             },
             {
                 url: 'error',

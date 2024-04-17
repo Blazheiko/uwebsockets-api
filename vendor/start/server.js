@@ -11,7 +11,7 @@ import {
     onClose,
     handleUpgrade,
     closeAllWs,
-} from "#vendor/start/wsHandler.js";
+} from '#vendor/start/wsHandler.js';
 import {
     getHeaders,
     readJson,
@@ -126,50 +126,52 @@ const setHeaders = (res, headers) => {
         res.writeHeader(header.name, header.value);
     });
 };
+const getResponseData = () => ({
+    payload: {},
+    middlewareData: {},
+    headers: [], // [{name, value}]
+    cookies: [],
+    status: 200,
+});
+const getHttpData = async (req, res, route) => {
+    const cookies = parseCookies(req.getHeader('cookie'));
+    const contentType = req.getHeader('content-type').trim();
+    const url = req.getUrl();
+    const query = qs.parse(req.getQuery());
+    const headers = getHeaders(req);
+    const isJson =
+        route.method === 'post' &&
+        contentType.toLowerCase() === 'application/json';
+    let payload = null;
+    if (isJson) {
+        payload = await readJson(res);
+        if (route.validator) {
+            // logger.info('validator: ' + route.validator);
+            const validator = validators[route.validator];
+            if (validator) payload = await validator.validate(payload);
+        }
+    }
+    return Object.freeze({
+        params: extractParameters(route.url, url),
+        payload,
+        query,
+        headers,
+        contentType,
+        cookies,
+        isJson,
+    });
+};
 const setHttpHandler = async (res, req, route) => {
     // logger.info('Handler method:' + method);
-    const method = route.method;
     if (state.listenSocket) {
         try {
             res.onAborted(() => {
                 res.aborted = true;
             });
 
-            const cookies = parseCookies(req.getHeader('cookie'));
-            const contentType = req.getHeader('content-type').trim();
-            const url = req.getUrl();
-            const query = qs.parse(req.getQuery());
-            const headers = getHeaders(req);
-            const isJson =
-                method === 'post' &&
-                contentType.toLowerCase() === 'application/json';
-            let payload = null;
-            if (isJson) {
-                payload = await readJson(res);
-                if (route.validator) {
-                    // logger.info('validator: ' + route.validator);
-                    const validator = validators[route.validator];
-                    if (validator) payload = await validator.validate(payload);
-                }
-            }
-            const httpData = Object.freeze({
-                params: extractParameters(route.url, url),
-                payload,
-                query,
-                headers,
-                contentType,
-                cookies,
-                isJson,
-            });
-            const responseData = {
-                payload: {},
-                middlewareData: {},
-                headers: [], // [{name, value}]
-                cookies: [],
-                status: '200',
-            };
-
-            let result = null;
+            const httpData = await getHttpData(req, res, route);
+            const responseData = getResponseData();
+            let isExecuteHandler = true;
             if (route.middlewares?.length) {
                 await executeMiddlewares(
                     route.middlewares,
@@ -177,15 +179,21 @@ const setHttpHandler = async (res, req, route) => {
                     responseData,
                 );
             }
-            result = await route.handler(httpData, responseData);
+            let result = responseData;
+            logger.info('1 - ' + responseData.status);
+            if (isExecuteHandler) {
+                logger.info('isExecuteHandler ');
+                result = await route.handler(httpData, responseData);
+            }
             if (result && !res.aborted) {
                 res.cork(() => {
-                    if (isJson)
+                    if (httpData.isJson)
                         res.writeHeader('content-type', 'application/json');
                     if (result.headers?.length) setHeaders(res, result.headers);
                     if (result.cookies?.length) setCookies(res, result.cookies);
                     if (corsConfig.enabled) setCorsHeader(res);
-                    res.writeStatus(result.status).end(
+                    logger.info('2 - ' + result.status);
+                    res.writeStatus(`${result.status}`).end(
                         JSON.stringify(result.payload),
                     );
                 });

@@ -9,7 +9,7 @@ const init = async () => {
         'POST',
         '/api/save-user',
         JSON.stringify({
-            name: 'New name',
+            names: 'New name',
             email: 'test@gmail.com',
             password: '123456789',
         }),

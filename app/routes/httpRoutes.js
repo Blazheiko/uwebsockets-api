@@ -33,7 +33,7 @@ export default [
             {
                 url: '/test-middleware',
                 method: 'get',
-                handler: MainController.setHeaderAndCookie,
+                handler: MainController.testMiddleware,
                 middlewares: ['test1'],
             },
         ],

@@ -30,7 +30,7 @@ export default {
         return responseData;
     },
     async testMiddleware(httpData, responseData) {
-        logger.info('testMiddleware');
+        logger.info('testMiddleware handler');
         responseData.payload = responseData.middlewareData;
         return responseData;
     },

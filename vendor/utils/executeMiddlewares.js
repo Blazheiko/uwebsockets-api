@@ -11,10 +11,12 @@ const executeMiddlewares = async (middlewares, httpData, responseData) => {
         const middlewareName = stack.shift();
         if (!middlewareName) return;
         const middleware = middlewaresKernel[middlewareName];
-        if (!middleware) return;
+        if (!middleware) throw new Error(`No middleware ${middlewareName}`);
         await middleware(httpData, responseData, next);
     };
     await next();
+
+    return;
 };
 
 export default executeMiddlewares;
