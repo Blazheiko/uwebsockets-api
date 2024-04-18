@@ -26,7 +26,7 @@ export default {
         //     secure: true,
         //     maxAge: 3600,
         // });
-        responseData.setCookies('cookieTest', 'test');
+        responseData.setCookie('cookieTest', 'test');
         return { status: 'ok' };
     },
     async testMiddleware(httpData, responseData) {
@@ -36,7 +36,6 @@ export default {
     async saveUser(httpData, responseData) {
         logger.info('saveUser');
         const { payload } = httpData;
-        // console.log({payload});
         const user = await User.create({
             name: payload.name,
             email: payload.email,

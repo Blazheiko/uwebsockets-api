@@ -128,45 +128,38 @@ const setHeaders = (res, headers) => {
         res.writeHeader(header.name, header.value);
     });
 };
-// const getResponseData = () => {
-//     const cookies = [];
-//     const headers = [];
-//     const setCookies = (name, value, options = {}) =>
-//         cookies.push({
-//             name,
-//             value,
-//             path: options?.path ? options.path : cookiesConfig.default.path,
-//             httpOnly: options?.httpOnly
-//                 ? options.httpOnly
-//                 : cookiesConfig.default.httpOnly,
-//             secure: options?.secure
-//                 ? options.secure
-//                 : cookiesConfig.default.secure,
-//             maxAge: options?.maxAge
-//                 ? options.maxAge
-//                 : cookiesConfig.default.maxAge,
-//         });
-//     const setHeaders = (name, value) => headers.push({ name, value });
-//
-//     return {
-//         aborted: false,
-//         payload: {},
-//         middlewareData: {},
-//         headers,
-//         cookies,
-//         status: 200,
-//         setCookies,
-//         setHeaders,
-//     };
-// };
-const getResponseData = () => ({
-    aborted: false,
-    payload: {},
-    middlewareData: {},
-    headers: [], // [{name, value}]
-    cookies: [],
-    status: 200,
-});
+const getResponseData = () => {
+    const cookies = [];
+    const headers = [];
+    const setCookie = (name, value, options = {}) =>
+        cookies.push({
+            name,
+            value,
+            path: options?.path ? options.path : cookiesConfig.default.path,
+            httpOnly: options?.httpOnly
+                ? options.httpOnly
+                : cookiesConfig.default.httpOnly,
+            secure: options?.secure
+                ? options.secure
+                : cookiesConfig.default.secure,
+            maxAge: options?.maxAge
+                ? options.maxAge
+                : cookiesConfig.default.maxAge,
+        });
+    const setHeader = (name, value) => headers.push({ name, value });
+
+    return {
+        aborted: false,
+        payload: {},
+        middlewareData: {},
+        headers,
+        cookies,
+        status: 200,
+        setCookie,
+        setHeader,
+    };
+};
+
 const getHttpData = async (req, res, route) => {
     const cookies = parseCookies(req.getHeader('cookie'));
     const contentType = req.getHeader('content-type').trim();
@@ -199,13 +192,14 @@ const setHttpHandler = async (res, req, route) => {
     // logger.info('Handler method:' + method);
     if (state.listenSocket) {
         try {
+            let aborted = false;
+            res.onAborted(() => {
+                aborted = true;
+            });
             const httpData = await getHttpData(req, res, route);
             const responseData = getResponseData();
-            res.onAborted(() => {
-                responseData.aborted = true;
-            });
             await executeMiddlewares(route, httpData, responseData);
-            if (responseData.aborted) return;
+            if (aborted) return;
             res.cork(() => {
                 res.writeStatus(`${responseData.status}`);
                 if (httpData.isJson)
