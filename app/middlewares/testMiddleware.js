@@ -8,5 +8,5 @@ export default async (httpData, responseData, next) => {
         middleware1: 'TEST1',
     };
     responseData.status = 401;
-    await next();
+    // await next();
 };

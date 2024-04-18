@@ -168,39 +168,24 @@ const setHttpHandler = async (res, req, route) => {
             res.onAborted(() => {
                 res.aborted = true;
             });
-
             const httpData = await getHttpData(req, res, route);
             const responseData = getResponseData();
-            let isExecuteHandler = true;
-            if (route.middlewares?.length) {
-                await executeMiddlewares(
-                    route.middlewares,
-                    httpData,
-                    responseData,
+            await executeMiddlewares(route, httpData, responseData);
+            if (res.aborted) return;
+            res.cork(() => {
+                if (httpData.isJson)
+                    res.writeHeader('content-type', 'application/json');
+                if (responseData.headers?.length)
+                    setHeaders(res, responseData.headers);
+                if (responseData.cookies?.length)
+                    setCookies(res, responseData.cookies);
+                if (corsConfig.enabled) setCorsHeader(res);
+                logger.info('2 - ' + responseData.status);
+                res.writeStatus(`${responseData.status}`).end(
+                    JSON.stringify(responseData.payload),
                 );
-            }
-            let result = responseData;
-            logger.info('1 - ' + responseData.status);
-            if (isExecuteHandler) {
-                logger.info('isExecuteHandler ');
-                result = await route.handler(httpData, responseData);
-            }
-            if (result && !res.aborted) {
-                res.cork(() => {
-                    if (httpData.isJson)
-                        res.writeHeader('content-type', 'application/json');
-                    if (result.headers?.length) setHeaders(res, result.headers);
-                    if (result.cookies?.length) setCookies(res, result.cookies);
-                    if (corsConfig.enabled) setCorsHeader(res);
-                    logger.info('2 - ' + result.status);
-                    res.writeStatus(`${result.status}`).end(
-                        JSON.stringify(result.payload),
-                    );
-                });
-            }
+            });
         } catch (e) {
-            // logger.error('catch server error');
-            // logger.error(e);
             res.cork(() => {
                 if (e.code === 'E_VALIDATION_ERROR') {
                     // logger.error('E_VALIDATION_ERROR');

@@ -1,7 +1,7 @@
 import middlewaresKernel from '#app/middlewares/kernel.js';
 import logger from '#logger';
-const executeMiddlewares = async (middlewares, httpData, responseData) => {
-    const stack = middlewares.slice();
+const executeMiddlewares = async (route, httpData, responseData) => {
+    const stack = route.middlewares.slice();
     const next = async (error) => {
         if (error) {
             logger.error('Middleware error:');
@@ -9,14 +9,15 @@ const executeMiddlewares = async (middlewares, httpData, responseData) => {
             return;
         }
         const middlewareName = stack.shift();
-        if (!middlewareName) return;
+        if (!middlewareName) {
+            responseData.payload = await route.handler(httpData, responseData);
+            return;
+        }
         const middleware = middlewaresKernel[middlewareName];
         if (!middleware) throw new Error(`No middleware ${middlewareName}`);
         await middleware(httpData, responseData, next);
     };
     await next();
-
-    return;
 };
 
 export default executeMiddlewares;

@@ -6,15 +6,14 @@ import User from '#app/models/User.js';
 
 export default {
     async index(httpData, responseData) {
-        responseData.payload = httpData;
-        return responseData;
+        const payload = httpData;
+        return payload;
     },
     async init(httpData, responseData) {
         const token = generateToken(configApp.key, configApp.characters, 32);
         const time = Date.now();
         await redis.setex(`auth:ws:${token}`, 3600, time);
-        responseData.payload = { token, time };
-        return responseData;
+        return { token, time };
     },
     async setHeaderAndCookie(httpData, responseData) {
         logger.info('set-header-and-cookie');
@@ -27,12 +26,11 @@ export default {
             secure: true,
             maxAge: 3600,
         });
-        return responseData;
+        return { status: 'ok' };
     },
     async testMiddleware(httpData, responseData) {
         logger.info('testMiddleware handler');
-        responseData.payload = responseData.middlewareData;
-        return responseData;
+        return responseData.middlewareData;
     },
     async saveUser(httpData, responseData) {
         logger.info('saveUser');
@@ -43,8 +41,6 @@ export default {
             email: payload.email,
             password: payload.password,
         });
-        // console.log(user);
-        responseData.payload = { status: 'ok', user };
-        return responseData;
+        return { status: 'ok', user };
     },
 };
