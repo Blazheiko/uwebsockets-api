@@ -127,6 +127,7 @@ const setHeaders = (res, headers) => {
     });
 };
 const getResponseData = () => ({
+    aborted: false,
     payload: {},
     middlewareData: {},
     headers: [], // [{name, value}]
@@ -165,14 +166,15 @@ const setHttpHandler = async (res, req, route) => {
     // logger.info('Handler method:' + method);
     if (state.listenSocket) {
         try {
-            res.onAborted(() => {
-                res.aborted = true;
-            });
             const httpData = await getHttpData(req, res, route);
             const responseData = getResponseData();
+            res.onAborted(() => {
+                responseData.aborted = true;
+            });
             await executeMiddlewares(route, httpData, responseData);
-            if (res.aborted) return;
+            if (responseData.aborted) return;
             res.cork(() => {
+                res.writeStatus(`${responseData.status}`);
                 if (httpData.isJson)
                     res.writeHeader('content-type', 'application/json');
                 if (responseData.headers?.length)
@@ -181,9 +183,7 @@ const setHttpHandler = async (res, req, route) => {
                     setCookies(res, responseData.cookies);
                 if (corsConfig.enabled) setCorsHeader(res);
                 logger.info('2 - ' + responseData.status);
-                res.writeStatus(`${responseData.status}`).end(
-                    JSON.stringify(responseData.payload),
-                );
+                res.end(JSON.stringify(responseData.payload));
             });
         } catch (e) {
             res.cork(() => {
