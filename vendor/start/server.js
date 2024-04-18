@@ -4,6 +4,7 @@ import path from 'node:path';
 import qs from 'qs';
 import appConfig from '#config/app.js';
 import corsConfig from '#config/cors.js';
+import cookiesConfig from '#config/cookies.js';
 import state from '#app/state/state.js';
 import {
     onMessage,
@@ -24,6 +25,7 @@ import { promises as fs } from 'node:fs';
 //import middlewaresKernel from '#app/middlewares/kernel.js';
 import validators from '#vendor/start/validators.js';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
+import cookies from '#config/cookies.js';
 
 const MIME_TYPES = {
     default: 'application/octet-stream',
@@ -126,6 +128,37 @@ const setHeaders = (res, headers) => {
         res.writeHeader(header.name, header.value);
     });
 };
+// const getResponseData = () => {
+//     const cookies = [];
+//     const headers = [];
+//     const setCookies = (name, value, options = {}) =>
+//         cookies.push({
+//             name,
+//             value,
+//             path: options?.path ? options.path : cookiesConfig.default.path,
+//             httpOnly: options?.httpOnly
+//                 ? options.httpOnly
+//                 : cookiesConfig.default.httpOnly,
+//             secure: options?.secure
+//                 ? options.secure
+//                 : cookiesConfig.default.secure,
+//             maxAge: options?.maxAge
+//                 ? options.maxAge
+//                 : cookiesConfig.default.maxAge,
+//         });
+//     const setHeaders = (name, value) => headers.push({ name, value });
+//
+//     return {
+//         aborted: false,
+//         payload: {},
+//         middlewareData: {},
+//         headers,
+//         cookies,
+//         status: 200,
+//         setCookies,
+//         setHeaders,
+//     };
+// };
 const getResponseData = () => ({
     aborted: false,
     payload: {},

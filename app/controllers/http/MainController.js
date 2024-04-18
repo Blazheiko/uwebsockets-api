@@ -18,14 +18,15 @@ export default {
     async setHeaderAndCookie(httpData, responseData) {
         logger.info('set-header-and-cookie');
         responseData.headers.push({ name: 'test-header', value: 'test' });
-        responseData.cookies.push({
-            name: 'cookieTest',
-            value: 'test',
-            path: '/',
-            httpOnly: true,
-            secure: true,
-            maxAge: 3600,
-        });
+        // responseData.cookies.push({
+        //     name: 'cookieTest',
+        //     value: 'test',
+        //     path: '/',
+        //     httpOnly: true,
+        //     secure: true,
+        //     maxAge: 3600,
+        // });
+        responseData.setCookies('cookieTest', 'test');
         return { status: 'ok' };
     },
     async testMiddleware(httpData, responseData) {
