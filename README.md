@@ -1,3 +1,7 @@
+🇺🇦 Stand With Ukraine - Support Independence, Resist Russian Aggression 🇺🇦
+
+🇮🇱 Stand With Israel - Support its Fight Against Terrorism 🇮🇱
+
 # uWebSockets API
 
 `uWebSockets-api` — This wrapper simplifies the usage of [uWebSockets.js](https://github.com/uNetworking/uWebSockets.js) by offering more convenient tools for handling WebSockets and HTTP routing.
