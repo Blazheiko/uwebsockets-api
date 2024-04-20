@@ -5,17 +5,22 @@ services:
     restart: unless-stopped
     tty: true
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
     ports:
       - "8088:8088"
-    command: sh -c 'dockerize -wait tcp://mysql:3306 -timeout 60s && npm run prod'
 
   mysql:
     image: mysql
     restart: unless-stopped
     ports:
       - "33060:3306"
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: cab

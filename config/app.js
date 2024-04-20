@@ -1,4 +1,4 @@
-import { env } from "node:process";
+import { env } from 'node:process';
 const config = Object.freeze({
     /* eslint-disable no-undef */
     appName: env.APP_NAME,
@@ -7,6 +7,7 @@ const config = Object.freeze({
     url: env.APP_URL,
     port: Number(env.APP_PORT),
     serveStatic: env.SERVE_STATIC,
+    startMigration: env.START_MIGRATION,
     characters:
         'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
 });

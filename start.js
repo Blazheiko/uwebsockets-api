@@ -49,8 +49,10 @@ const start = async () => {
         compileValidateSchema();
         // const wsRoutes = getWsRoutes();
         // logger.info(wsRoutes);
-        await migrationDB();
-        logger.info('migrate success');
+        if (configApp.startMigration) {
+            await migrationDB();
+            logger.info('migrate success');
+        }
         await testRedis();
         logger.info('test redis success');
         routesHandler(httpRoutes, false);
