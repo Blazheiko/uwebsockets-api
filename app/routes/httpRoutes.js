@@ -13,12 +13,12 @@ export default [
         middlewares: ['test1'],
     },
     {
+        url: '/api/init',
+        method: 'get',
+        handler: MainController.init,
+    },
+    {
         group: [
-            {
-                url: '/init',
-                method: 'get',
-                handler: MainController.init,
-            },
             {
                 url: '/save-user',
                 method: 'post',

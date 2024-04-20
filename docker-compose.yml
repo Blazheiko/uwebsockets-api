@@ -1,0 +1,37 @@
+version: '3'
+services:
+  api:
+    build: .
+    restart: unless-stopped
+    tty: true
+    depends_on:
+      - mysql
+      - redis
+    ports:
+      - "8088:8088"
+    command: sh -c 'dockerize -wait tcp://mysql:3306 -timeout 60s && npm run prod'
+
+  mysql:
+    image: mysql
+    restart: unless-stopped
+    ports:
+      - "33060:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: cab
+
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    ports:
+      - "8888:8080"
+
+  redis:
+    container_name: redis
+    image: redis:alpine3.19
+    restart: unless-stopped
+    ports:
+      - "6377:6379"
+
+
+

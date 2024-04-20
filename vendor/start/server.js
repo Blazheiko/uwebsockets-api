@@ -22,10 +22,8 @@ import {
 import logger from '#logger';
 import { getListRoutes } from './router.js';
 import { promises as fs } from 'node:fs';
-//import middlewaresKernel from '#app/middlewares/kernel.js';
 import validators from '#vendor/start/validators.js';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
-import cookies from '#config/cookies.js';
 
 const MIME_TYPES = {
     default: 'application/octet-stream',
@@ -209,7 +207,6 @@ const setHttpHandler = async (res, req, route) => {
                 if (responseData.cookies?.length)
                     setCookies(res, responseData.cookies);
                 if (corsConfig.enabled) setCorsHeader(res);
-                logger.info('2 - ' + responseData.status);
                 res.end(JSON.stringify(responseData.payload));
             });
         } catch (e) {

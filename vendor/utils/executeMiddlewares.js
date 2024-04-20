@@ -1,6 +1,10 @@
 import middlewaresKernel from '#app/middlewares/kernel.js';
 import logger from '#logger';
 const executeMiddlewares = async (route, httpData, responseData) => {
+    if (!route.middlewares || !route.middlewares.length) {
+        responseData.payload = await route.handler(httpData, responseData);
+        return;
+    }
     const stack = route.middlewares.slice();
     const next = async (error) => {
         if (error) {

@@ -10,10 +10,11 @@ export default {
         return payload;
     },
     async init(httpData, responseData) {
-        const token = generateToken(configApp.key, configApp.characters, 32);
-        const time = Date.now();
-        await redis.setex(`auth:ws:${token}`, 3600, time);
-        return { token, time };
+        // const token = generateToken(configApp.key, configApp.characters, 32);
+        // const time = Date.now();
+        // await redis.setex(`auth:ws:${token}`, 3600, time);
+        // return { token, time };
+        return { status: 'ok' };
     },
     async setHeaderAndCookie(httpData, responseData) {
         logger.info('set-header-and-cookie');

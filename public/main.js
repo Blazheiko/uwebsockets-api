@@ -21,7 +21,7 @@ const init = async () => {
 const api = {
     http: async (method, route, body = {}) => {
         try {
-            const BASE_URL = 'http://127.0.0.1:8082';
+            const BASE_URL = 'http://127.0.0.1:8088';
             const init = {
                 method,
                 headers: {
