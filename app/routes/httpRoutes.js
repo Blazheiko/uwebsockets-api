@@ -2,6 +2,11 @@ import MainController from '#app/controllers/http/MainController.js';
 
 export default [
     {
+        url: '/',
+        method: 'get',
+        handler: MainController.ping,
+    },
+    {
         url: '/save-user',
         method: 'post',
         handler: MainController.saveUser,
@@ -12,13 +17,14 @@ export default [
         handler: MainController.testMiddleware,
         middlewares: ['test1'],
     },
-    {
-        url: '/api/init',
-        method: 'get',
-        handler: MainController.init,
-    },
+
     {
         group: [
+            {
+                url: '/init',
+                method: 'get',
+                handler: MainController.init,
+            },
             {
                 url: '/save-user',
                 method: 'post',

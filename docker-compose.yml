@@ -1,4 +1,7 @@
 version: '3'
+volumes:
+  mysql_data:
+
 services:
   api:
     build: .
@@ -15,6 +18,8 @@ services:
   mysql:
     image: mysql
     restart: unless-stopped
+    volumes:
+      - mysql_data:/val/lib/mysql
     ports:
       - "33060:3306"
     healthcheck:
@@ -47,6 +52,7 @@ services:
       - REDIS_HOSTS=local:redis:6379
     ports:
       - "8081:8081"
+
 
 
 

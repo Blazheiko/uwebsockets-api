@@ -3,18 +3,26 @@ import configApp from '#config/app.js';
 import redis from '#database/redis.js';
 import logger from '#logger';
 import User from '#app/models/User.js';
+import httpRoutes from "#app/routes/httpRoutes.js";
+import wsRoutes from "#app/routes/wsRoutes.js";
 
 export default {
+    ping() {
+        return { status: 'OK' };
+    },
     async index(httpData, responseData) {
         const payload = httpData;
         return payload;
     },
     async init(httpData, responseData) {
-        // const token = generateToken(configApp.key, configApp.characters, 32);
-        // const time = Date.now();
-        // await redis.setex(`auth:ws:${token}`, 3600, time);
-        // return { token, time };
-        return { status: 'ok' };
+        logger.info('init');
+        return { status: 'ok', httpRoutes, wsRoutes };
+    },
+    async initOld(httpData, responseData) {
+        const token = generateToken(configApp.key, configApp.characters, 32);
+        const time = Date.now();
+        await redis.setex(`auth:ws:${token}`, 3600, time);
+        return { token, time };
     },
     async setHeaderAndCookie(httpData, responseData) {
         logger.info('set-header-and-cookie');
