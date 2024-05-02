@@ -1,18 +1,22 @@
-const serializeModel = (model, schema, hidden) => {
-    if (!schema || !model) return model;
-    const keys = Object.keys(schema);
-    keys.forEach((key) => {
-        if (hidden && hidden.length && hidden.includes(key)) delete model[key];
-        else if (
-            schema[key] &&
-            model[key] &&
-            typeof schema[key] === 'function'
-        ) {
-            model[key] = schema.key(model[key]);
-        }
-    });
+import logger from '#logger';
 
-    return model;
+const serializeModel = (model, schema, hidden) => {
+    try {
+        if (!schema || !model) return model;
+        const keys = Object.keys(model);
+        const newModel = { ...model };
+        keys.forEach((key) => {
+            const handler = schema[key];
+            if (hidden && hidden.length && hidden.includes(key))
+                delete newModel[key];
+            else if (handler && typeof handler === 'function')
+                newModel[key] = handler(newModel[key]);
+        });
+        return newModel;
+    } catch (e) {
+        logger.error(e);
+        throw new Error('Error serializeModel');
+    }
 };
 
 export { serializeModel };

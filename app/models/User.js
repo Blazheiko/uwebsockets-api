@@ -6,8 +6,8 @@ import logger from '#logger';
 const TABLE_NAME = 'users';
 const schema = {
     isAdmin: (value) => Boolean(Number(value)),
-    created_at: (value) => DateTime.fromISO(value).toISO(),
-    updated_at: (value) => DateTime.fromISO(value).toISO(),
+    created_at: (value) => DateTime.fromJSDate(value).toISO(),
+    updated_at: (value) => DateTime.fromJSDate(value).toISO(),
 };
 //const fields = ['name', 'password', 'email'];
 const required = ['name', 'password', 'email'];
@@ -28,12 +28,11 @@ export default {
             name: payload.name,
             password: payload.password,
             email: payload.email,
-            // created_at: DateTime.now().toISO(),
-            // updated_at: DateTime.now().toISO(),
         });
         const id = res[0];
         const user = await db(TABLE_NAME).where('id', '=', id).first();
-        return user;
+        // return user;
+        return serializeModel(user, schema, hidden);
     },
     async update(id, payload) {
         return db

@@ -7,8 +7,8 @@ import httpRoutes from "#app/routes/httpRoutes.js";
 import wsRoutes from "#app/routes/wsRoutes.js";
 
 export default {
-    ping() {
-        return { status: 'OK' };
+    async ping() {
+        return { status: 'OK'};
     },
     async index(httpData, responseData) {
         const payload = httpData;
