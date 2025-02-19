@@ -9,15 +9,11 @@ import db from '#database/db.js';
 import redis from '#database/redis.js';
 import schemas from '#app/validate/schemas/schemas.js';
 import validators from '#vendor/start/validators.js';
-// import '#app/routes/httpRoutes.js';
-// import '#app/routes/wsRoutes.js';
-import { getListRoutes, getWsRoutes, routesHandler } from "#vendor/start/router.js";
+import { getListRoutes, routesHandler } from '#vendor/start/router.js';
 import httpRoutes from '#app/routes/httpRoutes.js';
 import wsRoutes from '#app/routes/wsRoutes.js';
-// import { getWsRoutes } from '#vendor/start/router.js';
 
-logger.info(configApp);
-// console.log({ configApp })
+// logger.info(configApp);
 
 const migrationDB = async () => {
     await db.migrate.up({ directory: './database/migrations' });
@@ -47,8 +43,6 @@ const start = async () => {
                 '.node',
         );
         compileValidateSchema();
-        // const wsRoutes = getWsRoutes();
-        // logger.info(wsRoutes);
         if (configApp.startMigration) {
             await migrationDB();
             logger.info('migrate success');

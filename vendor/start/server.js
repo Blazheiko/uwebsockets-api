@@ -1,5 +1,4 @@
 import uWS from 'uWebSockets.js';
-import path from 'node:path';
 import qs from 'qs';
 import appConfig from '#config/app.js';
 import corsConfig from '#config/cors.js';
@@ -164,6 +163,7 @@ const setHttpHandler = async (res, req, route) => {
             const httpData = await getHttpData(req, res, route);
             const responseData = getResponseData();
             await executeMiddlewares(route, httpData, responseData);
+            responseData.payload = await route.handler(httpData, responseData);
             if (aborted) return;
             res.cork(() => {
                 res.writeStatus(`${responseData.status}`);
