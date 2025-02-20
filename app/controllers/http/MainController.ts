@@ -5,7 +5,8 @@ import logger from '#logger';
 import User from '#app/models/User.js';
 import httpRoutes from '#app/routes/httpRoutes.js';
 import wsRoutes from '#app/routes/wsRoutes.js';
-import { HttpData, ResponseData } from "#vendor/types/types.js";
+// import { HttpData, ResponseData } from '#vendor/types/types.d.ts';
+import { HttpData, ResponseData } from './../../../vendor/types/types.js';
 
 export default {
     async ping() {

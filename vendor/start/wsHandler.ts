@@ -3,7 +3,7 @@ import wsApiHandler from '#vendor/wsApiHandler.js';
 import { generateUUID } from 'metautil';
 import redis from '#database/redis.js';
 import { HttpRequest, HttpResponse, us_socket_context_t } from "uWebSockets.js";
-import { MyWebSocket } from "#vendor/types/types.js";
+import { MyWebSocket } from '../types/types.js';
 
 
 
@@ -29,7 +29,7 @@ const handlePong = (ws: MyWebSocket) => {
     });
 };
 
-const onMessage = async (ws: MyWebSocket, wsMessage: any, isBinary: boolean) => {
+const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: boolean) => {
     if (isBinary) logger.info('isBinary', isBinary);
     try {
         let message = null;

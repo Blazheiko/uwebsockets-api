@@ -2,7 +2,7 @@ import logger from '#logger';
 import User from '#app/models/User.js';
 
 export default {
-    test(wsData, responseData) {
+    test(wsData: any, responseData: any) {
         logger.info('ws test');
         responseData.payload = { test: true };
 
