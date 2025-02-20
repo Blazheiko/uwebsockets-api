@@ -3,28 +3,32 @@ import configApp from '#config/app.js';
 import redis from '#database/redis.js';
 import logger from '#logger';
 import User from '#app/models/User.js';
-import httpRoutes from "#app/routes/httpRoutes.js";
-import wsRoutes from "#app/routes/wsRoutes.js";
+import httpRoutes from '#app/routes/httpRoutes.js';
+import wsRoutes from '#app/routes/wsRoutes.js';
+import { HttpData, ResponseData } from "#vendor/types/types.js";
 
 export default {
     async ping() {
-        return { status: 'OK'};
+        return { status: 'OK' };
     },
-    async index(httpData, responseData) {
+
+    async index(httpData: HttpData, responseData: ResponseData): Promise<any> {
         const payload = httpData;
+        // eslint-disable-next-line no-undef
+        console.log(responseData);
         return payload;
     },
-    async init(httpData, responseData) {
+    async init(httpData: HttpData, responseData: ResponseData): Promise<any> {
         logger.info('init');
         return { status: 'ok', httpRoutes, wsRoutes };
     },
-    async initOld(httpData, responseData) {
+    async initOld(httpData: HttpData, responseData: ResponseData): Promise<any> {
         const token = generateToken(configApp.key, configApp.characters, 32);
         const time = Date.now();
         await redis.setex(`auth:ws:${token}`, 3600, time);
         return { token, time };
     },
-    async setHeaderAndCookie(httpData, responseData) {
+    async setHeaderAndCookie(httpData: HttpData, responseData: ResponseData): Promise<any> {
         logger.info('set-header-and-cookie');
         responseData.headers.push({ name: 'test-header', value: 'test' });
         // responseData.cookies.push({
@@ -38,11 +42,11 @@ export default {
         responseData.setCookie('cookieTest', 'test');
         return { status: 'ok' };
     },
-    async testMiddleware(httpData, responseData) {
+    async testMiddleware(httpData: HttpData, responseData: ResponseData): Promise<any> {
         logger.info('testMiddleware handler');
         return responseData.middlewareData;
     },
-    async saveUser(httpData, responseData) {
+    async saveUser(httpData: HttpData, responseData: ResponseData): Promise<any> {
         logger.info('saveUser');
         const { payload } = httpData;
         const user = await User.create({

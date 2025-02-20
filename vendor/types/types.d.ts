@@ -11,9 +11,9 @@ export interface cookie {
   expires: string
   maxAge: number,
 }
-export interface httpData {
+export interface HttpData {
   params: object,
-  payload: object,
+  payload: any,
   query: object,
   headers: object,
   contentType: string,
@@ -21,12 +21,14 @@ export interface httpData {
   isJson: boolean,
 }
 
-export interface responseData {
+export interface ResponseData {
   payload: object,
   middlewareData: object,
   headers: header[],
   cookies: cookie[],
   status: string,
+  setCookie: Function,
+  setHeader: Function,
 }
 
 export interface routeItem {

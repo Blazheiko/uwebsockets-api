@@ -1,4 +1,4 @@
-import MainController from '#app/controllers/http/MainController.js';
+import MainController from '#app/controllers/http/MainController.ts';
 
 export default [
     {
