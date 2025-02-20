@@ -1,4 +1,4 @@
-import uWS from 'uWebSockets.js';
+import uWS, { HttpRequest, HttpResponse, TemplatedApp } from 'uWebSockets.js';
 import qs from 'qs';
 import appConfig from '#config/app.js';
 import corsConfig from '#config/cors.js';
@@ -10,7 +10,7 @@ import {
     onClose,
     handleUpgrade,
     closeAllWs,
-} from '#vendor/start/wsHandler.ts';
+} from '#vendor/start/wsHandler.js';
 import {
     getHeaders,
     readJson,
@@ -18,12 +18,13 @@ import {
     normalizePath,
 } from '../httpRequestHandlers.js';
 import logger from '#logger';
-import { getListRoutes } from './router.ts';
+import { getListRoutes } from './router.js';
 
-import validators from '#vendor/start/validators.ts';
+import validators from '#vendor/start/validators.js';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
+import { Cookie, Header, RouteItem } from '../types/types.js';
 
-const configureWebsockets = (server) => {
+const configureWebsockets = (server: TemplatedApp) => {
     return server.ws('/websocket/:token', {
         compression: 0,
         idleTimeout: 120, // According to protocol
@@ -37,8 +38,8 @@ const configureWebsockets = (server) => {
     });
 };
 
-const parseCookies = (cookieHeader) => {
-    let list = {};
+const parseCookies = (cookieHeader: string) => {
+    let list: Record<string, string> = {};
 
     if (cookieHeader) {
         cookieHeader.split(';').forEach((cookie) => {
@@ -71,7 +72,7 @@ const parseCookies = (cookieHeader) => {
 |   },
 |]
  */
-const setCookies = (res, cookies) => {
+const setCookies = (res: HttpResponse, cookies: Cookie[]) => {
     cookies.forEach((cookie) => {
         let parts = [];
         parts.push(`${cookie.name}=${encodeURIComponent(cookie.value)}`);
@@ -87,15 +88,15 @@ const setCookies = (res, cookies) => {
     });
 };
 
-const setHeaders = (res, headers) => {
+const setHeaders = (res: HttpResponse, headers: Header[]) => {
     headers.forEach((header) => {
         res.writeHeader(header.name, header.value);
     });
 };
 const getResponseData = () => {
-    const cookies = [];
-    const headers = [];
-    const setCookie = (name, value, options = {}) =>
+    const cookies: Cookie[] = [];
+    const headers: Header[] = [];
+    const setCookie = (name: string, value: string, options: any = {}) =>
         cookies.push({
             name,
             value,
@@ -110,7 +111,7 @@ const getResponseData = () => {
                 ? options.maxAge
                 : cookiesConfig.default.maxAge,
         });
-    const setHeader = (name, value) => headers.push({ name, value });
+    const setHeader = (name: string, value: string) => headers.push({ name, value });
 
     return {
         aborted: false,
@@ -124,7 +125,7 @@ const getResponseData = () => {
     };
 };
 
-const getHttpData = async (req, res, route) => {
+const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem) => {
     const cookies = parseCookies(req.getHeader('cookie'));
     const contentType = req.getHeader('content-type').trim();
     const url = req.getUrl();
@@ -152,7 +153,7 @@ const getHttpData = async (req, res, route) => {
         isJson,
     });
 };
-const setHttpHandler = async (res, req, route) => {
+const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteItem) => {
     // logger.info('Handler method:' + method);
     if (state.listenSocket) {
         try {
@@ -176,7 +177,7 @@ const setHttpHandler = async (res, req, route) => {
                 if (corsConfig.enabled) setCorsHeader(res);
                 res.end(JSON.stringify(responseData.payload));
             });
-        } catch (e) {
+        } catch (e: any) {
             res.cork(() => {
                 if (e.code === 'E_VALIDATION_ERROR') {
                     // logger.error('E_VALIDATION_ERROR');
@@ -196,14 +197,15 @@ const setHttpHandler = async (res, req, route) => {
         res.close();
     }
 };
-const configureHttp = (server) => {
+const configureHttp = (server: TemplatedApp) => {
     logger.info('configureHttp get');
     // console.log(getGetRoutes());
-    getListRoutes().forEach((route) => {
+    getListRoutes().forEach((route: RouteItem) => {
         // console.log(route);
+        // @ts-ignore
         server[route.method](
             `/${normalizePath(route.url)}`,
-            async (res, req) => {
+            async (res: HttpResponse, req: HttpRequest) => {
                 await setHttpHandler(res, req, route);
             },
         );
@@ -227,7 +229,7 @@ const configureHttp = (server) => {
     });
 };
 
-const setCorsHeader = (res) => {
+const setCorsHeader = (res: HttpResponse) => {
     res.writeHeader('Access-Control-Allow-Origin', corsConfig.origin);
     res.writeHeader('Access-Control-Allow-Methods', corsConfig.methods);
     res.writeHeader('Access-Control-Max-Age', `${corsConfig.maxAge}`);
@@ -247,7 +249,7 @@ const setCorsHeader = (res) => {
 };
 // let server = null;
 const init = () => {
-    const server = uWS.App();
+    const server: TemplatedApp = uWS.App();
     configureWebsockets(server);
     configureHttp(server);
     server.listen(appConfig.port, (token) => {

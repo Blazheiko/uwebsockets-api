@@ -5,14 +5,14 @@
   "main": "start.js",
   "type": "module",
   "imports": {
-    "#app/*": "./app/*",
-    "#config/*": "./config/*",
-    "#database/*": "./database/*",
-    "#routes/*": "./routes/*",
-    "#start/*": "./start/*",
-    "#utils/*": "./utils/*",
-    "#logger": "./logger.js",
-    "#vendor/*": "./vendor/*"
+    "#app/*": "./dist/app/*",
+    "#config/*": "./dist/config/*",
+    "#database/*": "./dist/database/*",
+    "#routes/*": "./dist/routes/*",
+    "#start/*": "./dist/start/*",
+    "#utils/*": "./dist/utils/*",
+    "#logger": "./dist/logger.js",
+    "#vendor/*": "./dist/vendor/*"
   },
   "scripts": {
     "lint": "eslint .",
@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.4",
+    "@types/qs": "^6.9.18",
     "babel-eslint": "^10.1.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",

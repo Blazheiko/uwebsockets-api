@@ -6,26 +6,27 @@ export interface MyWebSocket extends WebSocket<any> {
   UUID: string,
   id: string,
 }
-export interface header {
+export interface Header {
   name: string,
   value: string
 }
-export interface cookie {
+export interface Cookie {
   name: string,
   value: string,
-  path: string,
-  httpOnly: boolean,
-  secure: boolean,
-  expires: string
-  maxAge: number,
+  path?: string,
+  httpOnly?: boolean,
+  secure?: boolean,
+  expires?: Date,
+  maxAge?: number,
+  sameSite?: string,
 }
 export interface HttpData {
   params: object,
   payload: any,
   query: object,
-  headers: object,
+  headers: Header[],
   contentType: string,
-  cookies: object,
+  cookies: Cookie[],
   isJson: boolean,
 }
 

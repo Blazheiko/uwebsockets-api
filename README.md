@@ -30,7 +30,7 @@ Inspired by the frameworks `Laravel` and `AdonisJs`, `uWebSockets-api` aims to p
 routing http `app/routes/httpRoutes.js`
 
 ```js
-import MainController from '#app/controllers/http/MainController.ts';
+import MainController from '#app/controllers/http/MainController.js';
 
 export default [
   {

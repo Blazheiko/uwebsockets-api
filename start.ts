@@ -8,8 +8,8 @@ import configApp from '#config/app.js';
 import db from '#database/db.js';
 import redis from '#database/redis.js';
 import schemas from '#app/validate/schemas/schemas.js';
-import validators from '#vendor/start/validators.ts';
-import { getListRoutes, routesHandler } from '#vendor/start/router.ts';
+import validators from '#vendor/start/validators.js';
+import { getListRoutes, routesHandler } from '#vendor/start/router.js';
 import httpRoutes from '#app/routes/httpRoutes.js';
 import wsRoutes from '#app/routes/wsRoutes.js';
 
@@ -24,7 +24,8 @@ const testRedis = async () => {
 
 const compileValidateSchema = () => {
     const schemaKeys = Object.keys(schemas);
-    schemaKeys.forEach((key) => {
+    schemaKeys.forEach((key: string) => {
+        // @ts-ignore
         validators[key] = vine.compile(schemas[key]);
     });
 };
@@ -54,7 +55,7 @@ const start = async () => {
         routesHandler(wsRoutes, true);
         // console.log(getListRoutes());
 
-        await init();
+        init();
         process.on('SIGINT', stopSIGINT);
         process.on('SIGHUP', stopSIGHUP);
         process.on('SIGTERM', stopSIGTERM);
@@ -73,7 +74,7 @@ const removeListeners = () => {
     process.removeListener('uncaughtException', stopUncaughtException);
 };
 
-const stopHandler = (type) => {
+const stopHandler = (type: string) => {
     stop(type);
     removeListeners();
 };
@@ -93,7 +94,7 @@ const stopSIGTERM = () => {
     stopHandler('SIGTERM');
     process.exit(1);
 };
-const stopUncaughtException = (err, origin) => {
+const stopUncaughtException = (err: any, origin: any) => {
     logger.error('event uncaughtException');
     logger.error(err);
     logger.error(origin);
@@ -105,7 +106,7 @@ const stopUncaughtException = (err, origin) => {
 
 start().then(() => {
     logger.info('start success');
-    if (!isMainThread) {
+    if (!isMainThread && parentPort) {
         parentPort.postMessage('start success');
         parentPort.on('message', (message) => {
             if (message.command === 'shutdown') {
@@ -113,10 +114,11 @@ start().then(() => {
                 stop('MainThread');
                 removeListeners();
                 setTimeout(() => {
-                    parentPort.close().then(() => {
-                        logger.info('parentPort.close');
-                        //process.exit(0);
-                    });
+                    if(parentPort) parentPort.close()
+                                                // .then(() => {
+                                                //     logger.info('parentPort.close');
+                                                //     //process.exit(0);
+                                                // });
                 }, 100);
             }
         });
