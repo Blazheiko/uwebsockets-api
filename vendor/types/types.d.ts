@@ -1,3 +1,11 @@
+import {  WebSocket } from "uWebSockets.js";
+
+export interface MyWebSocket extends WebSocket<any> {
+  sendJson: (data: any) => void;
+  timeout: NodeJS.Timeout,
+  UUID: string,
+  id: string,
+}
 export interface header {
   name: string,
   value: string
@@ -30,13 +38,15 @@ export interface ResponseData {
   setCookie: Function,
   setHeader: Function,
 }
-
+export type Method = 'get' | 'post' | 'del' | 'put' | 'patch' | 'ws' | 'delete'
+export type WsRoutes = Record<string, routeItem>
+export type Validators = Record<string, any>
 export interface routeItem {
   url: string,
-  method: 'get' | 'post' | 'del' | 'put' | 'patch' ,
+  method: Method ,
   handler: Function,
-  middleware?: string[],
-  validate?: string,
+  middlewares?: string[],
+  validator?: string,
   description?: string,
 }
 export interface groupRouteItem {

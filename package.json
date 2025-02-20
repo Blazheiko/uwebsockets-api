@@ -38,6 +38,7 @@
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.51.0"
   },
   "devDependencies": {
+    "@types/node": "^22.13.4",
     "babel-eslint": "^10.1.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",

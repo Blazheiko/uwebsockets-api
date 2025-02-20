@@ -10,7 +10,7 @@ import {
     onClose,
     handleUpgrade,
     closeAllWs,
-} from '#vendor/start/wsHandler.js';
+} from '#vendor/start/wsHandler.ts';
 import {
     getHeaders,
     readJson,
@@ -18,9 +18,9 @@ import {
     normalizePath,
 } from '../httpRequestHandlers.js';
 import logger from '#logger';
-import { getListRoutes } from './router.js';
+import { getListRoutes } from './router.ts';
 
-import validators from '#vendor/start/validators.js';
+import validators from '#vendor/start/validators.ts';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
 
 const configureWebsockets = (server) => {

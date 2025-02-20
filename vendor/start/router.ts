@@ -1,10 +1,11 @@
 import logger from '#logger';
 import { normalizePath } from '#vendor/httpRequestHandlers.js';
+import { Method, routeItem, routeList, WsRoutes } from "#vendor/types/types.js";
 
-const listRoutes = [];
-const wsRoutes = {};
+const listRoutes: routeItem[] = [];
+const wsRoutes: WsRoutes = {};
 
-const createRoute = (method, route) => {
+const createRoute = (method: Method, route:any): routeItem => {
     return {
         method,
         url: route.url,
@@ -16,11 +17,11 @@ const createRoute = (method, route) => {
 
 const METHODS = ['get', 'post', 'del', 'put', 'patch'];
 
-const routeHandler = (route, isWs) => {
+const routeHandler = (route: any, isWs: boolean): void => {
     if (route.group) throw new Error('Error parse routes, route include group');
     if (!route.url || (!isWs && !route.method) || !route.handler)
         throw new Error(`Error parse routes. invalid route`);
-    let method = 'ws';
+    let method: Method = 'ws';
     if (route.method) {
         method = route.method.toLocaleLowerCase();
         method = method === 'delete' ? 'del' : route.method;
@@ -32,7 +33,7 @@ const routeHandler = (route, isWs) => {
     else listRoutes.push(createRoute(method, route));
 };
 
-const routesHandler = (routeList, isWs) => {
+const routesHandler = (routeList: any[], isWs: boolean): void => {
     logger.info('routes Handler start');
     const parseRouteList = parseGroups(routeList, '', [], isWs);
     parseRouteList.forEach((route) => {
@@ -40,8 +41,8 @@ const routesHandler = (routeList, isWs) => {
     });
 };
 
-const parseGroups = (routeList, prefix, middlewares, isWs) => {
-    const parseRouteList = [];
+const parseGroups = (routeList: any[], prefix: string, middlewares: string[], isWs: boolean) => {
+    const parseRouteList: any[]  = [];
     routeList.forEach((route) => {
         if (route.group) {
             if (Array.isArray(route.group) && route.group.length) {
@@ -80,7 +81,7 @@ const parseGroups = (routeList, prefix, middlewares, isWs) => {
     return parseRouteList;
 };
 
-const getWsRoutes = () => wsRoutes;
-const getListRoutes = () => listRoutes;
+const getWsRoutes = (): WsRoutes => wsRoutes;
+const getListRoutes = (): routeList => listRoutes;
 
 export { getWsRoutes, getListRoutes, routesHandler };

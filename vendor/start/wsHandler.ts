@@ -2,8 +2,12 @@ import logger from '#logger';
 import wsApiHandler from '#vendor/wsApiHandler.js';
 import { generateUUID } from 'metautil';
 import redis from '#database/redis.js';
+import { HttpRequest, HttpResponse, us_socket_context_t } from "uWebSockets.js";
+import { MyWebSocket } from "#vendor/types/types.js";
 
-const wsStorage = new Set();
+
+
+const wsStorage: Set<MyWebSocket> = new Set();
 
 const closeAllWs = () => {
     for (const ws of wsStorage) {
@@ -18,14 +22,14 @@ const closeAllWs = () => {
     wsStorage.clear();
 };
 
-const handlePong = (ws) => {
+const handlePong = (ws: MyWebSocket) => {
     ws.sendJson({
         event: 'service:pong',
         data: {},
     });
 };
 
-const onMessage = async (ws, wsMessage, isBinary) => {
+const onMessage = async (ws: MyWebSocket, wsMessage: any, isBinary: boolean) => {
     if (isBinary) logger.info('isBinary', isBinary);
     try {
         let message = null;
@@ -38,7 +42,7 @@ const onMessage = async (ws, wsMessage, isBinary) => {
         }
         const result = await wsApiHandler(message);
         if (result) ws.sendJson(result);
-    } catch (err) {
+    } catch (err: any) {
         logger.error('Error parse onMessage');
         logger.error(err);
         if (err.code === 'E_VALIDATION_ERROR') {
@@ -50,7 +54,7 @@ const onMessage = async (ws, wsMessage, isBinary) => {
         }
     }
 };
-const onClose = (ws, code, message) => {
+const onClose = (ws: MyWebSocket, code: number, message: any) => {
     logger.info('onClose code:', code);
     logger.info('onClose message:', message);
     // eslint-disable-next-line no-undef
@@ -58,7 +62,7 @@ const onClose = (ws, code, message) => {
     wsStorage.delete(ws);
 };
 
-const updateTimeout = (ws) => {
+const updateTimeout = (ws: MyWebSocket) => {
     /* eslint-disable no-undef */
     clearTimeout(ws.timeout);
 
@@ -72,8 +76,8 @@ const updateTimeout = (ws) => {
     }, 120_000);
 };
 
-const onOpen = (ws) => {
-    ws.sendJson = (data) => {
+const onOpen = (ws: MyWebSocket) => {
+    ws.sendJson = (data: any) => {
         try {
             ws.send(JSON.stringify(data));
             updateTimeout(ws);
@@ -112,14 +116,12 @@ const onOpen = (ws) => {
     wsStorage.add(ws);
 };
 
-const ab2str = (buffer, encoding = 'utf8') =>
-    /* eslint-disable no-undef */
-    Buffer.from(buffer).toString(encoding);
+const ab2str = (buffer: ArrayBuffer, encoding: BufferEncoding | undefined = 'utf8') => Buffer.from(buffer).toString(encoding);
 
-const handleUpgrade = (res, req, context) => {
+const handleUpgrade = (res: HttpResponse, req: HttpRequest, context: us_socket_context_t): void => {
     const userAgent = req.getHeader('user-agent');
     let ip = req.getHeader('x-forwarded-for');
-    if (ip && typeof ip === 'string') ip = ip.trim();
+    if (ip) ip = ip.trim();
 
     res.upgrade(
         {
