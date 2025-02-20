@@ -24,15 +24,27 @@ export interface HttpData {
   params: object,
   payload: any,
   query: object,
-  headers: Header[],
+  headers: Record<string, string>,
   contentType: string,
   cookies: Cookie[],
   isJson: boolean,
 }
 
+export interface WsResponseData {
+  payload: any,
+  event: string,
+  status: number,
+}
+
+export interface WsData {
+  middlewareData: WsRoutes,
+  status: string,
+  payload?: any,
+}
+
 export interface ResponseData {
   payload: object,
-  middlewareData: object,
+  middlewareData: any,
   headers: header[],
   cookies: cookie[],
   status: string,
@@ -42,7 +54,7 @@ export interface ResponseData {
 export type Method = 'get' | 'post' | 'del' | 'put' | 'patch' | 'ws' | 'delete'
 export type WsRoutes = Record<string, routeItem>
 export type Validators = Record<string, any>
-export interface routeItem {
+export interface RouteItem {
   url: string,
   method: Method ,
   handler: Function,

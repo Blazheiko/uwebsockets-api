@@ -5,15 +5,15 @@ import logger from '#logger';
 
 const TABLE_NAME = 'users';
 const schema = {
-    isAdmin: (value) => Boolean(Number(value)),
-    created_at: (value) => DateTime.fromJSDate(value).toISO(),
-    updated_at: (value) => DateTime.fromJSDate(value).toISO(),
+    isAdmin: (value: number | string) => Boolean(Number(value)),
+    created_at: (value: Date) => DateTime.fromJSDate(value).toISO(),
+    updated_at: (value: Date) => DateTime.fromJSDate(value).toISO(),
 };
 //const fields = ['name', 'password', 'email'];
 const required = ['name', 'password', 'email'];
 const hidden = ['password'];
 export default {
-    async create(payload) {
+    async create(payload: any) {
         logger.info('create user');
         // console.log(payload);
         if (!payload || typeof payload !== 'object')
@@ -34,7 +34,7 @@ export default {
         // return user;
         return serializeModel(user, schema, hidden);
     },
-    async update(id, payload) {
+    async update(id: number, payload: any) {
         return db
             .table(TABLE_NAME)
             .where('id', '=', id)
@@ -46,10 +46,10 @@ export default {
     query() {
         return db.table(TABLE_NAME);
     },
-    serialize(user) {
+    serialize(user: any) {
         return serializeModel(user, schema, hidden);
     },
-    serializeArray(users) {
-        return users.map((user) => serializeModel(user, schema, hidden));
+    serializeArray(users: any) {
+        return users.map((user: any) => serializeModel(user, schema, hidden));
     },
 };

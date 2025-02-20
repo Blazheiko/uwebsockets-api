@@ -2,7 +2,7 @@ import logger from '#logger';
 import wsApiHandler from '#vendor/wsApiHandler.js';
 import { generateUUID } from 'metautil';
 import redis from '#database/redis.js';
-import { HttpRequest, HttpResponse, us_socket_context_t } from "uWebSockets.js";
+import { HttpRequest, HttpResponse, us_socket_context_t, WebSocket } from 'uWebSockets.js';
 import { MyWebSocket } from '../types/types.js';
 
 

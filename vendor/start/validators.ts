@@ -1,4 +1,4 @@
-import { Validators } from "#vendor/types/types.js";
+import { Validators } from "./../types/types.js";
 
 const validators: Validators = {}
 

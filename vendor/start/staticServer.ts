@@ -55,13 +55,13 @@ const MIME_TYPES = {
     woff2: 'application/font-woff2',
     ttf: 'application/x-font-ttf',
 };
-const cacheFile = async (filePath) => {
+const cacheFile = async (filePath: string) => {
     const data = await fs.readFile(filePath, 'utf8');
     const key = filePath.substring(STATIC_PATH.length);
     cache.set(key, data);
 };
 
-const cacheDirectory = async (directoryPath) => {
+const cacheDirectory = async (directoryPath: string) => {
     const files = await fs.readdir(directoryPath, { withFileTypes: true });
     for (const file of files) {
         const filePath = path.join(directoryPath, file.name);

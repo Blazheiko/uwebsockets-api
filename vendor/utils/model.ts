@@ -1,6 +1,6 @@
 import logger from '#logger';
 
-const serializeModel = (model, schema, hidden) => {
+const serializeModel = (model: any, schema: any, hidden: string[]) => {
     try {
         if (!schema || !model) return model;
         const keys = Object.keys(model);

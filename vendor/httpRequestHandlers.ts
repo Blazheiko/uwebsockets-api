@@ -1,7 +1,9 @@
 import logger from '#logger';
+import { Header } from './types/types.js';
+import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 
-const getHeaders = (req) => {
-    const headers = {};
+const getHeaders = (req: HttpRequest): Record<string, string> => {
+    const headers: Record<string, string> = {};
     req.forEach((key, value) => {
         headers[key.toLowerCase()] = value.trim();
     });
@@ -9,10 +11,10 @@ const getHeaders = (req) => {
     return headers;
 };
 
-const readJson = (res) => {
+const readJson = (res: HttpResponse) => {
     logger.info('readJson');
     return new Promise((resolve, reject) => {
-        let buffer = null;
+        let buffer: any = null;
         // resolve({
         //     name: 'Alex',
         //     email: 'test@email',
@@ -43,17 +45,17 @@ const readJson = (res) => {
         });
     });
 };
-const normalizePath = (path) => {
+const normalizePath = (path: string) => {
     return path.startsWith('/') ? path.slice(1) : path;
 };
 
-const extractParameters = (template, path) => {
+const extractParameters = (template: string, path: string) => {
     const normalizedTemplate = normalizePath(template);
     const normalizedPath = normalizePath(path);
 
     const templateParts = normalizedTemplate.split('/');
     const pathParts = normalizedPath.split('/');
-    const params = {};
+    const params: Record<string, string> = {};
 
     if (templateParts.length !== pathParts.length) {
         throw new Error('Path does not match the template');

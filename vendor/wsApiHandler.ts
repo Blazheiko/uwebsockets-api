@@ -2,13 +2,14 @@ import logger from '#logger';
 import { getWsRoutes } from '#vendor/start/router.js';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
 import validators from '#vendor/start/validators.js';
+import { WsData, WsResponseData } from './types/types.js';
 
 const wsRoutes = getWsRoutes();
 
 export default async (message: any) => {
     // logger.info('ws API Handler');
     // logger.info(message);
-    const responseData = {
+    const responseData: WsResponseData = {
         payload: {},
         event: message.event,
         status: 200,
@@ -21,7 +22,7 @@ export default async (message: any) => {
                 const validator: any = validators[route.validator];
                 if (validator) payload = await validator.validate(payload);
             }
-            const wsData = {
+            const wsData: WsData = {
                 middlewareData: {},
                 status: '200',
                 payload: payload ? Object.freeze({ ...payload }) : null,

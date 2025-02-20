@@ -1,4 +1,4 @@
-import uWS, { HttpRequest, HttpResponse, TemplatedApp } from 'uWebSockets.js';
+import uWS, { HttpRequest, HttpResponse, TemplatedApp, WebSocket } from 'uWebSockets.js';
 import qs from 'qs';
 import appConfig from '#config/app.js';
 import corsConfig from '#config/cors.js';
@@ -22,7 +22,7 @@ import { getListRoutes } from './router.js';
 
 import validators from '#vendor/start/validators.js';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
-import { Cookie, Header, RouteItem } from '../types/types.js';
+import { Cookie, Header, MyWebSocket, RouteItem } from '../types/types.js';
 
 const configureWebsockets = (server: TemplatedApp) => {
     return server.ws('/websocket/:token', {
@@ -30,11 +30,11 @@ const configureWebsockets = (server: TemplatedApp) => {
         idleTimeout: 120, // According to protocol
         maxBackpressure: 1024 * 1024,
         maxPayloadLength: 100 * 1024 * 1024, // 100 MB
-        open: (ws) => onOpen(ws),
-        message: (ws, message, isBinary) => onMessage(ws, message, isBinary),
-        upgrade: (res, req, context) => handleUpgrade(res, req, context),
+        open: (ws: WebSocket<any>) => onOpen(ws as MyWebSocket),
+        message: (ws: WebSocket<any>, message: ArrayBuffer, isBinary: boolean) => onMessage(ws as MyWebSocket, message, isBinary),
+        upgrade: (res: HttpResponse, req: HttpRequest, context) => handleUpgrade(res, req, context),
         // drain: (ws) => handleDrain(ws),
-        close: (ws, code, message) => onClose(ws, code, message),
+        close: (ws, code, message) => onClose(ws as MyWebSocket, code, message),
     });
 };
 
