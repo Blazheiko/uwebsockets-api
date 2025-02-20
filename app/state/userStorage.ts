@@ -1,12 +1,12 @@
 const authToken = new Map();
-const getUserByToken = (token) => {
+const getUserByToken = (token: string) => {
     return authToken.get(token);
 };
-const setUserByToken = (token, user) => {
+const setUserByToken = (token: string, user: any) => {
     authToken.set(token, user);
 };
 
-const deleteToken = (token) => {
+const deleteToken = (token: string) => {
     authToken.delete(token);
 };
 

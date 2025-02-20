@@ -3,7 +3,7 @@ export default {
     /* eslint-disable no-undef */
     client: env.DB_CONNECTION,
     host: env.MYSQL_HOST,
-    port: env.MYSQL_PORT,
+    port: Number(env.MYSQL_PORT) || 3306,
     user: env.MYSQL_USER,
     password: env.MYSQL_PASSWORD,
     database: env.MYSQL_DB_NAME,

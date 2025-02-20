@@ -3,10 +3,10 @@ import process from 'node:process';
 import logger from '#logger';
 import watcher from '#vendor/start/watcher.js';
 
-let worker = null;
+let worker: Worker | null = null;
 
 const startDev = () => {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         worker = new Worker(`${process.cwd()}/start.js`);
         worker.on('message', (msg) => {
             logger.info(`Message worker: ${msg}`);
@@ -17,7 +17,7 @@ const startDev = () => {
             logger.info(`Worker stopped with exit code ${code}`);
             // eslint-disable-next-line no-undef
             setTimeout(() => {
-                worker.terminate();
+                if (worker) worker.terminate();
                 worker = null;
                 go();
             }, 100);

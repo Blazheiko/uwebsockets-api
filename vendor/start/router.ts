@@ -1,11 +1,11 @@
 import logger from '#logger';
 import { normalizePath } from '#vendor/httpRequestHandlers.js';
-import { Method, routeItem, routeList, WsRoutes } from "#vendor/types/types.js";
+import { Method, RouteItem, routeList, WsRoutes } from "./../types/types.js";
 
-const listRoutes: routeItem[] = [];
+const listRoutes: RouteItem[] = [];
 const wsRoutes: WsRoutes = {};
 
-const createRoute = (method: Method, route:any): routeItem => {
+const createRoute = (method: Method, route:any): RouteItem => {
     return {
         method,
         url: route.url,

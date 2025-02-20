@@ -2,7 +2,8 @@ import process from 'node:process';
 import chokidar from 'chokidar';
 import logger from '#logger';
 
-export default (restart) => {
+export default (restart: Function) => {
+
     const watcher = chokidar.watch(process.cwd(), {
         ignored: [
             `${process.cwd()}/node_modules`,
@@ -15,6 +16,7 @@ export default (restart) => {
         ///[\/\\]\./,
         usePolling: false,
         persistent: true,
+        // @ts-ignore
         stabilityThreshold: 2000,
         awaitWriteFinish: true,
     });
