@@ -1,4 +1,4 @@
-import logger from '#logger';
+// import logger from '#logger';
 import { getWsRoutes } from '#vendor/start/router.js';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
 import validators from '#vendor/start/validators.js';

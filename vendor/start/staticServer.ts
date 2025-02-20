@@ -1,8 +1,7 @@
 import process from 'node:process';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
-import appConfig from '#config/app.js';
-import logger from '#logger';
+// import logger from '#logger';
 
 // if (appConfig.serveStatic) {
 //   logger.info('cache Directory ' + STATIC_PATH);
@@ -39,7 +38,7 @@ const STATIC_PATH = path.join(process.cwd(), './public');
 
 const cache = new Map();
 
-const MIME_TYPES = {
+export const MIME_TYPES = {
     default: 'application/octet-stream',
     html: 'text/html; charset=UTF-8',
     js: 'application/javascript; charset=UTF-8',

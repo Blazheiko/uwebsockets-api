@@ -1,5 +1,4 @@
 import logger from '#logger';
-import { Header } from './types/types.js';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 
 const getHeaders = (req: HttpRequest): Record<string, string> => {

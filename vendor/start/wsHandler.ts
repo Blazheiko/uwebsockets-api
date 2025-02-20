@@ -2,7 +2,7 @@ import logger from '#logger';
 import wsApiHandler from '#vendor/wsApiHandler.js';
 import { generateUUID } from 'metautil';
 import redis from '#database/redis.js';
-import { HttpRequest, HttpResponse, us_socket_context_t, WebSocket } from 'uWebSockets.js';
+import { HttpRequest, HttpResponse, us_socket_context_t } from 'uWebSockets.js';
 import { MyWebSocket } from '../types/types.js';
 
 
@@ -32,9 +32,8 @@ const handlePong = (ws: MyWebSocket) => {
 const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: boolean) => {
     if (isBinary) logger.info('isBinary', isBinary);
     try {
-        let message = null;
-        if (wsMessage instanceof ArrayBuffer)
-            message = JSON.parse(ab2str(wsMessage));
+        // let message = null;
+        const message = JSON.parse(ab2str(wsMessage));
         if (!message) return;
         if (message.event === 'service:ping') {
             handlePong(ws);

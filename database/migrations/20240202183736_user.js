@@ -1,10 +1,10 @@
-import { Knex } from 'knex';
+import { SchemaBuilder } from 'knex';
 
 /**
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-const up = (knex: Knex) => {
+const up = (knex) => {
     return knex.schema.createTable('users', function (table) {
         table.increments('id');
         table.string('name', 100).notNullable();
@@ -26,7 +26,7 @@ const up = (knex: Knex) => {
  * @param { import("knex").Knex } knex
  * @returns { SchemaBuilder }
  */
-const down = (knex: Knex) => {
+const down = (knex) => {
     return knex.schema.dropTable('users');
 };
 
