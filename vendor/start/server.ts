@@ -40,21 +40,17 @@ const configureWebsockets = (server: TemplatedApp) => {
 
 const parseCookies = (cookieHeader: string) => {
     let list: Record<string, string> = {};
-
-    if (cookieHeader) {
-        cookieHeader.split(';').forEach((cookie) => {
-            let [key, value] = cookie.split('=').map((part) => part.trim());
-            if (value) {
-                try {
-                    list[key] = decodeURIComponent(value);
-                } catch (e) {
-                    logger.error(
-                        'Error decodeURIComponent for cookie value: ' + value,
-                    );
-                }
-            }
-        });
+    if (!cookieHeader) return list;
+    const handler = (key: string, value: string): void => {
+        if (value)
+            try {
+                list[key] = decodeURIComponent(value);
+            }catch (e) {logger.error('Error decodeURIComponent for cookie value: ' + value)}
     }
+    cookieHeader.split(';').forEach((cookie) => {
+        let [key, value] = cookie.split('=').map((part) => part.trim());
+        handler(key, value);
+    });
 
     return list;
 };

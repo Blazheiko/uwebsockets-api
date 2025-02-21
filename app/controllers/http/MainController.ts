@@ -1,6 +1,6 @@
-import { generateToken } from 'metautil';
-import configApp from '#config/app.js';
-import redis from '#database/redis.js';
+// import { generateToken } from 'metautil';
+// import configApp from '#config/app.js';
+// import redis from '#database/redis.js';
 import logger from '#logger';
 import User from '#app/models/User.js';
 import httpRoutes from '#app/routes/httpRoutes.js';
