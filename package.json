@@ -5,19 +5,20 @@
   "main": "start.js",
   "type": "module",
   "imports": {
-    "#app/*": "./dist/app/*",
-    "#config/*": "./dist/config/*",
-    "#database/*": "./dist/database/*",
-    "#routes/*": "./dist/routes/*",
-    "#start/*": "./dist/start/*",
-    "#utils/*": "./dist/utils/*",
-    "#logger": "./dist/logger.js",
-    "#vendor/*": "./dist/vendor/*"
+    "#app/*": "./app/*",
+    "#config/*": "./config/*",
+    "#database/*": "./database/*",
+    "#routes/*": "./routes/*",
+    "#start/*": "./start/*",
+    "#utils/*": "./utils/*",
+    "#logger": "./logger.ts",
+    "#vendor/*": "./vendor/*"
   },
   "scripts": {
     "lint": "eslint .",
-    "dev": "node dev.js",
-    "prod": "node start.js",
+    "start": "node --loader ts-node/esm start.ts",
+    "dev": "nodemon && node --loader ts-node/esm start.ts",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -39,12 +40,13 @@
   "devDependencies": {
     "@types/luxon": "^3.4.2",
     "@types/node": "^22.13.4",
-    "@types/qs": "^6.9.18",
     "babel-eslint": "^10.1.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
+    "nodemon": "^3.1.9",
     "prettier": "^3.2.4",
+    "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   }
 }

@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { isMainThread, parentPort } from 'node:worker_threads';
+// import { isMainThread, parentPort } from 'node:worker_threads';
 import 'dotenv/config';
 import vine from '@vinejs/vine';
 import logger from '#logger';
@@ -104,23 +104,24 @@ const stopUncaughtException = (err: any, origin: any) => {
     process.exit(1);
 };
 
+console.log('start');
 start().then(() => {
     logger.info('start success');
-    if (!isMainThread && parentPort) {
-        parentPort.postMessage('start success');
-        parentPort.on('message', (message) => {
-            if (message.command === 'shutdown') {
-                logger.info('message.command === shutdown');
-                stop('MainThread');
-                removeListeners();
-                setTimeout(() => {
-                    if(parentPort) parentPort.close()
-                                                // .then(() => {
-                                                //     logger.info('parentPort.close');
-                                                //     //process.exit(0);
-                                                // });
-                }, 100);
-            }
-        });
-    }
+    // if (!isMainThread && parentPort) {
+    //     parentPort.postMessage('start success');
+    //     parentPort.on('message', (message) => {
+    //         if (message.command === 'shutdown') {
+    //             logger.info('message.command === shutdown');
+    //             stop('MainThread');
+    //             removeListeners();
+    //             setTimeout(() => {
+    //                 if(parentPort) parentPort.close()
+    //                                             // .then(() => {
+    //                                             //     logger.info('parentPort.close');
+    //                                             //     //process.exit(0);
+    //                                             // });
+    //             }, 100);
+    //         }
+    //     });
+    // }
 });

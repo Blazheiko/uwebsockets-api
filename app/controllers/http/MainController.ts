@@ -10,7 +10,7 @@ import { HttpData, ResponseData } from './../../../vendor/types/types.js';
 
 export default {
     async ping() {
-        return { status: 'OK' };
+        return { status: 'ok' };
     },
 
     async index(httpData: HttpData, responseData: ResponseData): Promise<any> {
@@ -22,8 +22,8 @@ export default {
     async testParams(httpData: HttpData, responseData: ResponseData): Promise<any> {
         const params = httpData.params;
         const query = httpData.query.getAll('test');
-        console.log(responseData);
-        return { params, query };
+        console.log('testParams');
+        return { params, query, status: 'ok' };
     },
     async init(httpData: HttpData, responseData: ResponseData): Promise<any> {
         logger.info('init');

@@ -2,9 +2,11 @@ import process from 'node:process';
 import chokidar from 'chokidar';
 import logger from '#logger';
 
+// test version
 export default (restart: Function) => {
 
-    const watcher = chokidar.watch(process.cwd(), {
+    const watcher = chokidar.watch( process.cwd(),
+        {
         ignored: [
             `${process.cwd()}/node_modules`,
             `${process.cwd()}/README.md`,

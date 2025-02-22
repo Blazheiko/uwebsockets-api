@@ -5,9 +5,11 @@ import watcher from '#vendor/start/watcher.js';
 
 let worker: Worker | null = null;
 
+//test version
+
 const startDev = () => {
     return new Promise<void>((resolve, reject) => {
-        worker = new Worker(`${process.cwd()}/start.js`);
+        worker = new Worker(`${process.cwd()}/start.ts`);
         worker.on('message', (msg) => {
             logger.info(`Message worker: ${msg}`);
             resolve();
@@ -24,10 +26,13 @@ const startDev = () => {
         });
     });
 };
+
 let isRestart = true;
+
 const restart = () => {
-    logger.info('restart');
+    logger.info('restart dev');
     if (isRestart && worker && worker.postMessage) {
+        logger.info('isRestart && worker && worker.postMessage');
         isRestart = false;
         worker.postMessage({ command: 'shutdown' });
     }
