@@ -23,7 +23,7 @@ export interface Cookie {
 export interface HttpData {
   params: object,
   payload: any,
-  query: object,
+  query: URLSearchParams
   headers: Record<string, string>,
   contentType: string,
   cookies: Cookie[],

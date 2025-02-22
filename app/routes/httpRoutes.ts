@@ -17,6 +17,12 @@ export default [
         handler: MainController.testMiddleware,
         middlewares: ['test1'],
     },
+    {
+        url: '/test-params/:id/:name',
+        method: 'get',
+        handler: MainController.testParams,
+        middlewares: ['test1'],
+    },
 
     {
         group: [

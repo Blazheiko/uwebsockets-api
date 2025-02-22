@@ -19,16 +19,16 @@ export default {
         console.log(responseData);
         return payload;
     },
+    async testParams(httpData: HttpData, responseData: ResponseData): Promise<any> {
+        const params = httpData.params;
+        const query = httpData.query.getAll('test');
+        console.log(responseData);
+        return { params, query };
+    },
     async init(httpData: HttpData, responseData: ResponseData): Promise<any> {
         logger.info('init');
         return { status: 'ok', httpRoutes, wsRoutes };
     },
-    // async initOld(httpData: HttpData, responseData: ResponseData): Promise<any> {
-    //     const token = generateToken(configApp.key, configApp.characters, 32);
-    //     const time = Date.now();
-    //     await redis.setex(`auth:ws:${token}`, 3600, time);
-    //     return { token, time };
-    // },
     async setHeaderAndCookie(httpData: HttpData, responseData: ResponseData): Promise<any> {
         logger.info('set-header-and-cookie');
         responseData.headers.push({ name: 'test-header', value: 'test' });

@@ -1,5 +1,4 @@
 import uWS, { HttpRequest, HttpResponse, TemplatedApp, WebSocket } from 'uWebSockets.js';
-import qs from 'qs';
 import appConfig from '#config/app.js';
 import corsConfig from '#config/cors.js';
 import cookiesConfig from '#config/cookies.js';
@@ -125,7 +124,8 @@ const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem
     const cookies = parseCookies(req.getHeader('cookie'));
     const contentType = req.getHeader('content-type').trim();
     const url = req.getUrl();
-    const query = qs.parse(req.getQuery());
+    // const query = qs.parse(req.getQuery());
+    const query = new URLSearchParams(req.getQuery());
     const headers = getHeaders(req);
     const isJson =
         route.method === 'post' &&
