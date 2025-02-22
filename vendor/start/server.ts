@@ -250,13 +250,12 @@ const init = () => {
     configureHttp(server);
     server.listen(appConfig.port, (token) => {
         if (token) {
-            logger.info('Listening to port ' + appConfig.port);
+            logger.info('Listening http://localhost:' + appConfig.port);
             state.listenSocket = token;
         } else {
             logger.info('Failed to listen to port ' + appConfig.port);
         }
     });
-    /* eslint-disable no-undef */
 };
 
 const stop = (type = 'handle') => {

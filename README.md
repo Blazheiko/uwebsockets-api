@@ -18,9 +18,9 @@ Install dependencies `npm install`
 
 Create `.env` file following the `.env.example`
 
-Start server `node start.js` || `npm run prod`
+Start server `npm run start`
 
-Starting the server in development mode `node dev.js` || `npm run dev`
+Starting the server in development mode  `npm run dev`
 
 ## Usage Example
 
@@ -30,7 +30,7 @@ Inspired by the frameworks `Laravel` and `AdonisJs`, `uWebSockets-api` aims to p
 routing http `app/routes/httpRoutes.js`
 
 ```js
-import MainController from '#app/controllers/http/MainController.js';
+import MainController from '#app/controllers/http/MainController.ts';
 
 export default [
   {
@@ -60,7 +60,7 @@ export default [
 
 ```
 
-routing ws `app/routes/wsRoutes.js`
+routing ws `app/routes/wsRoutes.ts`
 
 ```js
 import WSApiController from '#app/controllers/ws/WSApiController.js';
@@ -92,13 +92,13 @@ export default [
 
 ## Modules used
 
-Query Builder `database/db.js` [khex](https://knexjs.org/guide/)
+Query Builder `database/db.ts` [khex](https://knexjs.org/guide/)
 
-Redis client `database/redis.js` [ioredis](https://github.com/redis/ioredis)
+Redis client `database/redis.ts` [ioredis](https://github.com/redis/ioredis)
 
-Validator `app/validate/schemas/schemas.js` [VineJS](https://vinejs.dev/docs/introduction)
+Validator `app/validate/schemas/schemas.ts` [VineJS](https://vinejs.dev/docs/introduction)
 
-Logger `logger.js` [pino](https://github.com/pinojs/pino)
+Logger `logger.ts` [pino](https://github.com/pinojs/pino)
 
 Library for working with dates and times [Luxon](https://github.com/moment/luxon#readme)
 

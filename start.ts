@@ -107,21 +107,4 @@ const stopUncaughtException = (err: any, origin: any) => {
 console.log('start');
 start().then(() => {
     logger.info('start success');
-    // if (!isMainThread && parentPort) {
-    //     parentPort.postMessage('start success');
-    //     parentPort.on('message', (message) => {
-    //         if (message.command === 'shutdown') {
-    //             logger.info('message.command === shutdown');
-    //             stop('MainThread');
-    //             removeListeners();
-    //             setTimeout(() => {
-    //                 if(parentPort) parentPort.close()
-    //                                             // .then(() => {
-    //                                             //     logger.info('parentPort.close');
-    //                                             //     //process.exit(0);
-    //                                             // });
-    //             }, 100);
-    //         }
-    //     });
-    // }
 });
