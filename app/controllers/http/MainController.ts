@@ -45,7 +45,7 @@ export default {
     },
     async testMiddleware(httpData: HttpData, responseData: ResponseData): Promise<any> {
         logger.info('testMiddleware handler');
-        return responseData.middlewareData;
+        return { m: responseData.middlewareData , status: 'ok'};
     },
     async saveUser(httpData: HttpData, responseData: ResponseData): Promise<any> {
         logger.info('saveUser');

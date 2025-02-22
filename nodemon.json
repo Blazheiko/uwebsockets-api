@@ -2,5 +2,5 @@
   "watch": ["."],
   "ignore": ["node_modules", "dist"],
   "ext": "*",
-  "exec": "node --loader ts-node/esm start.ts"
+  "exec": "tsc && node dist/index.js"
 }

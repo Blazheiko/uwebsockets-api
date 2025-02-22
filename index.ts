@@ -30,7 +30,7 @@ const compileValidateSchema = () => {
     });
 };
 
-const start = async () => {
+const index = async () => {
     try {
         /* eslint-disable no-undef */
         process.title = configApp.appName;
@@ -105,6 +105,6 @@ const stopUncaughtException = (err: any, origin: any) => {
 };
 
 console.log('start');
-start().then(() => {
+index().then(() => {
     logger.info('start success');
 });
