@@ -14,13 +14,7 @@ const readJson = (res: HttpResponse) => {
     logger.info('readJson');
     return new Promise((resolve, reject) => {
         let buffer: any = null;
-        // resolve({
-        //     name: 'Alex',
-        //     email: 'test@email',
-        //     password: '123456789',
-        // });
         res.onData((ab, isLast) => {
-            /* eslint-disable no-undef */
 
             let chunk = Buffer.from(ab);
             if (isLast) {
