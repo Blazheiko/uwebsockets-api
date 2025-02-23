@@ -2,7 +2,7 @@
   "name": "comic-assistant-backend",
   "version": "2.0.0",
   "description": "",
-  "main": "start.js",
+  "main": "index.ts",
   "type": "module",
   "imports": {
     "#app/*": "./dist/app/*",
