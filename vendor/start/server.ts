@@ -160,7 +160,10 @@ const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteI
             const httpData = await getHttpData(req, res, route);
             const responseData = getResponseData();
             await executeMiddlewares(route, httpData, responseData);
-            responseData.payload = await route.handler(httpData, responseData);
+            responseData.payload = await route.handler({
+                httpData,
+                responseData,
+            });
             if (aborted) return;
             res.cork(() => {
                 res.writeStatus(`${responseData.status}`);
@@ -253,7 +256,7 @@ const init = () => {
             logger.info('Listening http://localhost:' + appConfig.port);
             state.listenSocket = token;
         } else {
-            logger.info('Failed to listen to port ' + appConfig.port);
+            logger.error('Failed to listen to port ' + appConfig.port);
         }
     });
 };

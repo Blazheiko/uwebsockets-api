@@ -145,7 +145,7 @@ class WebsocketBase {
         if (data.status === 200 && cb.resolve) cb.resolve(data);
         else if (cb.reject)
             cb.reject({
-                status: data.status,
+                status: data?.status,
                 message: data?.payload?.message,
                 messages: data?.payload?.messages,
             });

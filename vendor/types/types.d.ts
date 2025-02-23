@@ -20,6 +20,16 @@ export interface Cookie {
   maxAge?: number,
   sameSite?: string,
 }
+export interface HttpContext {
+  httpData: HttpData,
+  responseData: ResponseData,
+  auth: any,
+}
+export interface WsContext {
+  wsData: WsData,
+  responseData: WsResponseData,
+  auth: any,
+}
 export interface HttpData {
   params: object,
   payload: any,

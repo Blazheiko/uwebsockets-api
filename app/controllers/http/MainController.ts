@@ -6,48 +6,55 @@ import User from '#app/models/User.js';
 import httpRoutes from '#app/routes/httpRoutes.js';
 import wsRoutes from '#app/routes/wsRoutes.js';
 // import { HttpData, ResponseData } from '#vendor/types/types.d.ts';
-import { HttpData, ResponseData } from './../../../vendor/types/types.js';
+import { HttpContext, HttpData, ResponseData } from './../../../vendor/types/types.js';
 
 export default {
     async ping() {
         return { status: 'ok' };
     },
 
-    async index(httpData: HttpData, responseData: ResponseData): Promise<any> {
+    async index({ httpData, responseData }: HttpContext): Promise<any> {
         const payload = httpData;
         // eslint-disable-next-line no-undef
         console.log(responseData);
-        return payload;
+        return { payload, responseData };
     },
-    async testParams(httpData: HttpData, responseData: ResponseData): Promise<any> {
+    async testParams({ httpData }: HttpContext): Promise<any> {
         const params = httpData.params;
         const query = httpData.query.getAll('test');
         console.log('testParams');
         return { params, query, status: 'ok' };
     },
-    async init(httpData: HttpData, responseData: ResponseData): Promise<any> {
+    async init({ responseData }: HttpContext): Promise<any> {
         logger.info('init');
+        responseData.setCookie('cookieTest2', 'test2', {
+            path: '/',
+            httpOnly: true,
+            secure: true,
+            maxAge: 3600,
+        });
+        responseData.setCookie('cookieTest3', 'test3');
         return { status: 'ok', httpRoutes, wsRoutes };
     },
-    async setHeaderAndCookie(httpData: HttpData, responseData: ResponseData): Promise<any> {
+    async setHeaderAndCookie({ responseData }: HttpContext): Promise<any> {
         logger.info('set-header-and-cookie');
         responseData.headers.push({ name: 'test-header', value: 'test' });
-        // responseData.cookies.push({
-        //     name: 'cookieTest',
-        //     value: 'test',
-        //     path: '/',
-        //     httpOnly: true,
-        //     secure: true,
-        //     maxAge: 3600,
-        // });
+        responseData.cookies.push({
+            name: 'cookieTest',
+            value: 'test',
+            path: '/',
+            httpOnly: true,
+            secure: true,
+            maxAge: 3600,
+        });
         responseData.setCookie('cookieTest', 'test');
         return { status: 'ok' };
     },
-    async testMiddleware(httpData: HttpData, responseData: ResponseData): Promise<any> {
+    async testMiddleware({ responseData }: HttpContext): Promise<any> {
         logger.info('testMiddleware handler');
-        return { m: responseData.middlewareData , status: 'ok'};
+        return { m: responseData.middlewareData, status: 'ok' };
     },
-    async saveUser(httpData: HttpData, responseData: ResponseData): Promise<any> {
+    async saveUser({ httpData }: HttpContext): Promise<any> {
         logger.info('saveUser');
         const { payload } = httpData;
         const user = await User.create({

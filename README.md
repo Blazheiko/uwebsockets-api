@@ -27,9 +27,9 @@ Starting the server in development mode  `npm run dev`
 Inspired by the frameworks `Laravel` and `AdonisJs`, `uWebSockets-api` aims to provide a similar experience in organizing project structure and route descriptions.
 
 
-routing http `app/routes/httpRoutes.js`
+routing http `app/routes/httpRoutes.ts`
 
-```js
+```ts
 import MainController from '#app/controllers/http/MainController.ts';
 
 export default [
@@ -62,7 +62,7 @@ export default [
 
 routing ws `app/routes/wsRoutes.ts`
 
-```js
+```ts
 import WSApiController from '#app/controllers/ws/WSApiController.js';
 
 export default [
@@ -88,6 +88,59 @@ export default [
 ];
 
 
+```
+http controller `app/controllers/http/MainController.ts`
+
+```ts
+import { HttpContext, HttpData, ResponseData } from './../../../vendor/types/types.js';
+
+export default {
+    async setHeaderAndCookie({ responseData }: HttpContext): Promise<any> {
+        logger.info('set-header-and-cookie');
+        responseData.headers.push({ name: 'test-header', value: 'test' });
+        responseData.cookies.push({
+            name: 'cookieTest',
+            value: 'test',
+            path: '/',
+            httpOnly: true,
+            secure: true,
+            maxAge: 3600,
+        });
+        responseData.setCookie('cookieTest', 'test');
+        return { status: 'ok' };
+    },
+}
+```
+
+ws controller `app/controllers/ws/WSApiController.ts`
+
+```ts
+import logger from '#logger';
+import User from '#app/models/User.js';
+import { WsContext, WsData, WsResponseData } from '../../../vendor/types/types.js';
+
+export default {
+    test({ responseData}: WsContext) {
+        logger.info('ws test');
+        responseData.payload = { test: true };
+
+        return responseData;
+    },
+    async saveUser({ wsData, responseData}: WsContext) {
+        logger.info('ws saveUser');
+        const { payload } = wsData;
+        console.log({ payload });
+        const user = await User.create({
+            name: payload.name,
+            email: payload.email,
+            password: payload.password,
+        });
+       
+        responseData.payload = { status: 'ok', user };
+
+        return responseData;
+    },
+};
 ```
 
 ## Modules used
