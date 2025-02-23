@@ -28,7 +28,7 @@ services:
       retries: 10
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: cab
+      MYSQL_DATABASE: uapi
 
   adminer:
     image: adminer
