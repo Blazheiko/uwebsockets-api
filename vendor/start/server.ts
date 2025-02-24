@@ -251,14 +251,26 @@ const init = () => {
     const server: TemplatedApp = uWS.App();
     configureWebsockets(server);
     configureHttp(server);
-    server.listen(appConfig.port, (token) => {
-        if (token) {
-            logger.info('Listening http://localhost:' + appConfig.port);
-            state.listenSocket = token;
-        } else {
-            logger.error('Failed to listen to port ' + appConfig.port);
-        }
-    });
+    if(appConfig.unixPath){
+        server.listen_unix((token) => {
+            if (token) {
+                logger.info(`Listening unix socket: ${appConfig.unixPath}`);
+                state.listenSocket = token;
+            } else {
+                logger.error(`Failed to listening unix socket: ${appConfig.unixPath}`);
+            }
+        }, appConfig.unixPath);
+    }else {
+        server.listen(appConfig.host, appConfig.port, (token) => {
+            if (token) {
+                logger.info(`Listening http://${appConfig.host}:` + appConfig.port);
+                state.listenSocket = token;
+            } else {
+                logger.error('Failed to listen to port ' + appConfig.port);
+            }
+        });
+    }
+
 };
 
 const stop = (type = 'handle') => {
