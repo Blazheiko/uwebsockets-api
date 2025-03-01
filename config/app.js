@@ -5,7 +5,7 @@ const config = Object.freeze({
     key: env.APP_KEY || '1234567890',
     env: env.APP_ENV,
     url: env.APP_URL,
-    host: env.APP_HOST || '127.0.0.1',
+    host: env.APP_HOST || '0.0.0.0',
     port: Number(env.APP_PORT),
     unixPath: env.APP_UNIX_PATH,
     serveStatic: env.SERVE_STATIC,
