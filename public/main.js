@@ -84,7 +84,7 @@ const connectWS = (token) => {
     setTimeout(async () => {
         const wsUser = await Api.ws('save-user', {
             names: 'WS name',
-            email: 'test@gmail.com',
+            email: 'testWS@gmail.com',
             password: '123456789',
         });
         console.log({ wsUser });

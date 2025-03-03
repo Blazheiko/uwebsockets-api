@@ -30,11 +30,13 @@ export default [
                 url: '/register',
                 method: 'post',
                 handler: AuthController.register,
+                validator: 'register',
             },
             {
                 url: '/login',
                 method: 'post',
                 handler: AuthController.login,
+                validator: 'login',
             },
         ],
         prefix: 'auth',

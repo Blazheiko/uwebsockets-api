@@ -137,7 +137,10 @@ const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem
         payload = await readJson(res);
         if (route.validator) {
             const validator = validators.get(route.validator);
-            if (validator) payload = await validator.validate(payload);
+            if (validator) {
+                logger.info('validator: ' + route.validator);
+                payload = await validator.validate(payload);
+            }
         }
     }
 
