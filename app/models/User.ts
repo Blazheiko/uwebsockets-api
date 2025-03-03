@@ -11,7 +11,8 @@ const schema = {
 };
 //const fields = ['name', 'password', 'email'];
 const required = ['name', 'password', 'email'];
-const hidden = ['password'];
+const hidden = ['password', 'isAdmin'];
+
 export default {
     async create(payload: any) {
         logger.info('create user');

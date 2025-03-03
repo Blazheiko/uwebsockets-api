@@ -1,4 +1,5 @@
 import MainController from '#app/controllers/http/MainController.js';
+import AuthController from '../controllers/http/AuthController.js';
 
 export default [
     {
@@ -23,13 +24,38 @@ export default [
         handler: MainController.testParams,
         middlewares: ['test1'],
     },
-
+    {
+        group: [
+            {
+                url: '/register',
+                method: 'post',
+                handler: AuthController.register,
+            },
+            {
+                url: '/login',
+                method: 'post',
+                handler: AuthController.login,
+            },
+        ],
+        prefix: 'auth',
+        validator: 'register',
+    },
     {
         group: [
             {
                 url: '/init',
                 method: 'get',
                 handler: MainController.init,
+            },
+            {
+                url: '/test-header',
+                method: 'get',
+                handler: MainController.testHeaders,
+            },
+            {
+                url: '/test-cookie',
+                method: 'get',
+                handler: MainController.getSetCookies,
             },
             {
                 url: '/save-user',
@@ -50,6 +76,6 @@ export default [
             },
         ],
         middlewares: ['test2'],
-        prefix: '/api',
+        prefix: 'api',
     },
 ];

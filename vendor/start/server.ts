@@ -37,13 +37,13 @@ const configureWebsockets = (server: TemplatedApp) => {
     });
 };
 
-const parseCookies = (cookieHeader: string) => {
-    let list: Record<string, string> = {};
+const parseCookies = (cookieHeader: string):Map <string, string> => {
+    const list = new Map<string, string>();
     if (!cookieHeader) return list;
     const handler = (key: string, value: string): void => {
         if (value)
             try {
-                list[key] = decodeURIComponent(value);
+                list.set(key, decodeURIComponent(value));
             }catch (e) {logger.error('Error decodeURIComponent for cookie value: ' + value)}
     }
     cookieHeader.split(';').forEach((cookie) => {
@@ -121,26 +121,28 @@ const getResponseData = () => {
 };
 
 const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem) => {
-    const cookies = parseCookies(req.getHeader('cookie'));
-    const contentType = req.getHeader('content-type').trim();
+    const cookies: Map<string, string> = parseCookies(req.getHeader('cookie'));
+    // const contentType = req.getHeader('content-type').trim();
     const url = req.getUrl();
     // const query = qs.parse(req.getQuery());
     const query = new URLSearchParams(req.getQuery());
     const headers = getHeaders(req);
+    const params = extractParameters(route.url, url);
+    const contentType = headers.get('content-type');
     const isJson =
-        route.method === 'post' &&
-        contentType.toLowerCase() === 'application/json';
+        (route.method === 'post' || route.method === 'put') &&
+        (contentType && contentType.trim().toLowerCase() === 'application/json');
     let payload = null;
     if (isJson) {
         payload = await readJson(res);
         if (route.validator) {
-            // logger.info('validator: ' + route.validator);
-            const validator = validators[route.validator];
+            const validator = validators.get(route.validator);
             if (validator) payload = await validator.validate(payload);
         }
     }
+
     return Object.freeze({
-        params: extractParameters(route.url, url),
+        params,
         payload,
         query,
         headers,
@@ -150,7 +152,7 @@ const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem
     });
 };
 const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteItem) => {
-    // logger.info('Handler method:' + method);
+    logger.info('Handler method:' + route.method + ' url:' + route.url);
     if (state.listenSocket) {
         try {
             let aborted = false;
@@ -187,6 +189,7 @@ const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteI
                         }),
                     );
                 } else {
+                    logger.error(e);
                     res.writeStatus('500').end('Server error');
                 }
             });

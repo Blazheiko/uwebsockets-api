@@ -34,9 +34,9 @@ export interface HttpData {
   params: object,
   payload: any,
   query: URLSearchParams
-  headers: Record<string, string>,
+  headers: Map<string, string>,
   contentType: string,
-  cookies: Cookie[],
+  cookies: Map<string, string>,
   isJson: boolean,
 }
 

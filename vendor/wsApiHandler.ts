@@ -19,7 +19,7 @@ export default async (message: any) => {
         if (route) {
             let payload = message.payload ? message.payload : null;
             if (route.validator) {
-                const validator: any = validators[route.validator];
+                const validator: any = validators.get(route.validator);
                 if (validator) payload = await validator.validate(payload);
             }
             const wsData: WsData = {

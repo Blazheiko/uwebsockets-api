@@ -6,11 +6,29 @@ import User from '#app/models/User.js';
 import httpRoutes from '#app/routes/httpRoutes.js';
 import wsRoutes from '#app/routes/wsRoutes.js';
 // import { HttpData, ResponseData } from '#vendor/types/types.d.ts';
-import { HttpContext, HttpData, ResponseData } from './../../../vendor/types/types.js';
+import { HttpContext } from './../../../vendor/types/types.js';
 
 export default {
     async ping() {
         return { status: 'ok' };
+    },
+    async testHeaders({ httpData }: HttpContext): Promise<any> {
+        logger.info('testHeaders');
+        const headers: any[] = [];
+        httpData.headers.forEach((value, key, map) => {
+            headers.push({ key, value});
+        });
+        return { status: 'ok' , headers };
+    },
+
+    async getSetCookies({ httpData }: HttpContext): Promise<any> {
+        logger.info('testCookies');
+        const cookies: any[] = [];
+        httpData.cookies.forEach((value, key, map) => {
+            cookies.push({ key, value});
+        });
+
+        return { status: 'ok' , cookies };
     },
 
     async index({ httpData, responseData }: HttpContext): Promise<any> {
@@ -40,14 +58,14 @@ export default {
         logger.info('set-header-and-cookie');
         responseData.headers.push({ name: 'test-header', value: 'test' });
         responseData.cookies.push({
-            name: 'cookieTest',
+            name: 'cookieTest1',
             value: 'test',
             path: '/',
             httpOnly: true,
-            secure: true,
+            secure: false,
             maxAge: 3600,
         });
-        responseData.setCookie('cookieTest', 'test');
+        responseData.setCookie('cookieTest2', 'test');
         return { status: 'ok' };
     },
     async testMiddleware({ responseData }: HttpContext): Promise<any> {

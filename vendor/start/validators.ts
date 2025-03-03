@@ -1,5 +1,4 @@
-import { Validators } from "./../types/types.js";
 
-const validators: Validators = {}
+const validators: Map<string, any> = new Map()
 
 export default validators;

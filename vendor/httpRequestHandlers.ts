@@ -1,10 +1,10 @@
 import logger from '#logger';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 
-const getHeaders = (req: HttpRequest): Record<string, string> => {
-    const headers: Record<string, string> = {};
+const getHeaders = (req: HttpRequest): Map<string, string> => {
+    const headers: Map<string, string> = new Map();
     req.forEach((key, value) => {
-        headers[key.toLowerCase()] = value.trim();
+        headers.set(key,value.trim())
     });
 
     return headers;
