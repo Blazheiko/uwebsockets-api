@@ -12,7 +12,7 @@ import {
 } from '#vendor/start/wsHandler.js';
 import {
     getHeaders,
-    readJson,
+    getData,
     extractParameters,
     normalizePath,
 } from '../httpRequestHandlers.js';
@@ -129,19 +129,13 @@ const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem
     const headers = getHeaders(req);
     const params = extractParameters(route.url, url);
     const contentType = headers.get('content-type');
-    const isJson =
-        (route.method === 'post' || route.method === 'put') &&
-        (contentType && contentType.trim().toLowerCase() === 'application/json');
-    let payload = null;
-    if (isJson) {
-        payload = await readJson(res);
-        if (route.validator) {
-            const validator = validators.get(route.validator);
-            if (validator) {
-                logger.info('validator: ' + route.validator);
-                payload = await validator.validate(payload);
-            }
-        }
+    const isJson = (route.method === 'post' || route.method === 'put')
+        && (contentType && contentType.trim().toLowerCase() === 'application/json');
+
+    let payload: any = contentType ? await getData(res, contentType) : null;
+    if (payload && route.validator) {
+        const validator = validators.get(route.validator);
+        if (validator) payload = await validator.validate(payload);
     }
 
     return Object.freeze({

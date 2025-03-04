@@ -8,7 +8,7 @@ export default {
         logger.info('register handler');
         const {name , email , password} = httpData.payload;
         const hash = await hashPassword(password);
-        console.log(hash)
+
         const user = await User.create({
             name: name,
             email: email,
