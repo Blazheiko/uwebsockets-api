@@ -30,6 +30,16 @@ export default {
 
         return { status: 'ok' , cookies };
     },
+    async testSession({ httpData }: HttpContext): Promise<any> {
+        logger.info('testSession');
+        const cookies: any[] = [];
+        httpData.cookies.forEach((value, key, map) => {
+            cookies.push({ key, value});
+        });
+        const session = httpData.session.sessionInfo;
+
+        return { status: 'ok' , cookies , session };
+    },
 
     async index({ httpData, responseData }: HttpContext): Promise<any> {
         const payload = httpData;

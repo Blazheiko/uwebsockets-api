@@ -40,7 +40,6 @@ export default [
             },
         ],
         prefix: 'auth',
-        validator: 'register',
     },
     {
         group: [
@@ -60,6 +59,11 @@ export default [
                 handler: MainController.getSetCookies,
             },
             {
+                url: '/test-session',
+                method: 'get',
+                handler: MainController.testSession,
+            },
+            {
                 url: '/save-user',
                 method: 'post',
                 handler: MainController.saveUser,
@@ -77,7 +81,7 @@ export default [
                 middlewares: ['test1'],
             },
         ],
-        middlewares: ['test2'],
+        middlewares: ['session','test2'],
         prefix: 'api',
     },
 ];

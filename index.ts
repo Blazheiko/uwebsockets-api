@@ -3,7 +3,7 @@ import process from 'node:process';
 import 'dotenv/config';
 import vine from '@vinejs/vine';
 import logger from '#logger';
-import { init, stop } from '#vendor/start/server.js';
+import { initServer, stopServer } from '#vendor/start/server.js';
 import configApp from '#config/app.js';
 import db from '#database/db.js';
 import redis from '#database/redis.js';
@@ -29,7 +29,7 @@ const compileValidateSchema = () => {
     });
 };
 
-const index = async () => {
+const start = async () => {
     try {
         /* eslint-disable no-undef */
         process.title = configApp.appName;
@@ -54,7 +54,7 @@ const index = async () => {
         routesHandler(wsRoutes, true);
         // console.log(getListRoutes());
 
-        init();
+        initServer();
         process.on('SIGINT', stopSIGINT);
         process.on('SIGHUP', stopSIGHUP);
         process.on('SIGTERM', stopSIGTERM);
@@ -74,7 +74,7 @@ const removeListeners = () => {
 };
 
 const stopHandler = (type: string) => {
-    stop(type);
+    stopServer(type);
     removeListeners();
 };
 
@@ -104,6 +104,6 @@ const stopUncaughtException = (err: any, origin: any) => {
 };
 
 console.log('start');
-index().then(() => {
+start().then(() => {
     logger.info('start success');
 });

@@ -39,17 +39,32 @@ const configureWebsockets = (server: TemplatedApp) => {
 
 const parseCookies = (cookieHeader: string):Map <string, string> => {
     const list = new Map<string, string>();
-    if (!cookieHeader) return list;
-    const handler = (key: string, value: string): void => {
-        if (value)
+    if (cookieHeader){
+        const handler = (cookie: string): void => {
+            // if (value)
+            //     try {
+            //         list.set(key, decodeURIComponent(value));
+            //     }catch (e) {logger.error('Error decodeURIComponent for cookie value: ' + value)}
+            const separatorIndex = cookie.indexOf('=');
+            if (separatorIndex === -1) return;
             try {
-                list.set(key, decodeURIComponent(value));
-            }catch (e) {logger.error('Error decodeURIComponent for cookie value: ' + value)}
+                const key = cookie.slice(0, separatorIndex).trim();
+                const value = cookie.slice(separatorIndex + 1).trim();
+                if(value) list.set(key, decodeURIComponent(value));
+            } catch (error) {
+                console.error(`Error decoding cookie value ${cookieHeader}":`, error);
+            }
+        }
+        // cookieHeader.split(';').forEach(handler);
+        let start = 0;
+
+        for (let i = 0; i <= cookieHeader.length; i++) {
+            if (i === cookieHeader.length || cookieHeader[i] === ';') {
+                handler ( cookieHeader.slice(start, i).trim() );
+                start = i + 1;
+            }
+        }
     }
-    cookieHeader.split(';').forEach((cookie) => {
-        let [key, value] = cookie.split('=').map((part) => part.trim());
-        handler(key, value);
-    });
 
     return list;
 };
@@ -145,6 +160,13 @@ const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem
         headers,
         contentType,
         cookies,
+        session: {
+            sessionInfo: null,
+            updateSessionData: () => null,
+            changeSessionData: () => null,
+            destroySession: () => 0,
+        },
+
         isJson,
     });
 };
@@ -247,7 +269,7 @@ const setCorsHeader = (res: HttpResponse) => {
     }
 };
 // let server = null;
-const init = () => {
+const initServer = () => {
     const server: TemplatedApp = uWS.App();
     configureWebsockets(server);
     configureHttp(server);
@@ -273,11 +295,11 @@ const init = () => {
 
 };
 
-const stop = (type = 'handle') => {
+const stopServer = (type = 'handle') => {
     logger.info('server stop type: ' + type);
     closeAllWs();
     uWS.us_listen_socket_close(state.listenSocket);
     state.listenSocket = null;
 };
 
-export { init, stop };
+export { initServer, stopServer };

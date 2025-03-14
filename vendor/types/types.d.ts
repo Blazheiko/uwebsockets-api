@@ -30,6 +30,19 @@ export interface WsContext {
   responseData: WsResponseData,
   auth: any,
 }
+
+export interface SessionData {
+  [key: string]: any;
+}
+
+export interface Session {
+  id: string;
+  data: SessionData;
+  createdAt: string;
+  updatedAt?: string;
+  expiresAt: string;
+}
+
 export interface HttpData {
   params: object,
   payload: any,
@@ -37,8 +50,12 @@ export interface HttpData {
   headers: Map<string, string>,
   contentType: string,
   cookies: Map<string, string>,
+  session: any,
   isJson: boolean,
 }
+// updateSessionData: Function;
+// changeSessionData: Function;
+// destroySession: Function;
 
 export interface WsResponseData {
   payload: any,
