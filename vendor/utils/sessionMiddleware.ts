@@ -6,7 +6,7 @@ import sessionConfig from '#config/session.js';
 import logger from '../../logger.js';
 
 
-const generateSessionId = () => crypto.randomUUID();
+const generateSessionId = () => Buffer.from( crypto.randomUUID() ).toString('base64');
 
 const saveSession = async (session: Session): Promise<void> => {
     await redis.setex(
