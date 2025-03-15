@@ -3,7 +3,6 @@ import { HttpContext, RouteItem, WsContext } from '../types/types.js';
 import logger from '../../logger.js';
 // import logger from '#logger';
 const executeMiddlewares = async (middlewares: string[] | undefined, context: HttpContext | WsContext) => {
-    logger.info('executeMiddlewares');
     if (!middlewares || !middlewares.length) return true;
     let index = 0;
     let counter = 0;
