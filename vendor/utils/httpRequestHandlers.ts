@@ -54,31 +54,6 @@ const readJson = (body: string) => {
     } catch (e) {
         throw new Error('error parse json');
     }
-    // return new Promise((resolve, reject) => {
-    //     let buffer: any = null;
-    //     res.onData((ab, isLast) => {
-    //
-    //         let chunk = Buffer.from(ab);
-    //         if (isLast) {
-    //             let json = null;
-    //             try {
-    //                 if (buffer)
-    //                     json = JSON.parse(
-    //                         Buffer.concat([buffer, chunk]).toString(),
-    //                     );
-    //                 else json = JSON.parse(chunk.toString());
-    //             } catch (e) {
-    //                 return reject('error parse json');
-    //             }
-    //             logger.info('end parse json');
-    //
-    //             return resolve(json);
-    //         } else {
-    //             if (buffer) buffer = Buffer.concat([buffer, chunk]);
-    //             else buffer = Buffer.concat([chunk]);
-    //         }
-    //     });
-    // });
 };
 const parseContentType = (contentType: string): string => {
     const boundaryIndex = contentType.indexOf('boundary=');

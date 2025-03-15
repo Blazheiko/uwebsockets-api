@@ -8,17 +8,18 @@ import logger from '../../logger.js';
 
 const generateSessionId = () => Buffer.from( crypto.randomUUID() ).toString('base64');
 
-const saveSession = async (session: SessionInfo): Promise<void> => {
+const saveSession = async (sessionInfo: SessionInfo): Promise<void> => {
+    const userId = sessionInfo?.data?.userId ? sessionInfo.data.userId: 'guest';
     await redis.setex(
-        `session:${session.id}`,
+        `session:${userId}:${sessionInfo.id}`,
         sessionConfig.age,
-        JSON.stringify(session)
+        JSON.stringify(sessionInfo)
     );
 };
 
-const getSession = async (sessionId: string | undefined): Promise<SessionInfo | null> => {
+const getSession = async (sessionId: string | undefined, userId = 'guest' ): Promise<SessionInfo | null> => {
     if (!sessionId) return null;
-    const sessionJson: string | null = await redis.get(`session:${sessionId}`);
+    const sessionJson: string | null = await redis.getex(`session:${userId}:${sessionId}`, 'EX', sessionConfig.age);
     if (!sessionJson) return null;
     try {
         return JSON.parse(sessionJson);
@@ -52,8 +53,8 @@ const  changeSessionData = async (sessionId: string, newData: SessionData): Prom
     return updatedSession;
 };
 
-const destroySession = async (sessionId: string): Promise<void> => {
-    await redis.del(`session:${sessionId}`);
+const destroySession = async (sessionId: string, userId = 'guest' ): Promise<void> => {
+    await redis.del(`session:${userId}:${sessionId}`);
 }
 
 const createSessionInfo = async (data: SessionData = {}): Promise<SessionInfo> => {
@@ -76,45 +77,26 @@ const sessionMiddleware = async ( context: HttpContext, next: Function) => {
     const cookies = httpData.cookies;
     const sessionId = cookies.get(sessionConfig.cookieName);
     let sessionInfo = null;
-    logger.info(`sessionId: ${sessionId}`);
 
     if(sessionId) sessionInfo = await getSession(sessionId);
 
-    if (!sessionInfo) {
-        sessionInfo = await createSessionInfo();
-        responseData.setCookie(sessionConfig.cookieName, sessionInfo.id,{
-            path: sessionConfig.cookie.path,
-            httpOnly: sessionConfig.cookie.httpOnly,
-            secure: sessionConfig.cookie.secure,
-            maxAge: sessionConfig.age,
-        });
-    }
-    const session : Session = {
+    if (!sessionInfo) sessionInfo = await createSessionInfo();
+
+    responseData.setCookie(sessionConfig.cookieName, sessionInfo.id,{
+        path: sessionConfig.cookie.path,
+        httpOnly: sessionConfig.cookie.httpOnly,
+        secure: sessionConfig.cookie.secure,
+        maxAge: sessionConfig.age,
+    });
+
+    context.session = {
         sessionInfo,
         updateSessionData: async ( newData: SessionData) => await updateSessionData( sessionInfo!.id, newData ),
         changeSessionData: async ( newData: SessionData) => await changeSessionData( sessionInfo!.id, newData ),
         destroySession: async () => await destroySession(sessionInfo!.id),
     }
 
-    // httpData.session.sessionInfo = session;
-    // httpData.session.updateSessionData = async ( newData: SessionData) => {
-    //     httpData.session.sessionInfo = await updateSessionData( httpData.session!.sessionInfo!.id, newData);
-    // };
-    // httpData.session.changeSessionData = async ( newData: SessionData) => {
-    //     httpData.session.sessionInfo = await changeSessionData( httpData.session!.sessionInfo!.id, newData);
-    // };
-    // httpData.session.destroySession = async () => {
-    //     await destroySession(session!.id);
-    //     responseData.setCookie(sessionConfig.cookieName, session.id,{
-    //         path: sessionConfig.cookie.path,
-    //         httpOnly: sessionConfig.cookie.httpOnly,
-    //         secure: sessionConfig.cookie.secure,
-    //         maxAge: 0,
-    //     });
-    // };
+    await next()
 };
 
-
 export default sessionMiddleware;
-
-

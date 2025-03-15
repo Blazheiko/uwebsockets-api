@@ -2,7 +2,7 @@
 import { getWsRoutes } from '#vendor/start/router.js';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
 import validators from '#vendor/start/validators.js';
-import { WsData, WsResponseData } from './types/types.js';
+import { WsData, WsResponseData } from '../types/types.js';
 
 const wsRoutes = getWsRoutes();
 
@@ -27,12 +27,13 @@ export default async (message: any) => {
                 status: '200',
                 payload: payload ? Object.freeze({ ...payload }) : null,
             };
+            const context = { wsData, responseData , session : null , auth: null};
             if (route.middlewares?.length) {
-                const context = { wsData, responseData , session : null , auth: null};
+
                 await executeMiddlewares(route.middlewares, context);
             }
             const handler = route.handler;
-            return await handler(wsData, responseData);
+            return await handler(context);
         }
         responseData.status = 404;
     } catch (e: any) {

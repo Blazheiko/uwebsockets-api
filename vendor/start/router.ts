@@ -1,5 +1,5 @@
 import logger from '#logger';
-import { normalizePath } from '#vendor/httpRequestHandlers.js';
+import { normalizePath } from '#vendor/utils/httpRequestHandlers.js';
 import { Method, RouteItem, routeList, WsRoutes } from "./../types/types.js";
 
 const listRoutes: RouteItem[] = [];

@@ -6,5 +6,6 @@ export default async ({ responseData } : HttpContext | WsContext, next: Function
     if ('middlewareData' in responseData) {
         responseData.middlewareData = { middleware2: 'TEST2' };
     }
+    // responseData.status = 401;
     await next();
 };

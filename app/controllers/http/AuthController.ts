@@ -28,7 +28,7 @@ export default {
             if(valid) return { status: 'ok',  user: User.serialize(user) };
         }
 
-        responseData.status = '401'
+        responseData.status = 401;
         return 'unauthorized';
 
     }

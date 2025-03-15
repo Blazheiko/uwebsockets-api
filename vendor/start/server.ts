@@ -9,19 +9,28 @@ import {
     onClose,
     handleUpgrade,
     closeAllWs,
-} from '#vendor/start/wsHandler.js';
+} from '#vendor/utils/wsHandler.js';
 import {
     getHeaders,
     getData,
     extractParameters,
     normalizePath,
-} from '../httpRequestHandlers.js';
+} from '../utils/httpRequestHandlers.js';
 import logger from '#logger';
 import { getListRoutes } from './router.js';
 
 import validators from '#vendor/start/validators.js';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
-import { Cookie, Header, HttpData, MyWebSocket, ResponseData, RouteItem, Session } from '../types/types.js';
+import {
+    Cookie,
+    Header,
+    HttpContext,
+    HttpData,
+    MyWebSocket,
+    ResponseData,
+    RouteItem,
+    Session
+} from '../types/types.js';
 
 const configureWebsockets = (server: TemplatedApp) => {
     return server.ws('/websocket/:token', {
@@ -41,10 +50,6 @@ const parseCookies = (cookieHeader: string):Map <string, string> => {
     const list = new Map<string, string>();
     if (cookieHeader){
         const handler = (cookie: string): void => {
-            // if (value)
-            //     try {
-            //         list.set(key, decodeURIComponent(value));
-            //     }catch (e) {logger.error('Error decodeURIComponent for cookie value: ' + value)}
             const separatorIndex = cookie.indexOf('=');
             if (separatorIndex === -1) return;
             try {
@@ -55,7 +60,7 @@ const parseCookies = (cookieHeader: string):Map <string, string> => {
                 console.error(`Error decoding cookie value ${cookieHeader}":`, error);
             }
         }
-        // cookieHeader.split(';').forEach(handler);
+
         let start = 0;
 
         for (let i = 0; i <= cookieHeader.length; i++) {
@@ -129,7 +134,7 @@ const getResponseData = (): ResponseData => {
         middlewareData: null,
         headers,
         cookies,
-        status: '200',
+        status: 200,
         setCookie,
         setHeader,
     };
@@ -183,11 +188,13 @@ const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteI
             const responseData = getResponseData();
             const session: Session =  getDefaultSession();
             const context = { httpData, responseData , session , auth: null }
-            await executeMiddlewares(route.middlewares, context );
-            responseData.payload = await route.handler({
-                httpData,
-                responseData,
-            });
+
+            // if(route.middlewares?.length) route.middlewares.push( handlerMiddleware );
+            // else route.middlewares = [ handlerMiddleware ];
+
+            if( await executeMiddlewares(route.middlewares, context ) && responseData.status >= 200 && responseData.status < 300 )
+                responseData.payload = await route.handler( context );
+
             if (aborted) return;
             res.cork(() => {
                 res.writeStatus(`${responseData.status}`);
@@ -198,7 +205,8 @@ const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteI
                 if (responseData.cookies?.length)
                     setCookies(res, responseData.cookies);
                 if (corsConfig.enabled) setCorsHeader(res);
-                res.end(JSON.stringify(responseData.payload));
+                if(responseData.payload && responseData.status >= 200 && responseData.status < 300) res.end(JSON.stringify(responseData.payload));
+                else res.end(`${responseData.status}`);
             });
         } catch (e: any) {
             res.cork(() => {
@@ -239,7 +247,7 @@ const configureHttp = (server: TemplatedApp) => {
         if (corsConfig.enabled && req.getMethod() === 'options') {
             //'OPTIONS' method === 'OPTIONS'
             res.cork(() => {
-                setCorsHeader(res);
+                if (corsConfig.enabled) setCorsHeader(res);
                 res.writeStatus('200').end();
             });
         } else {
