@@ -19,6 +19,12 @@ export default [
         middlewares: ['test1'],
     },
     {
+        url: '/test-api-session',
+        method: 'get',
+        handler: MainController.testApiSession,
+        middlewares: ['session_api'],
+    },
+    {
         url: '/test-params/:id/:name',
         method: 'get',
         handler: MainController.testParams,
@@ -81,7 +87,7 @@ export default [
                 middlewares: ['test1'],
             },
         ],
-        middlewares: ['session','test2'],
+        middlewares: ['session_web','test2'],
         prefix: 'api',
     },
 ];

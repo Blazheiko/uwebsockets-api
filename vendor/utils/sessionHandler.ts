@@ -6,7 +6,7 @@ import sessionConfig from '#config/session.js';
 import logger from '../../logger.js';
 
 
-const generateSessionId = () => Buffer.from( crypto.randomUUID() ).toString('base64');
+const generateSessionId = () : string => crypto.randomUUID();
 
 const saveSession = async (sessionInfo: SessionInfo): Promise<void> => {
     const userId = sessionInfo?.data?.userId ? sessionInfo.data.userId: 'guest';
@@ -29,8 +29,8 @@ const getSession = async (sessionId: string | undefined, userId = 'guest' ): Pro
     return null;
 };
 
-const updateSessionData = async (sessionId: string, newData: SessionData): Promise<SessionInfo | null> => {
-    const session = await getSession(sessionId);
+const updateSessionData = async (sessionId: string, newData: SessionData, userId='guest'): Promise<SessionInfo | null> => {
+    const session = await getSession(sessionId , userId );
     if (!session) return null;
     const updatedSession: SessionInfo = {
         ...session,
@@ -41,8 +41,8 @@ const updateSessionData = async (sessionId: string, newData: SessionData): Promi
     return updatedSession;
 };
 
-const  changeSessionData = async (sessionId: string, newData: SessionData): Promise<SessionInfo | null> => {
-    const session = await getSession(sessionId);
+const  changeSessionData = async (sessionId: string, newData: SessionData, userId = 'guest'): Promise<SessionInfo | null> => {
+    const session = await getSession(sessionId, userId);
     if (!session) return null;
     const updatedSession: SessionInfo = {
         ...session,
@@ -71,18 +71,32 @@ const createSessionInfo = async (data: SessionData = {}): Promise<SessionInfo> =
     return session;
 };
 
-const sessionMiddleware = async ( context: HttpContext, next: Function) => {
-    logger.info('sessionMiddleware');
-    const { httpData , responseData } = context;
-    const cookies = httpData.cookies;
-    const sessionId = cookies.get(sessionConfig.cookieName);
+const sessionHandler = async ( context: HttpContext, accessToken: string | undefined ) => {
+
+    const { responseData } = context;
+    let userId = undefined;
+    let sessionId = undefined;
+    if(accessToken){
+        const decodedString = Buffer.from(accessToken, 'base64').toString('utf-8');
+        const index = decodedString.indexOf('.');
+        if(index === -1) sessionId = decodedString;
+        else {
+            userId = decodedString.substring(0, index);
+            sessionId = decodedString.substring(index + 1);
+        }
+    }
+
     let sessionInfo = null;
 
-    if(sessionId) sessionInfo = await getSession(sessionId);
+    if(sessionId) sessionInfo = await getSession(sessionId, userId);
 
-    if (!sessionInfo) sessionInfo = await createSessionInfo();
+    if (!sessionInfo) sessionInfo = await createSessionInfo({ userId });
 
-    responseData.setCookie(sessionConfig.cookieName, sessionInfo.id,{
+    sessionId = userId ? `${userId}.${sessionInfo.id}` : sessionInfo.id;
+
+    const value = Buffer.from( sessionId ).toString('base64')
+
+    responseData.setCookie(sessionConfig.cookieName, value,{
         path: sessionConfig.cookie.path,
         httpOnly: sessionConfig.cookie.httpOnly,
         secure: sessionConfig.cookie.secure,
@@ -95,8 +109,6 @@ const sessionMiddleware = async ( context: HttpContext, next: Function) => {
         changeSessionData: async ( newData: SessionData) => await changeSessionData( sessionInfo!.id, newData ),
         destroySession: async () => await destroySession(sessionInfo!.id),
     }
-
-    await next()
 };
 
-export default sessionMiddleware;
+export default sessionHandler;

@@ -40,6 +40,17 @@ export default {
 
         return { status: 'ok' , cookies , sessionInfo };
     },
+    async testApiSession({ session, httpData }: HttpContext): Promise<any> {
+        logger.info('testApiSession');
+        const headers: any[] = [];
+        httpData.headers.forEach((value, key) => {
+            headers.push({ key, value});
+        });
+        
+        const sessionInfo = session?.sessionInfo;
+
+        return { status: 'ok' ,headers, sessionInfo };
+    },
 
     async index({ httpData, responseData }: HttpContext): Promise<any> {
         const payload = httpData;

@@ -149,10 +149,10 @@ const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem
     const headers = getHeaders(req);
     const params = extractParameters(route.url, url);
     const contentType = headers.get('content-type');
-    const isJson = Boolean((route.method === 'post' || route.method === 'put')
-        && (contentType && contentType.trim().toLowerCase() === 'application/json'));
+    const isJson = Boolean((route.method === 'post' || route.method === 'put') &&
+        (contentType && contentType.trim().toLowerCase() === 'application/json'));
 
-    let payload: any = contentType ? await getData(res, contentType) : null;
+    let payload: any = (isJson && contentType ) ? await getData(res, contentType) : null;
     if (payload && route.validator) {
         const validator = validators.get(route.validator);
         if (validator) payload = await validator.validate(payload);
