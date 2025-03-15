@@ -23,19 +23,28 @@ export interface Cookie {
 export interface HttpContext {
   httpData: HttpData,
   responseData: ResponseData,
+  session: Session,
   auth: any,
 }
 export interface WsContext {
   wsData: WsData,
   responseData: WsResponseData,
+  session: Session | null,
   auth: any,
 }
+
+export interface Session {
+  sessionInfo: SessionInfo | null,
+  updateSessionData: Function;
+  changeSessionData: Function;
+  destroySession: Function;
+};
 
 export interface SessionData {
   [key: string]: any;
 }
 
-export interface Session {
+export interface SessionInfo {
   id: string;
   data: SessionData;
   createdAt: string;
@@ -48,14 +57,11 @@ export interface HttpData {
   payload: any,
   query: URLSearchParams
   headers: Map<string, string>,
-  contentType: string,
+  contentType: string | undefined,
   cookies: Map<string, string>,
-  session: any,
   isJson: boolean,
 }
-// updateSessionData: Function;
-// changeSessionData: Function;
-// destroySession: Function;
+
 
 export interface WsResponseData {
   payload: any,
@@ -70,6 +76,7 @@ export interface WsData {
 }
 
 export interface ResponseData {
+  aborted: boolean,
   payload: object,
   middlewareData: any,
   headers: header[],
@@ -78,6 +85,7 @@ export interface ResponseData {
   setCookie: Function,
   setHeader: Function,
 }
+
 export type Method = 'get' | 'post' | 'del' | 'put' | 'patch' | 'ws' | 'delete'
 export type WsRoutes = Record<string, routeItem>
 export type Validators = Record<string, any>

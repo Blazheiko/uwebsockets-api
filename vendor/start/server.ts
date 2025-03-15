@@ -21,7 +21,7 @@ import { getListRoutes } from './router.js';
 
 import validators from '#vendor/start/validators.js';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
-import { Cookie, Header, MyWebSocket, RouteItem } from '../types/types.js';
+import { Cookie, Header, HttpData, MyWebSocket, ResponseData, RouteItem, Session } from '../types/types.js';
 
 const configureWebsockets = (server: TemplatedApp) => {
     return server.ws('/websocket/:token', {
@@ -103,7 +103,7 @@ const setHeaders = (res: HttpResponse, headers: Header[]) => {
         res.writeHeader(header.name, header.value);
     });
 };
-const getResponseData = () => {
+const getResponseData = (): ResponseData => {
     const cookies: Cookie[] = [];
     const headers: Header[] = [];
     const setCookie = (name: string, value: string, options: any = {}) =>
@@ -126,16 +126,16 @@ const getResponseData = () => {
     return {
         aborted: false,
         payload: {},
-        middlewareData: {},
+        middlewareData: null,
         headers,
         cookies,
-        status: 200,
+        status: '200',
         setCookie,
         setHeader,
     };
 };
 
-const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem) => {
+const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem): Promise<HttpData> => {
     const cookies: Map<string, string> = parseCookies(req.getHeader('cookie'));
     // const contentType = req.getHeader('content-type').trim();
     const url = req.getUrl();
@@ -144,8 +144,8 @@ const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem
     const headers = getHeaders(req);
     const params = extractParameters(route.url, url);
     const contentType = headers.get('content-type');
-    const isJson = (route.method === 'post' || route.method === 'put')
-        && (contentType && contentType.trim().toLowerCase() === 'application/json');
+    const isJson = Boolean((route.method === 'post' || route.method === 'put')
+        && (contentType && contentType.trim().toLowerCase() === 'application/json'));
 
     let payload: any = contentType ? await getData(res, contentType) : null;
     if (payload && route.validator) {
@@ -160,16 +160,17 @@ const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem
         headers,
         contentType,
         cookies,
-        session: {
-            sessionInfo: null,
-            updateSessionData: () => null,
-            changeSessionData: () => null,
-            destroySession: () => 0,
-        },
-
         isJson,
     });
 };
+const getDefaultSession = (): Session => {
+    return {
+        sessionInfo: null,
+        updateSessionData: () => null,
+        changeSessionData: () => null,
+        destroySession: () => 0,
+    }
+}
 const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteItem) => {
     logger.info('Handler method:' + route.method + ' url:' + route.url);
     if (state.listenSocket) {
@@ -180,7 +181,9 @@ const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteI
             });
             const httpData = await getHttpData(req, res, route);
             const responseData = getResponseData();
-            await executeMiddlewares(route, httpData, responseData);
+            const session: Session =  getDefaultSession();
+            const context = { httpData, responseData , session , auth: null }
+            await executeMiddlewares(route.middlewares, context );
             responseData.payload = await route.handler({
                 httpData,
                 responseData,

@@ -5,7 +5,6 @@ import logger from '#logger';
 import User from '#app/models/User.js';
 import httpRoutes from '#app/routes/httpRoutes.js';
 import wsRoutes from '#app/routes/wsRoutes.js';
-// import { HttpData, ResponseData } from '#vendor/types/types.d.ts';
 import { HttpContext } from './../../../vendor/types/types.js';
 
 export default {
@@ -15,7 +14,7 @@ export default {
     async testHeaders({ httpData }: HttpContext): Promise<any> {
         logger.info('testHeaders');
         const headers: any[] = [];
-        httpData.headers.forEach((value, key, map) => {
+        httpData.headers.forEach((value, key) => {
             headers.push({ key, value});
         });
         return { status: 'ok' , headers };
@@ -24,21 +23,21 @@ export default {
     async getSetCookies({ httpData }: HttpContext): Promise<any> {
         logger.info('testCookies');
         const cookies: any[] = [];
-        httpData.cookies.forEach((value, key, map) => {
+        httpData.cookies.forEach((value, key) => {
             cookies.push({ key, value});
         });
 
         return { status: 'ok' , cookies };
     },
-    async testSession({ httpData }: HttpContext): Promise<any> {
+    async testSession({ session, httpData }: HttpContext): Promise<any> {
         logger.info('testSession');
         const cookies: any[] = [];
-        httpData.cookies.forEach((value, key, map) => {
+        httpData.cookies.forEach((value, key) => {
             cookies.push({ key, value});
         });
-        const session = httpData.session.sessionInfo;
+        const sessionInfo = session.sessionInfo;
 
-        return { status: 'ok' , cookies , session };
+        return { status: 'ok' , cookies , sessionInfo };
     },
 
     async index({ httpData, responseData }: HttpContext): Promise<any> {

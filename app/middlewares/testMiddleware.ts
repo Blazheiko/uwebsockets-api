@@ -1,9 +1,11 @@
 import logger from '#logger';
-import { HttpData, ResponseData } from '../../vendor/types/types.js';
+import { HttpContext, HttpData, ResponseData, WsContext } from '../../vendor/types/types.js';
 
-export default async (httpData: HttpData, responseData: ResponseData, next: Function) => {
+export default async ( { responseData } : HttpContext | WsContext, next: Function) => {
     logger.info('testMiddleware.js');
-    responseData.middlewareData = { middleware1: 'TEST1' };
+    if ('middlewareData' in responseData) {
+        responseData.middlewareData = { middleware1: 'TEST1' };
+    }
     // responseData.status = '401 Unauthorized';
     await next();
 };

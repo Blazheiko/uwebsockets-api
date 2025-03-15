@@ -1,8 +1,10 @@
 import logger from '#logger';
-import { HttpData, ResponseData } from '../../vendor/types/types.js';
+import { HttpContext, HttpData, ResponseData, WsContext } from '../../vendor/types/types.js';
 
-export default async (httpData: HttpData, responseData: ResponseData, next: Function) => {
+export default async ({ responseData } : HttpContext | WsContext, next: Function) => {
     logger.info('testMiddleware2.js');
-    responseData.middlewareData = { middleware2: 'TEST2' };
+    if ('middlewareData' in responseData) {
+        responseData.middlewareData = { middleware2: 'TEST2' };
+    }
     await next();
 };

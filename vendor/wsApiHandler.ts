@@ -28,11 +28,8 @@ export default async (message: any) => {
                 payload: payload ? Object.freeze({ ...payload }) : null,
             };
             if (route.middlewares?.length) {
-                await executeMiddlewares(
-                    route.middlewares,
-                    wsData,
-                    responseData,
-                );
+                const context = { wsData, responseData , session : null , auth: null};
+                await executeMiddlewares(route.middlewares, context);
             }
             const handler = route.handler;
             return await handler(wsData, responseData);
