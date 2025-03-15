@@ -53,7 +53,7 @@ export default [
         validator: 'register',
       },
     ],
-    middlewares: ['test2'],
+    middlewares: ['session_web'],
     prefix: '/api',
   },
 ];
@@ -108,6 +108,17 @@ export default {
         });
         responseData.setCookie('cookieTest', 'test');
         return { status: 'ok' };
+    },
+    async testSession({ session, httpData }: HttpContext): Promise<any> {
+        logger.info('testSession');
+        logger.info(session);
+        const cookies: any[] = [];
+        httpData.cookies.forEach((value, key) => {
+            cookies.push({ key, value});
+        });
+        const sessionInfo = session?.sessionInfo;
+
+        return { status: 'ok' , cookies , sessionInfo };
     },
 }
 ```
