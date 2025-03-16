@@ -2,7 +2,6 @@ import logger from '#logger';
 import User from '#app/models/User.js';
 import { HttpContext } from '../../../vendor/types/types.js';
 import { hashPassword, validatePassword } from 'metautil';
-import sessionHandler from '../../../vendor/utils/sessionHandler.js';
 
 export default {
     async register(context: HttpContext) {
