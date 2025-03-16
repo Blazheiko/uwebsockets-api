@@ -3,7 +3,7 @@ import { DateTime } from 'luxon';
 import crypto from 'crypto';
 import { HttpContext, HttpData, ResponseData, Session, SessionData, SessionInfo } from '../types/types.js';
 import sessionConfig from '#config/session.js';
-import logger from '../../logger.js';
+import logger from '#logger';
 
 
 const generateSessionId = () : string => crypto.randomUUID();
@@ -71,10 +71,10 @@ const createSessionInfo = async (data: SessionData = {}): Promise<SessionInfo> =
     return session;
 };
 
-const sessionHandler = async ( context: HttpContext, accessToken: string | undefined ) => {
+const sessionHandler = async ( context: HttpContext, accessToken: string | undefined, userId: string | undefined  ) => {
 
     const { responseData } = context;
-    let userId = undefined;
+    // let userId = undefined;
     let sessionId = undefined;
     if(accessToken){
         const decodedString = Buffer.from(accessToken, 'base64').toString('utf-8');

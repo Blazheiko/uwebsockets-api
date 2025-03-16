@@ -12,7 +12,7 @@ const sessionAPI = async (context: HttpContext, next: Function) => {
     if (authorization && authorization.startsWith('Bearer ')) {
         sessionId = authorization.slice(7);
     }
-    await sessionHandler( context, sessionId )
+    await sessionHandler( context, sessionId, undefined )
 
     await next()
 };
