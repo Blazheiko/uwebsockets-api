@@ -44,7 +44,14 @@ export default [
                 handler: AuthController.login,
                 validator: 'login',
             },
+            {
+                url: '/logout',
+                method: 'post',
+                handler: AuthController.logout,
+                validator: 'login',
+            },
         ],
+        middlewares: ['session_web'],
         prefix: 'auth',
     },
     {

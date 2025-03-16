@@ -7,7 +7,7 @@ import sessionHandler from '../../../vendor/utils/sessionHandler.js';
 export default {
     async register(context: HttpContext) {
         logger.info('register handler');
-        const { httpData } = context;
+        const { httpData, auth, session } = context;
         const {name , email , password} = httpData.payload;
         const hash = await hashPassword(password);
 
@@ -16,14 +16,14 @@ export default {
             email: email,
             password: hash,
         });
-
-        await sessionHandler( context, '', `${user.id}`)
-        return { status: 'ok', user: User.serialize(user) };
+        await session.destroySession()
+        const res = await auth.login(user);
+        return { status: (res ? 'success':'error'), user: User.serialize(user) };
 
     },
     async login(context: HttpContext){
         logger.info('login handler');
-        const { httpData, responseData } = context;
+        const { httpData, responseData, auth } = context;
         const { email , password } = httpData.payload;
         const user = await User.query()
             .where('email','=', email)
@@ -31,13 +31,17 @@ export default {
         if(user){
             const valid = await validatePassword(password, user.password);
             if (valid) {
-                await sessionHandler( context, '', `${user.id}`)
-                return { status: 'ok', user: User.serialize(user) };
+                const res = await auth.login(user);
+                return { status: (res ? 'success':'error'), user: User.serialize(user) };
             }
         }
-
         responseData.status = 401;
         return 'unauthorized';
-
+    },
+    async logout(context: HttpContext){
+        logger.info('logout handler');
+        const { auth } = context;
+        const res = await auth.logout();
+        return { status: (res ? 'success':'error')}
     }
 }

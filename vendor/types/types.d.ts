@@ -33,12 +33,20 @@ export interface WsContext {
   auth: any,
 }
 
+export interface Auth {
+  getUserId: Function,
+  check: Function,
+  login: Function,
+  logout: Function,
+  logoutAll: Function,
+}
+
 export interface Session {
   sessionInfo: SessionInfo | null,
   updateSessionData: Function;
   changeSessionData: Function;
   destroySession: Function;
-};
+}
 
 export interface SessionData {
   [key: string]: any;

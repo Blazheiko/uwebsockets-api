@@ -1,9 +1,10 @@
 import redis from '#database/redis.js';
 import { DateTime } from 'luxon';
 import crypto from 'crypto';
-import { HttpContext, HttpData, ResponseData, Session, SessionData, SessionInfo } from '../types/types.js';
+import { Auth, HttpContext, HttpData, ResponseData, Session, SessionData, SessionInfo } from '../types/types.js';
 import sessionConfig from '#config/session.js';
 import logger from '#logger';
+import cookies from '../../config/cookies.js';
 
 
 const generateSessionId = () : string => crypto.randomUUID();
@@ -71,12 +72,14 @@ const createSessionInfo = async (data: SessionData = {}): Promise<SessionInfo> =
     return session;
 };
 
+const createCookieValue = (sessionId: string, userId: string | undefined): string => (userId ? `${userId}.${sessionId}` : sessionId)
+
 const sessionHandler = async ( context: HttpContext, accessToken: string | undefined, userId: string | undefined  ) => {
 
     const { responseData } = context;
     // let userId = undefined;
     let sessionId = undefined;
-    if(accessToken){
+    if(!userId && accessToken){
         const decodedString = Buffer.from(accessToken, 'base64').toString('utf-8');
         const index = decodedString.indexOf('.');
         if(index === -1) sessionId = decodedString;
@@ -92,9 +95,9 @@ const sessionHandler = async ( context: HttpContext, accessToken: string | undef
 
     if (!sessionInfo) sessionInfo = await createSessionInfo({ userId });
 
-    sessionId = userId ? `${userId}.${sessionInfo.id}` : sessionInfo.id;
+    const cookieValue = createCookieValue(sessionInfo.id, userId);
 
-    const value = Buffer.from( sessionId ).toString('base64')
+    const value = Buffer.from( cookieValue ).toString('base64')
 
     responseData.setCookie(sessionConfig.cookieName, value,{
         path: sessionConfig.cookie.path,
@@ -103,12 +106,40 @@ const sessionHandler = async ( context: HttpContext, accessToken: string | undef
         maxAge: sessionConfig.age,
     });
 
-    context.session = {
-        sessionInfo,
-        updateSessionData: async ( newData: SessionData) => await updateSessionData( sessionInfo!.id, newData ),
-        changeSessionData: async ( newData: SessionData) => await changeSessionData( sessionInfo!.id, newData ),
-        destroySession: async () => await destroySession(sessionInfo!.id),
-    }
-};
+    context.session.sessionInfo = sessionInfo;
+    context.session.updateSessionData = async ( newData: SessionData) => await updateSessionData( sessionInfo!.id, newData );
+    context.session.changeSessionData = async ( newData: SessionData) => await changeSessionData( sessionInfo!.id, newData );
+    context.session.destroySession = async () => await destroySession(sessionInfo!.id);
+
+    context.auth.getUserId = () => (sessionInfo?.data?.userId);
+    context.auth.check = () => Boolean(sessionInfo?.data?.userId);
+    context.auth.login = async (user: any) => {
+        logger.info('login handler');
+        const userId = sessionInfo?.data?.userId;
+        const sessionId = sessionInfo?.id;
+        if( sessionId) await destroySession( sessionId, (userId ? String(userId): undefined) )
+        await sessionHandler( context, '', String(user.id))
+        logger.info('login handler end');
+        return true;
+    };
+    context.auth.logout = async () => {
+        const userId = sessionInfo?.data?.userId;
+        if(!userId) return true;
+        const sessionId = sessionInfo?.id;
+        if(!sessionId) return false;
+        await destroySession( sessionId, String(userId))
+        await sessionHandler( context, '', undefined)
+        return true;
+    };
+    context.auth.logoutAll = async () => {
+        const userId = sessionInfo?.data?.userId;
+        if(!userId) return true;
+        const sessionId = sessionInfo?.id;
+        if(!sessionId) return false;
+        await redis.del(`session:${userId}`);
+        await sessionHandler( context, '', undefined)
+        return true;
+    };
+}
 
 export default sessionHandler;

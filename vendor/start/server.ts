@@ -31,6 +31,7 @@ import {
     RouteItem,
     Session
 } from '../types/types.js';
+import contextHandler from '../utils/contextHandler.js';
 
 const configureWebsockets = (server: TemplatedApp) => {
     return server.ws('/websocket/:token', {
@@ -168,14 +169,7 @@ const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem
         isJson,
     });
 };
-const getDefaultSession = (): Session => {
-    return {
-        sessionInfo: null,
-        updateSessionData: () => null,
-        changeSessionData: () => null,
-        destroySession: () => 0,
-    }
-}
+
 const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteItem) => {
     logger.info('Handler method:' + route.method + ' url:' + route.url);
     if (state.listenSocket) {
@@ -186,11 +180,7 @@ const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteI
             });
             const httpData = await getHttpData(req, res, route);
             const responseData = getResponseData();
-            const session: Session =  getDefaultSession();
-            const context = { httpData, responseData , session , auth: null }
-
-            // if(route.middlewares?.length) route.middlewares.push( handlerMiddleware );
-            // else route.middlewares = [ handlerMiddleware ];
+            const context = contextHandler( httpData, responseData )
 
             if( await executeMiddlewares(route.middlewares, context ) && responseData.status >= 200 && responseData.status < 300 )
                 responseData.payload = await route.handler( context );
