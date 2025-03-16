@@ -49,6 +49,7 @@ const readData = (res: HttpResponse) => {
 
 const readJson = (body: string) => {
     logger.info('readJson');
+    if(!body) return {};
     try {
         return JSON.parse( body );
     } catch (e) {
