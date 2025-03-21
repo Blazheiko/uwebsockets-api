@@ -173,6 +173,41 @@ const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem
     });
 };
 
+const sendResponse = (res: HttpResponse, httpData: HttpData, responseData: ResponseData) => {
+    res.writeStatus(`${responseData.status}`);
+    if (httpData.isJson)
+        res.writeHeader('content-type', 'application/json');
+    if (responseData.headers?.length)
+        setHeaders(res, responseData.headers);
+    if (responseData.cookies?.length)
+        setCookies(res, responseData.cookies);
+    if (corsConfig.enabled) setCorsHeader(res);
+    if(responseData.payload && responseData.status >= 200 && responseData.status < 300) 
+        res.end(JSON.stringify(responseData.payload));
+    else res.end(`${responseData.status}`);
+}
+
+interface ValidationError extends Error {
+    code?: string;
+    messages?: string[];
+}
+
+const handleError = (res: HttpResponse, error: unknown) => {
+    if ((error as ValidationError).code === 'E_VALIDATION_ERROR') {
+        const validationError = error as ValidationError;
+        res.writeStatus('422').end(
+            JSON.stringify({
+                message: 'Validation failure',
+                messages: validationError.messages,
+            })
+        );
+    } else {
+        logger.error(error);
+        res.writeStatus('500').end('Server error');
+    }
+    
+};
+
 const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteItem) => {
     logger.info('Handler method:' + route.method + ' url:' + route.url);
     if (state.listenSocket) {
@@ -190,31 +225,12 @@ const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteI
 
             if (aborted) return;
             res.cork(() => {
-                res.writeStatus(`${responseData.status}`);
-                if (httpData.isJson)
-                    res.writeHeader('content-type', 'application/json');
-                if (responseData.headers?.length)
-                    setHeaders(res, responseData.headers);
-                if (responseData.cookies?.length)
-                    setCookies(res, responseData.cookies);
-                if (corsConfig.enabled) setCorsHeader(res);
-                if(responseData.payload && responseData.status >= 200 && responseData.status < 300) res.end(JSON.stringify(responseData.payload));
-                else res.end(`${responseData.status}`);
+                sendResponse(res, httpData, responseData);
+
             });
-        } catch (e: any) {
+        } catch (error: unknown) {
             res.cork(() => {
-                if (e.code === 'E_VALIDATION_ERROR') {
-                    // logger.error('E_VALIDATION_ERROR');
-                    res.writeStatus('422').end(
-                        JSON.stringify({
-                            message: 'Validation failure',
-                            messages: e.messages,
-                        }),
-                    );
-                } else {
-                    logger.error(e);
-                    res.writeStatus('500').end('Server error');
-                }
+                handleError(res, error);
             });
         }
     } else {
