@@ -1,38 +1,10 @@
 import process from 'node:process';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
-// import logger from '#logger';
+import logger from '#logger';
+import appConfig from '#config/app.js';
 
-// if (appConfig.serveStatic) {
-//   logger.info('cache Directory ' + STATIC_PATH);
-//   cacheDirectory(STATIC_PATH).then(() => {
-//     logger.info('Success cache Directory ' + STATIC_PATH);
-//   });
-// }
 
-// if (appConfig.serveStatic) {
-//   const url = req.getUrl();
-//
-//   const ext =
-//     url === '/' || url === ''
-//       ? 'html'
-//       : path.extname(url).substring(1).toLowerCase();
-//   if (ext) {
-//     const mimeType = MIME_TYPES[ext] || MIME_TYPES.html;
-//     data =
-//       (url === '/' || url === '') &&
-//       cache.has('/index.html')
-//         ? cache.get('/index.html')
-//         : cache.get(url);
-//     // data = cache.get(url);
-//     statusCode = '200';
-//     if (!data) {
-//       statusCode = '404';
-//       data = cache.get('/404.html');
-//     }
-//     res.writeHeader('Content-Type', mimeType);
-//   }
-// }
 
 const STATIC_PATH = path.join(process.cwd(), './public');
 
@@ -68,4 +40,35 @@ const cacheDirectory = async (directoryPath: string) => {
         else cacheFile(filePath);
     }
 };
+
+// if (appConfig.serveStatic) {
+//     logger.info('cache Directory ' + STATIC_PATH);
+//     cacheDirectory(STATIC_PATH).then(() => {
+//         logger.info('Success cache Directory ' + STATIC_PATH);
+//     });
+// }
+//
+// if (appConfig.serveStatic) {
+//     const url = req.getUrl();
+//
+//     const ext =
+//         url === '/' || url === ''
+//             ? 'html'
+//             : path.extname(url).substring(1).toLowerCase();
+//     if (ext) {
+//         const mimeType = MIME_TYPES[ext] || MIME_TYPES.html;
+//         data =
+//             (url === '/' || url === '') &&
+//             cache.has('/index.html')
+//                 ? cache.get('/index.html')
+//                 : cache.get(url);
+//         // data = cache.get(url);
+//         statusCode = '200';
+//         if (!data) {
+//             statusCode = '404';
+//             data = cache.get('/404.html');
+//         }
+//         res.writeHeader('Content-Type', mimeType);
+//     }
+// }
 export { cacheFile, cacheDirectory };

@@ -57,7 +57,7 @@ export interface SessionInfo {
   data: SessionData;
   createdAt: string;
   updatedAt?: string;
-  expiresAt: string;
+  // expiresAt: string;
 }
 
 export interface HttpData {

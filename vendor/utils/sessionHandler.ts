@@ -59,12 +59,12 @@ const destroySession = async (sessionId: string, userId = 'guest' ): Promise<voi
 }
 
 const createSessionInfo = async (data: SessionData = {}): Promise<SessionInfo> => {
-    const sessionId = generateSessionId();
+    // const sessionId = generateSessionId();
     const session: SessionInfo = {
-        id: sessionId,
+        id: generateSessionId(),
         data,
         createdAt: DateTime.now().toISO(),
-        expiresAt: DateTime.now().plus({ seconds: sessionConfig.age }).toISO(),
+        // expiresAt: DateTime.now().plus({ seconds: sessionConfig.age }).toISO(),
     };
 
     await saveSession(session);

@@ -1,4 +1,4 @@
-import uWS, { HttpRequest, HttpResponse, TemplatedApp, WebSocket } from 'uWebSockets.js';
+import uWS, { HttpRequest, HttpResponse, TemplatedApp, us_socket_context_t, WebSocket } from 'uWebSockets.js';
 import appConfig from '#config/app.js';
 import corsConfig from '#config/cors.js';
 import cookiesConfig from '#config/cookies.js';
@@ -40,8 +40,11 @@ const configureWebsockets = (server: TemplatedApp) => {
         maxBackpressure: 1024 * 1024,
         maxPayloadLength: 100 * 1024 * 1024, // 100 MB
         open: (ws: WebSocket<any>) => onOpen(ws as MyWebSocket),
-        message: (ws: WebSocket<any>, message: ArrayBuffer, isBinary: boolean) => onMessage(ws as MyWebSocket, message, isBinary),
-        upgrade: (res: HttpResponse, req: HttpRequest, context) => handleUpgrade(res, req, context),
+        message: ( ws: WebSocket<any>, message: ArrayBuffer, isBinary: boolean ) => onMessage(ws as MyWebSocket, message, isBinary),
+        // upgrade: async (res: HttpResponse, req: HttpRequest, context: us_socket_context_t) => {
+        //    await handleUpgrade(res, req, context);
+        // },
+        upgrade: handleUpgrade,
         // drain: (ws) => handleDrain(ws),
         close: (ws, code, message) => onClose(ws as MyWebSocket, code, message),
     });
@@ -223,14 +226,14 @@ const configureHttp = (server: TemplatedApp) => {
     logger.info('configureHttp get');
     // console.log(getGetRoutes());
     getListRoutes().forEach((route: RouteItem) => {
-        // console.log(route);
-        // @ts-ignore
-        server[route.method](
-            `/${normalizePath(route.url)}`,
-            async (res: HttpResponse, req: HttpRequest) => {
-                await setHttpHandler(res, req, route);
-            },
-        );
+        if(route.method !== 'ws' && route.method !== 'delete' ){
+            server[route.method](
+                `/${normalizePath(route.url)}`,
+                async (res: HttpResponse, req: HttpRequest) => {
+                    await setHttpHandler(res, req, route);
+                },
+            );
+        }
     });
 
     server.any('/*', (res, req) => {

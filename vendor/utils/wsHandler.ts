@@ -4,6 +4,8 @@ import { generateUUID } from 'metautil';
 import redis from '#database/redis.js';
 import { HttpRequest, HttpResponse, us_socket_context_t } from 'uWebSockets.js';
 import { MyWebSocket } from '../types/types.js';
+import session from '../../config/session.js';
+import user from '../../app/models/User.js';
 
 
 
@@ -88,21 +90,21 @@ const onOpen = (ws: MyWebSocket) => {
 
     // if (this.server.closing) this.serverClosingHandler(ws)
 
-    const userData = ws.getUserData();
-    // const user = getUserByToken(userData.token);
-    const token = redis.get(`auth:ws:${userData.token}`);
-    if (!token) {
-        const errorMessage = {
-            event: 'service:error',
-            data: {
-                code: 4001,
-                message: `Token ${userData.token} does not exist.`,
-            },
-        };
-        logger.info(errorMessage);
-        // this.errorClientHandler(ws, errorMessage)
-        return ws.end(4001);
-    }
+    // const userData = ws.getUserData();
+    // // const user = getUserByToken(userData.token);
+    // const token = redis.get(`auth:ws:${userData.token}`);
+    // if (!token) {
+    //     const errorMessage = {
+    //         event: 'service:error',
+    //         data: {
+    //             code: 4001,
+    //             message: `Token ${userData.token} does not exist.`,
+    //         },
+    //     };
+    //     logger.info(errorMessage);
+    //     // this.errorClientHandler(ws, errorMessage)
+    //     return ws.end(4001);
+    // }
     let broadcastMessage = {
         event: 'service:connection_established',
         data: {
@@ -117,24 +119,73 @@ const onOpen = (ws: MyWebSocket) => {
 
 const ab2str = (buffer: ArrayBuffer, encoding: BufferEncoding | undefined = 'utf8') => Buffer.from(buffer).toString(encoding);
 
-const handleUpgrade = (res: HttpResponse, req: HttpRequest, context: us_socket_context_t): void => {
+const checkUserAccess = async (token: string): Promise<{ sessionId: string , userId: number  } | null> => {
+    if (!token) return null;
+    try {
+        const tokenData = await redis.get(`auth:ws:${token}`);
+        if (!tokenData) return null;
+
+        const userData = JSON.parse(tokenData);
+        const { sessionId, userId } = userData
+        if (!sessionId || !userId) return null;
+
+        const sessionData = await redis.get(`session:${userId}:${sessionId}`);
+        if (!sessionData) return null;
+
+        const sessionInfo = JSON.parse(sessionData);
+        if(sessionInfo && sessionId && userId && sessionInfo.data?.userId == userId)
+            return { sessionId, userId }
+
+        return null;
+    } catch (error) {
+        logger.error('Error checking user access:', error);
+        return null;
+    }
+}
+
+
+const handleUpgrade = async (res: HttpResponse, req: HttpRequest, context: us_socket_context_t): Promise<void> => {
+    logger.info('handleUpgrade');
+    let aborted = false;
+    res.onAborted(() => {
+        logger.warn('Client aborted before operation completed');
+        aborted = true;
+    });
+    const secWebsocketKey = req.getHeader('sec-websocket-key');
+    const secWebsocketProtocol = req.getHeader('sec-websocket-protocol');
+    const secWebsocketExtensions = req.getHeader('sec-websocket-extensions');
     const userAgent = req.getHeader('user-agent');
     let ip = req.getHeader('x-forwarded-for');
     if (ip) ip = ip.trim();
+    const token = req.getParameter(0);
+    let dataAccess: { sessionId: string, userId: number } | null = null;
 
-    res.upgrade(
-        {
-            ip: ip ? ip : ab2str(res.getRemoteAddressAsText()),
-            ip2: ab2str(res.getProxiedRemoteAddressAsText()),
-            token: req.getParameter(0),
-            user: null,
-            timeStart: Date.now(),
-            userAgent,
-        },
-        req.getHeader('sec-websocket-key'),
-        req.getHeader('sec-websocket-protocol'),
-        req.getHeader('sec-websocket-extensions'),
-        context,
-    );
+    if (token) dataAccess = await checkUserAccess(token);
+    if (!dataAccess && !aborted) {
+        logger.warn('Access ws denied');
+        res.cork(() => {
+            res.writeStatus('401 Unauthorized');
+            res.end('Access denied');
+        });
+
+    }else if(!aborted) {
+        res.upgrade(
+            {
+                ip: ip ? ip : ab2str(res.getRemoteAddressAsText()),
+                ip2: ab2str(res.getProxiedRemoteAddressAsText()),
+                token: token,
+                user: null,
+                sessionId: dataAccess? dataAccess.sessionId : undefined,
+                userId: dataAccess?  dataAccess.userId : undefined,
+                timeStart: Date.now(),
+                userAgent,
+            },
+            secWebsocketKey,
+            secWebsocketProtocol,
+            secWebsocketExtensions,
+            context,
+        );
+    }
 };
+
 export { onMessage, onOpen, onClose, handleUpgrade, closeAllWs };
