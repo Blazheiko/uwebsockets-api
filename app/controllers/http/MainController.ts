@@ -6,12 +6,12 @@ import User from '#app/models/User.js';
 import httpRoutes from '#app/routes/httpRoutes.js';
 import wsRoutes from '#app/routes/wsRoutes.js';
 import { HttpContext } from './../../../vendor/types/types.js';
-import redis from '#database/redis.js';
 
 export default {
     async ping() {
         return { status: 'ok' };
     },
+    
     async testHeaders({ httpData }: HttpContext): Promise<any> {
         logger.info('testHeaders');
         const headers: any[] = [];
