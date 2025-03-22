@@ -6,6 +6,10 @@ import User from '#app/models/User.js';
 import httpRoutes from '#app/routes/httpRoutes.js';
 import wsRoutes from '#app/routes/wsRoutes.js';
 import { HttpContext } from './../../../vendor/types/types.js';
+import { generateKey } from 'metautil';
+import redis from '#database/redis.js';
+import configApp from '#config/app.js';
+import configSession from '#config/session.js';
 
 export default {
     async ping() {
@@ -65,17 +69,30 @@ export default {
         console.log('testParams');
         return { params, query, status: 'ok' };
     },
-    async init({ responseData }: HttpContext): Promise<any> {
+    async init({ responseData, session }: HttpContext): Promise<any> {
         logger.info('init');
-        responseData.setCookie('cookieTest2', 'test2', {
-            path: '/',
-            httpOnly: true,
-            secure: true,
-            maxAge: 3600,
-        });
-        responseData.setCookie('cookieTest3', 'test3');
-        return { status: 'ok', httpRoutes, wsRoutes };
+        const sessionInfo = session?.sessionInfo;
+        if (!sessionInfo) {
+            return { status: 'error', message: 'Session not found' };
+        }
+        const userId = sessionInfo.data?.userId;
+        if (!userId) {
+            return { status: 'unauthorized', message: 'User ID not found' };
+        }
+        const user = await User.query().where('id','=', userId).first();
+        if (!user) {
+            return { status: 'unauthorized', message: 'User not found' };
+        }
+        const token = generateKey(configApp.characters, 16);
+        await redis.setex(
+            `auth:ws:${token}`,
+            configSession.age,
+            JSON.stringify({ sessionId: sessionInfo.id, userId: user.id }),
+        );
+        
+        return { status: 'ok', user: User.serialize(user), token };
     },
+    
     async setHeaderAndCookie({ responseData }: HttpContext): Promise<any> {
         logger.info('set-header-and-cookie');
         responseData.headers.push({ name: 'test-header', value: 'test' });

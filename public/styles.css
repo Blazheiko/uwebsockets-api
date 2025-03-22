@@ -15,6 +15,8 @@ body {
     height: 100vh;
     background-color: #fff;
     position: relative;
+    margin-top: 0;
+    transition: margin-top 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .contacts {
@@ -460,4 +462,150 @@ body {
 .modal-overlay.show .modal {
     transform: scale(1);
     opacity: 1;
+}
+
+/* Стили для индикатора соединения */
+.connection-status {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(255, 59, 48, 0.15);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    color: #ff3b30;
+    padding: 10px 20px;
+    text-align: center;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    font-weight: 500;
+    transform: translateY(-100%);
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+}
+
+.connection-status.offline {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.retry-button {
+    background-color: rgba(255, 59, 48, 0.9);
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.retry-button:hover {
+    background-color: rgba(255, 59, 48, 1);
+    transform: scale(1.05);
+}
+
+.retry-button:active {
+    transform: scale(0.95);
+}
+
+/* Стили для лоадера */
+.loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1001; /* Увеличиваем z-index, чтобы быть поверх всего */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.loader-overlay.show {
+    display: flex;
+    opacity: 1;
+}
+
+/* Вариант 1: Классический спиннер */
+.loader {
+    width: 48px;
+    height: 48px;
+    border: 5px solid #FFF;
+    border-bottom-color: #003399;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* ИЛИ Вариант 2: Три точки */
+.loader {
+    width: 60px;
+    height: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.loader div {
+    width: 12px;
+    height: 12px;
+    background: #003399;
+    border-radius: 50%;
+    animation: bounce 0.5s ease-in-out infinite;
+}
+
+.loader div:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.loader div:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* ИЛИ Вариант 3: Пульсирующий круг */
+.loader {
+    width: 48px;
+    height: 48px;
+    background: #003399;
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.8); opacity: 0.5; }
+    50% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(0.8); opacity: 0.5; }
+}
+
+/* Добавляем стиль для блокировки прокрутки при активном лоадере */
+body.loading {
+    overflow: hidden;
+}
+
+/* Добавляем отступ когда показывается статус соединения */
+.connection-status.offline + .chat-container {
+    margin-top: 40px;
 }

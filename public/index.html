@@ -6,9 +6,24 @@
   <title>Chat</title>
   <link rel="stylesheet" href="styles.css">
   <script defer src="websocket-base.js"></script>
-  <script src="main.js"></script>
+  <script defer src="main.js"></script>
 </head>
 <body>
+  <!-- Индикатор соединения -->
+  <div class="connection-status">
+    <span>No internet connection</span>
+    <button class="retry-button">Retry</button>
+  </div>
+
+  <!-- Лоадер -->
+  <div class="loader-overlay">
+    <div class="loader">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+  </div>
+
   <div class="chat-container">
     <!-- Кнопка переключения контактов -->
     <button class="toggle-contacts">
@@ -182,7 +197,11 @@
             </div>
         </div>
     </div>
-</div>
+  </div>
 
+  <script>
+    console.log('Loader exists:', document.querySelector('.loader-overlay') !== null);
+    console.log('Connection status exists:', document.querySelector('.connection-status') !== null);
+  </script>
 </body>
 </html>
