@@ -226,7 +226,6 @@ const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteI
             if (aborted) return;
             res.cork(() => {
                 sendResponse(res, httpData, responseData);
-
             });
         } catch (error: unknown) {
             res.cork(() => {

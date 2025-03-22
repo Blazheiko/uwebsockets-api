@@ -99,3 +99,51 @@ window.Api = api;
 init().then(() => {
     console.log('init success');
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleButton = document.querySelector('.toggle-contacts');
+    const contactsList = document.querySelector('.contacts');
+
+    toggleButton.addEventListener('click', function() {
+        contactsList.classList.toggle('show');
+    });
+
+    // Закрываем список контактов при клике на чат в мобильной версии
+    document.querySelector('.chat-area').addEventListener('click', function() {
+        if (window.innerWidth <= 768) {
+            contactsList.classList.remove('show');
+        }
+    });
+});
+
+function showModal(modalId) {
+    document.getElementById(modalId).classList.add('show');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('show');
+}
+
+function switchModal(currentModalId, nextModalId) {
+    closeModal(currentModalId);
+    showModal(nextModalId);
+}
+
+// Закрытие модального окна при клике вне его области
+document.addEventListener('click', function(event) {
+    const modals = document.querySelectorAll('.modal-overlay');
+    modals.forEach(modal => {
+        if (event.target === modal) {
+            modal.classList.remove('show');
+        }
+    });
+});
+// Показать индикатор печатания
+function showTypingIndicator() {
+    document.querySelector('.typing-indicator').style.display = 'flex';
+}
+
+// Скрыть индикатор печатания
+function hideTypingIndicator() {
+    document.querySelector('.typing-indicator').style.display = 'none';
+}
