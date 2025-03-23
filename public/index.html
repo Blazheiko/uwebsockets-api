@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAADvnCF87pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/vnCF87pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/voSz/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/vozD///////O6ZP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/87tl///////30Zj/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg//K0Vv//////+uG8/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/wqT3////////////405z/76Mw/+6cIf/2y4v/758m/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/////////////////////////fr////////////1x4H/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/87tj///////TAcv/vozD////////////wpzn///////ClNP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/9seC///////2y4v/7pwg//zs1P//////8KU1/+6gKP/wpzn/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg//KxT////////OzV/+6cIP/1xXz///////O5Yf/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/wpTX////////+/f/unCD/9MBw///////30JT/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/////////fv/7pwg//K1WP//////+NWh/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/vniX/76Aq/+6cIP/unCD/8Kg7/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/vnCF87pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/vnCF8gAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAEAAA==" rel="icon" type="image/x-icon">
-  <title>Chat</title>
+  <title>Chat Application</title>
   <link rel="stylesheet" href="styles.css">
   <script defer src="websocket-base.js"></script>
   <script defer src="main.js"></script>
@@ -203,5 +204,7 @@
     console.log('Loader exists:', document.querySelector('.loader-overlay') !== null);
     console.log('Connection status exists:', document.querySelector('.connection-status') !== null);
   </script>
+  <div id="app"></div>
+  <script type="module" src="/main.ts"></script>
 </body>
 </html>
