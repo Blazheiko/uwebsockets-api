@@ -609,3 +609,56 @@ body.loading {
 .connection-status.offline + .chat-container {
     margin-top: 40px;
 }
+
+/* Общий эффект нажатия для всех кнопок */
+button {
+    transition: transform 0.1s ease, opacity 0.1s ease, background-color 0.2s ease;
+}
+
+button:active {
+    transform: scale(0.95);
+    opacity: 0.9;
+}
+
+/* Специфичные эффекты для разных кнопок */
+.send-button:active {
+    background-color: #001e66; /* Темный оттенок основного цвета */
+    transform: scale(0.92);
+}
+
+.auth-header-button:active {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(0.95);
+}
+
+.retry-button:active {
+    transform: scale(0.92);
+}
+
+.toggle-contacts:active {
+    transform: scale(0.9);
+}
+
+.modal-close:active {
+    transform: scale(0.8);
+    color: #333;
+}
+
+.auth-button:active {
+    background-color: #001e66;
+    transform: scale(0.98);
+}
+
+/* Эффект клика для контактов в списке */
+.contact {
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.contact:active {
+    transform: scale(0.98);
+}
+
+/* Анимация нажатия для ссылок */
+.switch-form a:active {
+    color: #001e66;
+}

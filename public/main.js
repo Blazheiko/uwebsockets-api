@@ -9,10 +9,10 @@ const init = async () => {
     // data = await Api.http(
     //     'POST',
     //     '/auth/login',
-    //     JSON.stringify({
+    //     {
     //         email: 'test2@email.com',
     //         password: '123456789',
-    //     }),
+    //     },
     // );
 
     console.log(data);
@@ -39,7 +39,7 @@ const api = {
                 method.toLowerCase() !== 'get' &&
                 method.toLowerCase() !== 'delete'
             )
-                init.body = body;
+                init.body = JSON.stringify(body);
             const response = await fetch(`${BASE_URL}${route}`, init);
 
             if (!response.ok && response.status === 422) {
@@ -169,6 +169,151 @@ const toggleConnectionStatus = (online) => {
     }
 }
 
+let user = null;
+
+const saveUser = (user) => {
+    user;
+}
+
+// Функции для авторизации
+const loginUser = async (email, password) => {
+    try {
+        toggleLoader(true);
+        
+        const data = await Api.http(
+            'POST',
+            '/auth/login',
+            {
+                email,
+                password
+            }
+        );
+        
+        
+        if (data && data.status === 'success') {
+            // Сохраняем информацию о пользователе
+            user = data.user;
+            
+            // Закрываем модальное окно
+            closeModal('login-modal');
+            
+            // Обновляем UI для авторизованного пользователя
+            updateAuthUI(true, data.user.name);
+            
+            // Подключаем WebSocket если есть токен
+            if (data.token) connectWS(data.token);
+            
+        } else {
+            // showError(data?.message || 'Login failed');
+            // return ;
+        }
+    } catch (error) {
+        console.error('Login failed: ' + error.message);
+        console.error( error );
+        // showError('Login failed: ' + error.message);
+        // return ;
+    } finally {
+        toggleLoader(false);
+    }
+};
+
+const registerUser = async (name, email, password) => {
+    try {
+        toggleLoader(true);
+        
+        const data = await Api.http(
+            'POST',
+            '/auth/register',
+            {
+                name,
+                email,
+                password
+            }
+        );
+        
+        if (data && data.status === 'success') {
+            // Сохраняем информацию о пользователе
+            // localStorage.setItem('user', JSON.stringify(data.user));
+            user = data.user;
+            // Закрываем модальное окно
+            closeModal('register-modal');
+            
+            // Обновляем UI для авторизованного пользователя
+            updateAuthUI(true, data.user.name);
+            
+            // Подключаем WebSocket если есть токен
+            if (data.token) connectWS(data.token);
+            
+            // return data;
+        } else {
+            showError(data?.message || 'Registration failed');
+            // return null;
+        }
+    } catch (error) {
+        console.error('Registration failed: ' + error.message);
+        console.error( error );
+        // showError('Registration failed: ' + error.message);
+        // return null;
+    } finally {
+        toggleLoader(false);
+    }
+};
+
+// Функция для отображения ошибок
+const showError = (message) => {
+    alert(message); // Можно заменить на более красивое уведомление
+};
+
+// Функция для обновления UI после авторизации
+const updateAuthUI = (isLoggedIn, userName = '') => {
+    const authButton = document.querySelector('.auth-header-button');
+    
+    if (isLoggedIn) {
+        authButton.textContent = `Sign Out (${userName})`;
+        authButton.onclick = logout;
+    } else {
+        authButton.textContent = 'Sign In';
+        authButton.onclick = () => showModal('login-modal');
+    }
+};
+
+// Функция для выхода из аккаунта
+const logout = async () => {
+    try {
+        toggleLoader(true);
+        
+        // Очищаем локальное хранилище
+        localStorage.removeItem('user');
+        
+        // Отправляем запрос на выход (если требуется на бэкенде)
+        await Api.http('POST', '/auth/logout', null);
+        
+        // Отключаем WebSocket
+        WebSocketClient = null;
+        
+        // Обновляем UI
+        updateAuthUI(false);
+    } catch (error) {
+        console.error('Logout error:', error);
+    } finally {
+        toggleLoader(false);
+    }
+};
+
+// Проверка статуса авторизации при загрузке страницы
+// const checkAuthStatus = () => {
+//     const userData = localStorage.getItem('user');
+    
+//     if (userData) {
+//         try {
+//             const user = JSON.parse(userData);
+//             updateAuthUI(true, user.name);
+//         } catch (e) {
+//             localStorage.removeItem('user');
+//         }
+//     }
+// };
+
 // Ждем загрузки DOM перед добавлением обработчиков событий
 document.addEventListener('DOMContentLoaded', () => {
     // Проверяем наличие необходимых элементов в DOM
@@ -222,6 +367,52 @@ document.addEventListener('DOMContentLoaded', () => {
     init().then(() => {
         console.log('init success');
     });
+
+    // Проверяем статус авторизации
+    // checkAuthStatus();
+    
+    // Обработчик формы логина
+    const loginForm = document.querySelector('#login-modal form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            if (!email || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+            
+            await loginUser(email, password);
+        });
+    }
+    
+    // Обработчик формы регистрации
+    const registerForm = document.querySelector('#register-modal form');
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-password-confirm').value;
+            
+            if (!name || !email || !password || !confirmPassword) {
+                showError('Please fill in all fields');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('Passwords do not match');
+                return;
+            }
+            
+            await registerUser(name, email, password);
+        });
+    }
 });
 
 // toggleConnectionStatus(true); // Скрыть сообщение об отсутствии соединения
