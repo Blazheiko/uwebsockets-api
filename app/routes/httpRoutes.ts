@@ -2,11 +2,11 @@ import MainController from '#app/controllers/http/MainController.js';
 import AuthController from '../controllers/http/AuthController.js';
 
 export default [
-    {
-        url: '/',
-        method: 'get',
-        handler: MainController.ping,
-    },
+    // {
+    //     url: '/',
+    //     method: 'get',
+    //     handler: MainController.ping,
+    // },
     {
         url: '/save-user',
         method: 'post',

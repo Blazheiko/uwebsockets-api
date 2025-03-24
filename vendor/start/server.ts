@@ -1,4 +1,11 @@
-import uWS, { HttpRequest, HttpResponse, TemplatedApp, us_socket_context_t, WebSocket } from 'uWebSockets.js';
+import uWS, {
+    HttpRequest,
+    HttpResponse,
+    TemplatedApp,
+    us_listen_socket,
+    us_socket_context_t,
+    WebSocket
+} from 'uWebSockets.js';
 import appConfig from '#config/app.js';
 import corsConfig from '#config/cors.js';
 import cookiesConfig from '#config/cookies.js';
@@ -32,6 +39,7 @@ import {
     Session
 } from '../types/types.js';
 import contextHandler from '../utils/contextHandler.js';
+import { startStaticServer, staticHandler, staticIndexHandler } from './staticServer.js';
 
 const configureWebsockets = (server: TemplatedApp) => {
     return server.ws('/websocket/:token', {
@@ -192,6 +200,10 @@ interface ValidationError extends Error {
     messages?: string[];
 }
 
+interface State {
+    listenSocket: us_listen_socket | null;
+}
+
 const handleError = (res: HttpResponse, error: unknown) => {
     if ((error as ValidationError).code === 'E_VALIDATION_ERROR') {
         const validationError = error as ValidationError;
@@ -207,6 +219,7 @@ const handleError = (res: HttpResponse, error: unknown) => {
     }
     
 };
+const staticRoutes = ['/','/chat','/login','/register','/chat','/account','/news','/news/create','/news/edit', '/news/:id','/manifesto'];
 
 const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteItem) => {
     logger.info('Handler method:' + route.method + ' url:' + route.url);
@@ -237,11 +250,20 @@ const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteI
         res.close();
     }
 };
+
 const configureHttp = (server: TemplatedApp) => {
     logger.info('configureHttp get');
     // console.log(getGetRoutes());
+    if (appConfig.serveStatic) {
+        startStaticServer();
+        staticRoutes.forEach((route) => {
+            server.get(route, (res, req) => {
+                staticIndexHandler(res, req);
+            });
+        })
+    }
     getListRoutes().forEach((route: RouteItem) => {
-        if(route.method !== 'ws' && route.method !== 'delete' ){
+        if (route.method !== 'ws' && route.method !== 'delete') {
             server[route.method](
                 `/${normalizePath(route.url)}`,
                 async (res: HttpResponse, req: HttpRequest) => {
@@ -252,7 +274,10 @@ const configureHttp = (server: TemplatedApp) => {
     });
 
     server.any('/*', (res, req) => {
-        if (corsConfig.enabled && req.getMethod() === 'options') {
+        if (appConfig.serveStatic && req.getMethod() === 'get') {
+            const url = req.getUrl();
+            if (url.indexOf('.') !== -1 ) staticHandler(res, req);
+        }else if (corsConfig.enabled && req.getMethod() === 'options') {
             //'OPTIONS' method === 'OPTIONS'
             res.cork(() => {
                 if (corsConfig.enabled) setCorsHeader(res);
@@ -296,7 +321,7 @@ const initServer = () => {
         server.listen_unix((token) => {
             if (token) {
                 logger.info(`Listening unix socket: ${appConfig.unixPath}`);
-                state.listenSocket = token;
+                state.listenSocket = token as any;
             } else {
                 logger.error(`Failed to listening unix socket: ${appConfig.unixPath}`);
             }
@@ -305,7 +330,7 @@ const initServer = () => {
         server.listen(appConfig.host, appConfig.port, (token) => {
             if (token) {
                 logger.info(`Listening http://${appConfig.host}:` + appConfig.port);
-                state.listenSocket = token;
+                state.listenSocket = token as any;
             } else {
                 logger.error('Failed to listen to port ' + appConfig.port);
             }
@@ -317,7 +342,7 @@ const initServer = () => {
 const stopServer = (type = 'handle') => {
     logger.info('server stop type: ' + type);
     closeAllWs();
-    uWS.us_listen_socket_close(state.listenSocket);
+    if(state.listenSocket)uWS.us_listen_socket_close(state.listenSocket);
     state.listenSocket = null;
 };
 

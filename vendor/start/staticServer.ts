@@ -1,8 +1,9 @@
 import process from 'node:process';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
-// import logger from '#logger';
-// import appConfig from '#config/app.js';
+import logger from '#logger';
+import appConfig from '#config/app.js';
+import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 
 
 
@@ -10,7 +11,7 @@ const STATIC_PATH = path.join(process.cwd(), './public');
 
 const cache = new Map();
 
-export const MIME_TYPES = {
+const MIME_TYPES: Record<string, string> = {
     default: 'application/octet-stream',
     html: 'text/html; charset=UTF-8',
     js: 'application/javascript; charset=UTF-8',
@@ -41,34 +42,50 @@ const cacheDirectory = async (directoryPath: string) => {
     }
 };
 
-// if (appConfig.serveStatic) {
-//     logger.info('cache Directory ' + STATIC_PATH);
-//     cacheDirectory(STATIC_PATH).then(() => {
-//         logger.info('Success cache Directory ' + STATIC_PATH);
-//     });
-// }
-//
-// if (appConfig.serveStatic) {
-//     const url = req.getUrl();
-//
-//     const ext =
-//         url === '/' || url === ''
-//             ? 'html'
-//             : path.extname(url).substring(1).toLowerCase();
-//     if (ext) {
-//         const mimeType = MIME_TYPES[ext] || MIME_TYPES.html;
-//         data =
-//             (url === '/' || url === '') &&
-//             cache.has('/index.html')
-//                 ? cache.get('/index.html')
-//                 : cache.get(url);
-//         // data = cache.get(url);
-//         statusCode = '200';
-//         if (!data) {
-//             statusCode = '404';
-//             data = cache.get('/404.html');
-//         }
-//         res.writeHeader('Content-Type', mimeType);
-//     }
-// }
-export { cacheFile, cacheDirectory };
+const startStaticServer = () => {
+    if (appConfig.serveStatic) {
+        logger.info('cache Directory ' + STATIC_PATH);
+        cacheDirectory(STATIC_PATH).then(() => {
+            logger.info('Success cache Directory ' + STATIC_PATH);
+        });
+    }
+}
+const staticRoutes = ['/','/chat','/login','/register','/chat','/account','/news','/news/create','/news/edit', '/news/:id','/manifesto'];
+
+const staticIndexHandler = (res: HttpResponse, req: HttpRequest) => {
+    let data = cache.get('/index.html');
+    let statusCode = data? '200': '404';
+    let mimeType = MIME_TYPES.html;
+    res.cork(() => {
+        res.writeStatus(statusCode);
+        res.writeHeader('Content-Type', mimeType);
+        res.end(data || '');
+    });
+}
+const staticHandler = (res: HttpResponse, req: HttpRequest) => {
+    let data: string | null = null;
+    let statusCode = '404';
+    let mimeType = '';
+    const url = req.getUrl();
+    const ext = path.extname(url).substring(1).toLowerCase();
+    if (ext) {
+        mimeType = MIME_TYPES[ext] || MIME_TYPES.html;
+        data =  cache.get(url);
+        statusCode = '200';
+        if (!data) {
+            statusCode = '404';
+            data = cache.get('/404.html');
+        }
+    }
+
+    res.cork(() => {
+        res.writeStatus(statusCode);
+        res.writeHeader('Content-Type', mimeType);
+        res.end(data || '');
+    });
+
+}
+
+
+
+export { cacheFile, cacheDirectory, startStaticServer, staticHandler, staticIndexHandler };
