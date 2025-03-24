@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAADvnCF87pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/vnCF87pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/voSz/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/vozD///////O6ZP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/87tl///////30Zj/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg//K0Vv//////+uG8/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/wqT3////////////405z/76Mw/+6cIf/2y4v/758m/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/////////////////////////fr////////////1x4H/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/87tj///////TAcv/vozD////////////wpzn///////ClNP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/9seC///////2y4v/7pwg//zs1P//////8KU1/+6gKP/wpzn/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg//KxT////////OzV/+6cIP/1xXz///////O5Yf/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/wpTX////////+/f/unCD/9MBw///////30JT/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/////////fv/7pwg//K1WP//////+NWh/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/vniX/76Aq/+6cIP/unCD/8Kg7/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/vnCF87pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/unCD/7pwg/+6cIP/vnCF8gAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAEAAA==" rel="icon" type="image/x-icon">
+  <title>Chat Application</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="websocket-base.js"></script>
+  <script defer src="main.js"></script>
+</head>
+<body>
+  <!-- Индикатор соединения -->
+  <div class="connection-status">
+    <span>No internet connection</span>
+    <button class="retry-button">Retry</button>
+  </div>
+
+  <!-- Лоадер -->
+  <div class="loader-overlay">
+    <div class="loader">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+  </div>
+
+  <div class="chat-container">
+    <!-- Кнопка переключения контактов -->
+    <button class="toggle-contacts">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 18H21V16H3V18ZM3 13H21V11H3V13ZM3 6V8H21V6H3Z" fill="white"/>
+        </svg>
+    </button>
+    
+    <!-- Список контактов -->
+    <div class="contacts">
+        <div class="contact active">
+            <span>John Smith</span>
+            <span class="unread-count">2</span>
+        </div>
+        <div class="contact">
+            <span>Mary Johnson</span>
+            <span class="unread-count">5</span>
+        </div>
+        <div class="contact">
+            <span>Alex Wilson</span>
+        </div>
+        <div class="contact">
+            <span>Helen Brown</span>
+            <span class="unread-count">1</span>
+        </div>
+    </div>
+
+    <!-- Область чата -->
+    <div class="chat-area">
+        <!-- Заголовок чата -->
+        <div class="chat-header">
+            <h2>John Smith</h2>
+            <button class="auth-header-button" onclick="showModal('login-modal')">Sign In</button>
+        </div>
+
+        <!-- Контейнер для сообщений и индикатора печатания -->
+        <div class="messages-container">
+            <!-- Сообщения -->
+            <div class="messages">
+                <div class="date-divider">
+                    <span>Today</span>
+                </div>
+                <div class="message received">
+                    Hi! How are you?
+                    <div class="message-footer">
+                        <span>10:30 AM</span>
+                    </div>
+                </div>
+                <div class="message sent">
+                    Hello! I'm fine, thanks!
+                    <div class="message-footer">
+                        <span>10:31 AM</span>
+                        <span class="message-status read">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 7L9.429 15.571L6 12.143" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M18 7L9.429 15.571L6 12.143" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="translate(4 0)"/>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+                <div class="date-divider">
+                    <span>Yesterday</span>
+                </div>
+                <div class="message received">
+                    Would you like to grab lunch tomorrow?
+                    <div class="message-footer">
+                        <span>3:45 PM</span>
+                    </div>
+                </div>
+                <div class="message sent">
+                    Sure, that sounds great!
+                    <div class="message-footer">
+                        <span>3:47 PM</span>
+                        <span class="message-status read">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 7L9.429 15.571L6 12.143" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M18 7L9.429 15.571L6 12.143" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="translate(4 0)"/>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+                <div class="message sent">
+                    Let's meet at the usual place?
+                    <div class="message-footer">
+                        <span>3:47 PM</span>
+                        <span class="message-status delivered">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 7L9.429 15.571L6 12.143" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+                <div class="message received">
+                    Perfect, see you then!
+                    <div class="message-footer">
+                        <span>3:50 PM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Индикатор печатания -->
+        <div class="typing-indicator">
+            <span>John is typing</span>
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+
+        <!-- Поле ввода -->
+        <div class="input-area">
+            <input type="text" class="message-input" placeholder="Type a message...">
+            <button class="send-button">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="white"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Модальное окно входа -->
+    <div class="modal-overlay" id="login-modal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('login-modal')">&times;</button>
+            <h2>Sign In</h2>
+            <form>
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="auth-button">Sign In</button>
+            </form>
+            <div class="switch-form">
+                Don't have an account? <a onclick="switchModal('login-modal', 'register-modal')">Sign Up</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно регистрации -->
+    <div class="modal-overlay" id="register-modal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('register-modal')">&times;</button>
+            <h2>Sign Up</h2>
+            <form>
+                <div class="form-group">
+                    <label for="register-name">Name</label>
+                    <input type="text" id="register-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password-confirm">Confirm Password</label>
+                    <input type="password" id="register-password-confirm" required>
+                </div>
+                <button type="submit" class="auth-button">Sign Up</button>
+            </form>
+            <div class="switch-form">
+                Already have an account? <a onclick="switchModal('register-modal', 'login-modal')">Sign In</a>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <script>
+    console.log('Loader exists:', document.querySelector('.loader-overlay') !== null);
+    console.log('Connection status exists:', document.querySelector('.connection-status') !== null);
+  </script>
+  <div id="app"></div>
+  <script type="module" src="/main.ts"></script>
+</body>
+</html>
