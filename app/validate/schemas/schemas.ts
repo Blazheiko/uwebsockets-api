@@ -1,6 +1,6 @@
 import vine from '@vinejs/vine';
 
-const schemas: Record<string, any>= {
+const schemas: Record<string, any> = {
     register: vine.object({
         name: vine.string().minLength(1).maxLength(100),
         email: vine.string().email().minLength(1).maxLength(255),

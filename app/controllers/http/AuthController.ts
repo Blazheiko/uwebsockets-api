@@ -11,6 +11,10 @@ export default {
         logger.info('register handler');
         const { httpData, auth, session } = context;
         const {name , email , password} = httpData.payload;
+        const exist = await User.query().where('email','=', email).first();
+        if(exist) {
+            return { status: 'error', message: 'Email already exist' };
+        }
         const hash = await hashPassword(password);
 
         const user = await User.create({
