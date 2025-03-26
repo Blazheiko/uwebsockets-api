@@ -52,7 +52,7 @@ export default [
             },
         ],
         middlewares: ['session_web'],
-        prefix: 'auth',
+        prefix: 'api/auth',
     },
     {
         group: [

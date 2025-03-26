@@ -4,17 +4,13 @@ import { generateUUID } from 'metautil';
 import redis from '#database/redis.js';
 import { HttpRequest, HttpResponse, us_socket_context_t } from 'uWebSockets.js';
 import { MyWebSocket } from '../types/types.js';
-import session from '../../config/session.js';
-import user from '../../app/models/User.js';
-
-
 
 const wsStorage: Set<MyWebSocket> = new Set();
 
-const closeAllWs = () => {
+const closeAllWs = async () => {
     for (const ws of wsStorage) {
-        // eslint-disable-next-line no-undef
-        if (ws?.timeout) clearTimeout(ws.timeout);
+        const token = ws.getUserData().token;
+        if (token) await redis.del(`auth:ws:${token}`);
         try {
             ws.end(4201);
         } catch (e) {
@@ -25,96 +21,140 @@ const closeAllWs = () => {
 };
 
 const handlePong = (ws: MyWebSocket) => {
-    ws.sendJson({
-        event: 'service:pong',
-        data: {},
-    });
+    const token = ws.getUserData().token;
+    if (token) sendJson(ws, {
+            event: 'service:pong',
+            data: {},
+        }, token);
 };
 
+const unAuthorizedMessage = (token: string) => ({
+    event: 'service:error',
+    data: {
+        code: 4001,
+        message: `Token ${token} does not exist.`,
+    }
+});
+
 const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: boolean) => {
-    if (isBinary) logger.info('isBinary', isBinary);
+    const token = ws.getUserData().token;
+    let tokenData = null;
+    // if (isBinary) logger.info('isBinary', isBinary);
+
     try {
+        if (token) tokenData = await redis.get(`auth:ws:${token}`);
         // let message = null;
-        const message = JSON.parse(ab2str(wsMessage));
-        if (!message) return;
-        if (message.event === 'service:ping') {
-            handlePong(ws);
+        if(!tokenData) {
+            ws.send(JSON.stringify(unAuthorizedMessage(token)));
             return;
+        };
+        const message = JSON.parse(ab2str(wsMessage));
+
+        if (message) {
+            if (message.event === 'service:ping') handlePong(ws);
+            else{
+                const result = await wsApiHandler(message);
+                if (result) sendJson(ws, result, token);
+            }
         }
-        const result = await wsApiHandler(message);
-        if (result) ws.sendJson(result);
+       
     } catch (err: any) {
         logger.error('Error parse onMessage');
         logger.error(err);
         if (err.code === 'E_VALIDATION_ERROR') {
-            ws.sendJson({
-                status: '422',
-                message: 'Validation failure',
-                messages: err.messages,
-            });
+            sendJson(ws, {
+                    status: '422',
+                    message: 'Validation failure',
+                    messages: err.messages,
+                }, token);
         }
     }
 };
-const onClose = (ws: MyWebSocket, code: number, message: any) => {
+const onClose = async (ws: MyWebSocket, code: number, message: any) => {
     logger.info('onClose code:', code);
     logger.info('onClose message:', message);
-    // eslint-disable-next-line no-undef
-    if (ws?.timeout) clearTimeout(ws.timeout);
+   
+    // if (ws?.timeout) clearTimeout(ws.timeout);
+    const token = ws.getUserData().token;
+    if (token) await redis.del(`auth:ws:${token}`);
     wsStorage.delete(ws);
+    
 };
 
-const updateTimeout = (ws: MyWebSocket) => {
-    /* eslint-disable no-undef */
-    clearTimeout(ws.timeout);
-
-    ws.timeout = setTimeout(() => {
-        logger.warn('ws.end');
-        try {
-            ws.end(4201);
-        } catch (e) {
-            logger.warn('error close ws by timeout');
-        }
-    }, 120_000);
+const updateExpiration = (token: string) => {
+    redis.expire(`auth:ws:${token}`, 120);
 };
 
-const onOpen = (ws: MyWebSocket) => {
-    ws.sendJson = (data: any) => {
-        try {
-            ws.send(JSON.stringify(data));
-            updateTimeout(ws);
-        } catch (e) {
-            logger.error('Error sendJson');
-        }
-    };
-    ws.UUID = generateUUID();
+// const updateTimeout = (ws: MyWebSocket) => {
+//     /* eslint-disable no-undef */
+//     clearTimeout(ws.timeout);
+
+//     ws.timeout = setTimeout(() => {
+//         logger.warn('ws.end');
+//         try {
+//             ws.end(4201);
+//         } catch (e) {
+//             logger.warn('error close ws by timeout');
+//         }
+//     }, 120_000);
+// };
+
+const sendJson = (ws: MyWebSocket, data: any, token: string) => {
+    try {
+        ws.send(JSON.stringify(data));
+        updateExpiration(token);
+    } catch (e) {
+        logger.error('Error sendJson');
+    }
+};
+const onOpen = async (ws: MyWebSocket) => {
+    // ws.sendJson = (data: any) => {
+    //     try {
+    //         ws.send(JSON.stringify(data));
+    //         updateTimeout(ws);
+    //     } catch (e) {
+    //         logger.error('Error sendJson');
+    //     }
+    // };
+    // ws.UUID = generateUUID();
+    // const token = req.getParameter(0);
+    // let dataAccess: { sessionId: string, userId: number } | null = null;
+
+    // if (token) dataAccess = await checkUserAccess(token);
+    // if (!dataAccess && !aborted) {
+    //     logger.warn('Access ws denied');
+    //     res.cork(() => {
+    //         res.writeStatus('401 Unauthorized');
+    //         res.end('Access denied');
+    //     });
+
+    // }
 
     // if (this.server.closing) this.serverClosingHandler(ws)
 
-    // const userData = ws.getUserData();
-    // // const user = getUserByToken(userData.token);
-    // const token = redis.get(`auth:ws:${userData.token}`);
-    // if (!token) {
-    //     const errorMessage = {
-    //         event: 'service:error',
-    //         data: {
-    //             code: 4001,
-    //             message: `Token ${userData.token} does not exist.`,
-    //         },
-    //     };
-    //     logger.info(errorMessage);
-    //     // this.errorClientHandler(ws, errorMessage)
-    //     return ws.end(4001);
-    // }
-    let broadcastMessage = {
-        event: 'service:connection_established',
-        data: {
-            socket_id: ws.id,
-            activity_timeout: 30,
-        },
-    };
+    const userData = ws.getUserData();
+    // const user = getUserByToken(userData.token);
+    const token = userData.token;
+    let dataAccess: { sessionId: string, userId: number } | null = null;
 
-    ws.sendJson(broadcastMessage);
-    wsStorage.add(ws);
+    if (token) dataAccess = await checkUserAccess(token);
+    // const token = redis.get(`auth:ws:${userData.token}`);
+    if (!token || !dataAccess) {
+        const errorMessage = unAuthorizedMessage(userData.token);
+        logger.info(errorMessage);
+        ws.send(JSON.stringify(errorMessage));
+        ws.end(4001);
+    }else{
+        let broadcastMessage = {
+            event: 'service:connection_established',
+            data: {
+                socket_id: userData.uuid,
+                activity_timeout: 30
+            }
+        };
+        sendJson(ws, broadcastMessage, token);
+        wsStorage.add(ws);
+    }
 };
 
 const ab2str = (buffer: ArrayBuffer, encoding: BufferEncoding | undefined = 'utf8') => Buffer.from(buffer).toString(encoding);
@@ -161,20 +201,23 @@ const handleUpgrade = async (res: HttpResponse, req: HttpRequest, context: us_so
     let dataAccess: { sessionId: string, userId: number } | null = null;
 
     if (token) dataAccess = await checkUserAccess(token);
-    if (!dataAccess && !aborted) {
-        logger.warn('Access ws denied');
-        res.cork(() => {
-            res.writeStatus('401 Unauthorized');
-            res.end('Access denied');
-        });
 
-    }else if(!aborted) {
+    // if (!dataAccess && !aborted) {
+    //     logger.warn('Access ws denied');
+    //     res.cork(() => {
+    //         res.writeStatus('401 Unauthorized');
+    //         res.end('Access denied');
+    //     });
+
+    // }else 
+    if(!aborted) {
         res.upgrade(
             {
                 ip: ip ? ip : ab2str(res.getRemoteAddressAsText()),
                 ip2: ab2str(res.getProxiedRemoteAddressAsText()),
                 token: token,
                 user: null,
+                uuid: generateUUID(),
                 sessionId: dataAccess? dataAccess.sessionId : undefined,
                 userId: dataAccess?  dataAccess.userId : undefined,
                 timeStart: Date.now(),

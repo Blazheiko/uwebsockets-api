@@ -1,9 +1,9 @@
 import {  WebSocket } from "uWebSockets.js";
 
 export interface MyWebSocket extends WebSocket<any> {
-  sendJson: (data: any) => void;
-  timeout: NodeJS.Timeout,
-  UUID: string,
+  // sendJson: (data: any) => void;
+  // timeout: NodeJS.Timeout,
+  // UUID: string,
   id: string,
 }
 export interface Header {
