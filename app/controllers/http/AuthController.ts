@@ -3,37 +3,45 @@ import User from '#app/models/User.js';
 import { HttpContext } from '../../../vendor/types/types.js';
 import { generateKey, hashPassword, validatePassword } from 'metautil';
 import redis from '#database/redis.js';
-import configSession from '#config/session.js';
+// import configSession from '#config/session.js';
 import configApp from '#config/app.js';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export default {
     async register(context: HttpContext) {
         logger.info('register handler');
         const { httpData, auth, session } = context;
         const {name , email , password} = httpData.payload;
-        const exist = await User.query().where('email','=', email).first();
+        const exist = await prisma.user.findUnique({ where: { email } });
         if(exist) {
             return { status: 'error', message: 'Email already exist' };
         }
-        const hash = await hashPassword(password);
+        // const hash = await hashPassword(password);
 
-        const user = await User.create({
-            name: name,
-            email: email,
-            password: hash,
+        // const user = await User.query().where('email','=', email).first();
+        // if(user){
+        //     return { status: 'error', message: 'Email already exist' };
+        // }
+        const hash = await hashPassword(password);
+        const userCreated = await prisma.user.create({
+            data: {
+                name: name,
+                email: email,
+                password: hash,
+            },
         });
-        await session.destroySession()
-        const res = await auth.login(user);
-        return { status: (res ? 'success':'error'), user: User.serialize(user) };
+        // await session.destroySession()
+        const res = await auth.login(userCreated);
+        return { status: (res ? 'success':'error'), user: User.serialize(userCreated) };
 
     },
     async login(context: HttpContext){
         logger.info('login handler');
         const { httpData, responseData, auth , session} = context;
         const { email , password } = httpData.payload;
-        const user = await User.query()
-            .where('email','=', email)
-            .first();
+        const user = await prisma.user.findUnique({ where: { email } });
         if(user){
             const valid = await validatePassword(password, user.password);
             let token = '';

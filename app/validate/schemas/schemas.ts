@@ -10,6 +10,35 @@ const schemas: Record<string, any> = {
         email: vine.string().email().maxLength(255),
         password: vine.string().minLength(8).maxLength(32),
     }),
+
+    // Chat List schemas
+    createChat: vine.object({
+        participantId: vine.number().positive(),
+    }),
+    deleteChat: vine.object({
+        chatId: vine.number().positive(),
+    }),
+
+    // Message schemas
+    getMessages: vine.object({
+        contactId: vine.number().positive(),
+    }),
+    sendMessage: vine.object({
+        contactId: vine.number().positive(),
+        content: vine.string().minLength(1).maxLength(10000),
+        type: vine.enum(['TEXT', 'IMAGE', 'VIDEO', 'AUDIO']).optional(),
+        src: vine.string().optional(),
+    }),
+    deleteMessage: vine.object({
+        messageId: vine.number().positive(),
+    }),
+    editMessage: vine.object({
+        messageId: vine.number().positive(),
+        content: vine.string().minLength(1).maxLength(10000),
+    }),
+    markMessageAsRead: vine.object({
+        messageId: vine.number().positive(),
+    }),
 };
 
 export default schemas;

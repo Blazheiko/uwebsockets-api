@@ -19,13 +19,17 @@
     "start": "node dist/index.js",
     "dev": "nodemon && node dist/index.js",
     "build": "NODE_ENV=production tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
   },
   "keywords": [],
   "author": "Blazheiko",
   "license": "MIT",
   "dependencies": {
     "@eslint/js": "^9.22.0",
+    "@prisma/client": "^5.10.2",
     "@typescript-eslint/eslint-plugin": "^8.26.0",
     "@vinejs/vine": "^1.7.1",
     "dotenv": "^16.4.1",
@@ -37,6 +41,7 @@
     "mysql2": "3.9.8",
     "pino": "^8.17.2",
     "pino-pretty": "^10.3.1",
+    "prisma": "^5.10.2",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.51.0"
   },
   "devDependencies": {

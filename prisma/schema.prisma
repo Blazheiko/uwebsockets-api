@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  email     String   @unique
+  password  String   @map("password")
+  phone     String?  @unique @db.VarChar(20)
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  contacts         ContactList[] @relation("UserContacts")
+  contactOf        ContactList[] @relation("ContactOfUser")
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+
+  @@map("users")
+}
+
+model ContactList {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  contactId Int      @map("contact_id")
+  status    String   @default("pending") // pending, accepted, blocked
+  unreadCount Int    @default(0) @map("unread_count")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user    User     @relation("UserContacts", fields: [userId], references: [id])
+  contact User     @relation("ContactOfUser", fields: [contactId], references: [id])
+
+  @@unique([userId, contactId])
+  @@map("contact_list")
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  senderId  Int      @map("sender_id")
+  receiverId Int     @map("receiver_id")
+  type      MessageType @default(TEXT)
+  content   String   @db.Text
+  src       String?  // URL или путь к файлу для медиа-сообщений
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  sender   User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@map("messages")
+}

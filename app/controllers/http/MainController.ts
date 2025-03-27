@@ -79,7 +79,7 @@ export default {
         if (!userId) {
             return { status: 'unauthorized', message: 'User ID not found' };
         }
-        const user = await User.query().where('id','=', userId).first();
+        const user = await User.query().findUnique({ where: { id: userId } });
         if (!user) {
             return { status: 'unauthorized', message: 'User not found' };
         }

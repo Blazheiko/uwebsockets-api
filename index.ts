@@ -5,7 +5,6 @@ import vine from '@vinejs/vine';
 import logger from '#logger';
 import { initServer, stopServer } from '#vendor/start/server.js';
 import configApp from '#config/app.js';
-import db from '#database/db.js';
 import redis from '#database/redis.js';
 import schemas from '#app/validate/schemas/schemas.js';
 import validators from '#vendor/start/validators.js';
@@ -15,9 +14,6 @@ import wsRoutes from '#app/routes/wsRoutes.js';
 
 // logger.info(configApp);
 
-const migrationDB = async () => {
-    await db.migrate.up({ directory: './database/migrations' });
-};
 const testRedis = async () => {
     await redis.set('test', Date.now().toString());
 };
@@ -43,10 +39,6 @@ const start = async () => {
                 '.node',
         );
         compileValidateSchema();
-        if (configApp.startMigration) {
-            await migrationDB();
-            logger.info('migrate success');
-        }
         await testRedis();
         logger.info('test redis success');
         routesHandler(httpRoutes, false);
