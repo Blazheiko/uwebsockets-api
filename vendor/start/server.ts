@@ -100,37 +100,17 @@ const parseCookies = (cookieHeader: string):Map <string, string> => {
 |]
  */
 const setCookies = (res: HttpResponse, cookies: Record<string, Cookie>) => {
-    let cookieString = '';
-    for (const [name, cookie] of Object.entries(cookies)) {
-        console.log(`cookie ${name}: ${cookie}`);
 
-        let parts = [];
-        parts.push(`${cookie.name}=${encodeURIComponent(cookie.value)}`);
-        if (cookie.path) parts.push(`Path=${cookie.path}`);
-        if (cookie.expires)
-            parts.push(`Expires=${cookie.expires.toUTCString()}`);
-        if (cookie.httpOnly) parts.push('HttpOnly');
-        if (cookie.secure) parts.push('Secure');
-        if (cookie.maxAge) parts.push(`Max-Age=${cookie.maxAge}`);
-        if (cookie.sameSite) parts.push(`SameSite=${cookie.sameSite}`);
-        cookieString = parts.join('; ');
-
+    for (const cookie of Object.values(cookies)) {
+        const cookieHeader = `${cookie.name}=${encodeURIComponent(cookie.value)}`;
+        const pathPart = cookie.path ? `; Path=${cookie.path}` : '';
+        const expiresPart = cookie.expires ? `; Expires=${cookie.expires.toUTCString()}` : '';
+        const httpOnlyPart = cookie.httpOnly ? '; HttpOnly' : '';
+        const securePart = cookie.secure ? '; Secure' : '';
+        const maxAgePart = cookie.maxAge ? `; Max-Age=${cookie.maxAge}` : '';
+        const sameSitePart = cookie.sameSite ? `; SameSite=${cookie.sameSite}` : '';
+        res.writeHeader('Set-Cookie', `${cookieHeader}${pathPart}${expiresPart}${httpOnlyPart}${securePart}${maxAgePart}${sameSitePart}`);
     }
-    if(cookieString) res.writeHeader('Set-Cookie', cookieString);
-    // cookies.forEach((cookie) => {
-    //     let parts = [];
-    //     parts.push(`${cookie.name}=${encodeURIComponent(cookie.value)}`);
-    //     if (cookie.path) parts.push(`Path=${cookie.path}`);
-    //     if (cookie.expires)
-    //         parts.push(`Expires=${cookie.expires.toUTCString()}`);
-    //     if (cookie.httpOnly) parts.push('HttpOnly');
-    //     if (cookie.secure) parts.push('Secure');
-    //     if (cookie.maxAge) parts.push(`Max-Age=${cookie.maxAge}`);
-    //     if (cookie.sameSite) parts.push(`SameSite=${cookie.sameSite}`);
-    //     const cookieString = parts.join('; ');
-
-    // });
-    //     res.writeHeader('Set-Cookie', cookieString);
 };
 
 const setHeaders = (res: HttpResponse, headers: Header[]) => {
