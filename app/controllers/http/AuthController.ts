@@ -18,12 +18,7 @@ export default {
         if(exist) {
             return { status: 'error', message: 'Email already exist' };
         }
-        // const hash = await hashPassword(password);
 
-        // const user = await User.query().where('email','=', email).first();
-        // if(user){
-        //     return { status: 'error', message: 'Email already exist' };
-        // }
         const hash = await hashPassword(password);
         const userCreated = await prisma.user.create({
             data: {
@@ -32,7 +27,7 @@ export default {
                 password: hash,
             },
         });
-        // await session.destroySession()
+        await session.destroySession()
         const res = await auth.login(userCreated);
         return { status: (res ? 'success':'error'), user: User.serialize(userCreated) };
 

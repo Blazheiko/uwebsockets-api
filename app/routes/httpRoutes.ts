@@ -50,7 +50,6 @@ export default [
                 url: '/logout',
                 method: 'post',
                 handler: AuthController.logout,
-                validator: 'login',
             },
         ],
         middlewares: ['session_web'],
@@ -159,7 +158,7 @@ export default [
                 middlewares: ['test1'],
             },
         ],
-        middlewares: ['session_web','test2'],
+        middlewares: ['session_web'],
         prefix: 'api',
     },
 ];

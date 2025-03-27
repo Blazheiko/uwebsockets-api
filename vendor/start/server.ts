@@ -99,8 +99,11 @@ const parseCookies = (cookieHeader: string):Map <string, string> => {
 |   },
 |]
  */
-const setCookies = (res: HttpResponse, cookies: Cookie[]) => {
-    for (const cookie of cookies) {
+const setCookies = (res: HttpResponse, cookies: Record<string, Cookie>) => {
+    let cookieString = '';
+    for (const [name, cookie] of Object.entries(cookies)) {
+        console.log(`cookie ${name}: ${cookie}`);
+
         let parts = [];
         parts.push(`${cookie.name}=${encodeURIComponent(cookie.value)}`);
         if (cookie.path) parts.push(`Path=${cookie.path}`);
@@ -110,9 +113,10 @@ const setCookies = (res: HttpResponse, cookies: Cookie[]) => {
         if (cookie.secure) parts.push('Secure');
         if (cookie.maxAge) parts.push(`Max-Age=${cookie.maxAge}`);
         if (cookie.sameSite) parts.push(`SameSite=${cookie.sameSite}`);
-        const cookieString = parts.join('; ');
-        res.writeHeader('Set-Cookie', cookieString);
+        cookieString = parts.join('; ');
+
     }
+    if(cookieString) res.writeHeader('Set-Cookie', cookieString);
     // cookies.forEach((cookie) => {
     //     let parts = [];
     //     parts.push(`${cookie.name}=${encodeURIComponent(cookie.value)}`);
@@ -124,23 +128,24 @@ const setCookies = (res: HttpResponse, cookies: Cookie[]) => {
     //     if (cookie.maxAge) parts.push(`Max-Age=${cookie.maxAge}`);
     //     if (cookie.sameSite) parts.push(`SameSite=${cookie.sameSite}`);
     //     const cookieString = parts.join('; ');
-    //     res.writeHeader('Set-Cookie', cookieString);
+
     // });
+    //     res.writeHeader('Set-Cookie', cookieString);
 };
 
 const setHeaders = (res: HttpResponse, headers: Header[]) => {
-    for (const header of headers) {
-        res.writeHeader(header.name, header.value);
-    }
-    // headers.forEach((header) => {
+    // for (const header of headers) {
     //     res.writeHeader(header.name, header.value);
-    // });
+    // }
+    headers.forEach((header) => {
+        res.writeHeader(header.name, header.value);
+    });
 };
 const getResponseData = (): ResponseData => {
-    const cookies: Cookie[] = [];
+    let cookies: Record<string, Cookie> = {};
     const headers: Header[] = [];
     const setCookie = (name: string, value: string, options: any = {}) =>
-        cookies.push({
+        cookies[name] = {
             name,
             value,
             path: options?.path ? options.path : cookiesConfig.default.path,
@@ -153,7 +158,10 @@ const getResponseData = (): ResponseData => {
             maxAge: options?.maxAge
                 ? options.maxAge
                 : cookiesConfig.default.maxAge,
-        });
+        };
+    const deleteCookie = (name: string) => {
+        delete cookies[name];
+    }
     const setHeader = (name: string, value: string) => headers.push({ name, value });
 
     return {
@@ -164,6 +172,7 @@ const getResponseData = (): ResponseData => {
         cookies,
         status: 200,
         setCookie,
+        deleteCookie,
         setHeader,
     };
 };
@@ -203,7 +212,7 @@ const sendResponse = (res: HttpResponse, httpData: HttpData, responseData: Respo
         res.writeHeader('content-type', 'application/json');
     if (responseData.headers?.length)
         setHeaders(res, responseData.headers);
-    if (responseData.cookies?.length)
+    if (responseData.cookies)
         setCookies(res, responseData.cookies);
     if (corsConfig.enabled) setCorsHeader(res);
     if(responseData.payload && responseData.status >= 200 && responseData.status < 300) 

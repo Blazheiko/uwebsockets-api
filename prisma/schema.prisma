@@ -36,7 +36,8 @@ model ContactList {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
   contactId Int      @map("contact_id")
-  status    String   @default("pending") // pending, accepted, blocked
+  rename    String?  @db.VarChar(100)
+  status    String   @default("pending") // pending, accepted, blocked, favorite
   unreadCount Int    @default(0) @map("unread_count")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

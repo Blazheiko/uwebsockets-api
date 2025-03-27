@@ -28,9 +28,7 @@
   "author": "Blazheiko",
   "license": "MIT",
   "dependencies": {
-    "@eslint/js": "^9.22.0",
     "@prisma/client": "^5.10.2",
-    "@typescript-eslint/eslint-plugin": "^8.26.0",
     "@vinejs/vine": "^1.7.1",
     "dotenv": "^16.4.1",
     "globals": "^16.0.0",
@@ -45,6 +43,8 @@
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.51.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.22.0",
+    "@typescript-eslint/eslint-plugin": "^8.26.0",
     "@types/eslint-config-prettier": "^6.11.3",
     "@types/luxon": "^3.4.2",
     "@types/node": "^22.13.4",

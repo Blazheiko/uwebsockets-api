@@ -79,32 +79,35 @@ const sessionHandler = async ( context: HttpContext, accessToken: string | undef
     const { responseData } = context;
     // let userId = undefined;
     let sessionId = undefined;
+    let cookieUserId = undefined;
     if(!userId && accessToken){
         const decodedString = Buffer.from(accessToken, 'base64').toString('utf-8');
         const index = decodedString.indexOf('.');
         if(index === -1) sessionId = decodedString;
         else {
-            userId = decodedString.substring(0, index);
+            cookieUserId = decodedString.substring(0, index);
             sessionId = decodedString.substring(index + 1);
         }
     }
 
     let sessionInfo = null;
 
-    if(sessionId) sessionInfo = await getSession(sessionId, userId);
+    if(sessionId) sessionInfo = await getSession(sessionId, cookieUserId);
 
     if (!sessionInfo) sessionInfo = await createSessionInfo({ userId });
 
-    const cookieValue = createCookieValue(sessionInfo.id, userId);
+    const cookieValue = createCookieValue(sessionInfo.id, userId || cookieUserId);
 
     const value = Buffer.from( cookieValue ).toString('base64')
 
+    // responseData.deleteCookie(sessionConfig.cookieName)
     responseData.setCookie(sessionConfig.cookieName, value,{
         path: sessionConfig.cookie.path,
         httpOnly: sessionConfig.cookie.httpOnly,
         secure: sessionConfig.cookie.secure,
         maxAge: sessionConfig.age,
     });
+    //2025-03-27T16:14 2025-03-27T16:19:01.022Z
 
     context.session.sessionInfo = sessionInfo;
     context.session.updateSessionData = async ( newData: SessionData) => await updateSessionData( sessionInfo!.id, newData );
@@ -114,20 +117,19 @@ const sessionHandler = async ( context: HttpContext, accessToken: string | undef
     context.auth.getUserId = () => (sessionInfo?.data?.userId);
     context.auth.check = () => Boolean(sessionInfo?.data?.userId);
     context.auth.login = async (user: any) => {
-        logger.info('login handler');
         const userId = sessionInfo?.data?.userId;
         const sessionId = sessionInfo?.id;
         if( sessionId) await destroySession( sessionId, (userId ? String(userId): undefined) )
         await sessionHandler( context, '', String(user.id))
-        logger.info('login handler end');
         return true;
     };
     context.auth.logout = async () => {
         const userId = sessionInfo?.data?.userId;
-        if(!userId) return true;
-        const sessionId = sessionInfo?.id;
-        if(!sessionId) return false;
-        await destroySession( sessionId, String(userId))
+        if(userId) {
+            const sessionId = sessionInfo?.id;
+            if(sessionId) await destroySession( sessionId, String(userId))
+        }
+
         await sessionHandler( context, '', undefined)
         return true;
     };
@@ -136,7 +138,7 @@ const sessionHandler = async ( context: HttpContext, accessToken: string | undef
         if(!userId) return true;
         const sessionId = sessionInfo?.id;
         if(!sessionId) return false;
-        await redis.del(`session:${userId}`);
+        await redis.del(`session:${userId}:*`);
         await sessionHandler( context, '', undefined)
         return true;
     };

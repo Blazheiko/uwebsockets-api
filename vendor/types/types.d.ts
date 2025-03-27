@@ -88,8 +88,9 @@ export interface ResponseData {
   payload: object,
   middlewareData: any,
   headers: header[],
-  cookies: cookie[],
+  cookies: Record<string, Cookie>,
   status: number,
+  deleteCookie: Function,
   setCookie: Function,
   setHeader: Function,
 }

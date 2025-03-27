@@ -79,7 +79,7 @@ export default {
         if (!userId) {
             return { status: 'unauthorized', message: 'User ID not found' };
         }
-        const user = await User.query().findUnique({ where: { id: userId } });
+        const user = await User.query().findUnique({ where: { id: Number(userId) } });
         if (!user) {
             return { status: 'unauthorized', message: 'User not found' };
         }
@@ -96,7 +96,7 @@ export default {
     async setHeaderAndCookie({ responseData }: HttpContext): Promise<any> {
         logger.info('set-header-and-cookie');
         responseData.headers.push({ name: 'test-header', value: 'test' });
-        responseData.cookies.push({
+        responseData.setCookie({
             name: 'cookieTest1',
             value: 'test',
             path: '/',

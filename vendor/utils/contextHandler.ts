@@ -1,4 +1,5 @@
 import { Auth, HttpContext, HttpData, ResponseData, Session } from '../types/types.js';
+import logger from '../../logger.js';
 
 const getDefaultSession = (): Session => ({
         sessionInfo: null,
@@ -7,12 +8,12 @@ const getDefaultSession = (): Session => ({
         destroySession: () => 0,
     })
 const getDefaultAuth = (): Auth => ({
-        getUserId: () => null,
-        check: () => false,
-        login: () => false,
-        logout: () => false,
-        logoutAll: () => false,
-    })
+    getUserId: () => null,
+    check: () => false,
+    login: () => false,
+    logout: () => false,
+    logoutAll: () => false,
+});
 
 const session: Session =  getDefaultSession();
 const auth: any = getDefaultAuth();
