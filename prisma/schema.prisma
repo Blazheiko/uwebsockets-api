@@ -28,6 +28,8 @@ model User {
   contactOf        ContactList[] @relation("ContactOfUser")
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
+  createdInvitations Invitation[] @relation("CreatedInvitations")
+  receivedInvitations Invitation[] @relation("ReceivedInvitations")
 
   @@map("users")
 }
@@ -73,4 +75,21 @@ model Message {
   receiver User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
 
   @@map("messages")
+}
+
+model Invitation {
+  id          Int      @id @default(autoincrement())
+  token       String   @unique
+  userId      Int      @map("user_id")
+  invitedId   Int?     @map("invited_id")
+  isUsed      Boolean  @default(false) @map("is_used")
+  expiresAt   DateTime @map("expires_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User? @relation("CreatedInvitations", fields: [userId], references: [id])
+  invited   User? @relation("ReceivedInvitations", fields: [invitedId], references: [id])
+
+  @@map("invitations")
 }

@@ -2,6 +2,7 @@ import MainController from '#app/controllers/http/MainController.js';
 import AuthController from '../controllers/http/AuthController.js';
 import ChatListController from '../controllers/http/ChatListController.js';
 import MessageController from '../controllers/http/MessageController.js';
+import { InvitationController } from '../controllers/http/InvitationController.js';
 
 export default [
     // {
@@ -156,6 +157,34 @@ export default [
                 method: 'get',
                 handler: MainController.testMiddleware,
                 middlewares: ['test1'],
+            },
+        ],
+        middlewares: ['session_web'],
+        prefix: 'api',
+    },
+    {
+        group: [
+            // Invitation Routes
+            {
+                url: '/invitations',
+                method: 'post',
+                handler: InvitationController.createInvitation,
+                middlewares: ['session_web'],
+                validator: 'createInvitation',
+            },
+            {
+                url: '/invitations/user/:userId',
+                method: 'get',
+                handler: InvitationController.getUserInvitations,
+                middlewares: ['session_web'],
+                validator: 'getUserInvitations',
+            },
+            {
+                url: '/invitations/use/:token',
+                method: 'post',
+                handler: InvitationController.useInvitation,
+                middlewares: ['session_web'],
+                validator: 'useInvitation',
             },
         ],
         middlewares: ['session_web'],
