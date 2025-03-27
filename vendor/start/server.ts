@@ -100,7 +100,7 @@ const parseCookies = (cookieHeader: string):Map <string, string> => {
 |]
  */
 const setCookies = (res: HttpResponse, cookies: Cookie[]) => {
-    cookies.forEach((cookie) => {
+    for (const cookie of cookies) {
         let parts = [];
         parts.push(`${cookie.name}=${encodeURIComponent(cookie.value)}`);
         if (cookie.path) parts.push(`Path=${cookie.path}`);
@@ -112,13 +112,29 @@ const setCookies = (res: HttpResponse, cookies: Cookie[]) => {
         if (cookie.sameSite) parts.push(`SameSite=${cookie.sameSite}`);
         const cookieString = parts.join('; ');
         res.writeHeader('Set-Cookie', cookieString);
-    });
+    }
+    // cookies.forEach((cookie) => {
+    //     let parts = [];
+    //     parts.push(`${cookie.name}=${encodeURIComponent(cookie.value)}`);
+    //     if (cookie.path) parts.push(`Path=${cookie.path}`);
+    //     if (cookie.expires)
+    //         parts.push(`Expires=${cookie.expires.toUTCString()}`);
+    //     if (cookie.httpOnly) parts.push('HttpOnly');
+    //     if (cookie.secure) parts.push('Secure');
+    //     if (cookie.maxAge) parts.push(`Max-Age=${cookie.maxAge}`);
+    //     if (cookie.sameSite) parts.push(`SameSite=${cookie.sameSite}`);
+    //     const cookieString = parts.join('; ');
+    //     res.writeHeader('Set-Cookie', cookieString);
+    // });
 };
 
 const setHeaders = (res: HttpResponse, headers: Header[]) => {
-    headers.forEach((header) => {
+    for (const header of headers) {
         res.writeHeader(header.name, header.value);
-    });
+    }
+    // headers.forEach((header) => {
+    //     res.writeHeader(header.name, header.value);
+    // });
 };
 const getResponseData = (): ResponseData => {
     const cookies: Cookie[] = [];

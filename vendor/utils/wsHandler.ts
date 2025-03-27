@@ -38,6 +38,8 @@ const unAuthorizedMessage = (token: string) => ({
 
 const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: boolean) => {
     const token = ws.getUserData().token;
+    const message = JSON.parse(ab2str(wsMessage));
+
     let tokenData = null;
     // if (isBinary) logger.info('isBinary', isBinary);
 
@@ -45,10 +47,12 @@ const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: bool
         if (token) tokenData = await redis.get(`auth:ws:${token}`);
         // let message = null;
         if(!tokenData) {
-            ws.send(JSON.stringify(unAuthorizedMessage(token)));
+            ws.cork(() => {
+                ws.send(JSON.stringify(unAuthorizedMessage(token)));
+                ws.end(4001);
+            })
             return;
-        };
-        const message = JSON.parse(ab2str(wsMessage));
+        }
 
         if (message) {
             if (message.event === 'service:ping') handlePong(ws);
@@ -101,7 +105,9 @@ const updateExpiration = (token: string) => {
 
 const sendJson = (ws: MyWebSocket, data: any, token: string) => {
     try {
-        ws.send(JSON.stringify(data));
+        ws.cork(() => {
+            ws.send(JSON.stringify(data));
+        })
         updateExpiration(token);
     } catch (e) {
         logger.error('Error sendJson');
@@ -142,8 +148,11 @@ const onOpen = async (ws: MyWebSocket) => {
     if (!token || !dataAccess) {
         const errorMessage = unAuthorizedMessage(userData.token);
         logger.info(errorMessage);
-        ws.send(JSON.stringify(errorMessage));
-        ws.end(4001);
+        ws.cork(() => {
+            ws.send(JSON.stringify(errorMessage));
+            ws.end(4001);
+        })
+
     }else{
         let broadcastMessage = {
             event: 'service:connection_established',
@@ -211,23 +220,26 @@ const handleUpgrade = async (res: HttpResponse, req: HttpRequest, context: us_so
 
     // }else 
     if(!aborted) {
-        res.upgrade(
-            {
-                ip: ip ? ip : ab2str(res.getRemoteAddressAsText()),
-                ip2: ab2str(res.getProxiedRemoteAddressAsText()),
-                token: token,
-                user: null,
-                uuid: generateUUID(),
-                sessionId: dataAccess? dataAccess.sessionId : undefined,
-                userId: dataAccess?  dataAccess.userId : undefined,
-                timeStart: Date.now(),
-                userAgent,
-            },
-            secWebsocketKey,
-            secWebsocketProtocol,
-            secWebsocketExtensions,
-            context,
-        );
+        res.cork(() => {
+
+            res.upgrade(
+                {
+                    ip: ip ? ip : ab2str(res.getRemoteAddressAsText()),
+                    ip2: ab2str(res.getProxiedRemoteAddressAsText()),
+                    token: token,
+                    user: null,
+                    uuid: generateUUID(),
+                    sessionId: dataAccess ? dataAccess.sessionId : undefined,
+                    userId: dataAccess ? dataAccess.userId : undefined,
+                    timeStart: Date.now(),
+                    userAgent,
+                },
+                secWebsocketKey,
+                secWebsocketProtocol,
+                secWebsocketExtensions,
+                context,
+            );
+        })
     }
 };
 

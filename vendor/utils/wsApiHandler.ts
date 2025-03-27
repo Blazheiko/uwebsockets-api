@@ -2,11 +2,11 @@
 import { getWsRoutes } from '#vendor/start/router.js';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
 import validators from '#vendor/start/validators.js';
-import { WsData, WsResponseData } from '../types/types.js';
+import { WsData, WsResponseData, WsRoutes } from '../types/types.js';
 
-const wsRoutes = getWsRoutes();
+const wsRoutes: WsRoutes = getWsRoutes();
 
-export default async (message: any) => {
+export default async (message: { event: string; payload?: any }) => {
     // logger.info('ws API Handler');
     // logger.info(message);
     const responseData: WsResponseData = {

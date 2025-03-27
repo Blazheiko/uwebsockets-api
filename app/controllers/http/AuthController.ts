@@ -45,12 +45,12 @@ export default {
                     token = generateKey(configApp.characters, 16);
                     await redis.setex(
                         `auth:ws:${token}`,
-                        configSession.age,
+                        60,
                         JSON.stringify({ sessionId: sessionInfo.id, userId: user.id }),
                     );
                 }
 
-                return { status: (res ? 'success':'error'), user: User.serialize(user) , token };
+                return { status: (res ? 'success':'error'), user: User.serialize(user) , wsUrl: `ws://127.0.0.1:8088/websocket/${token}` };
             }
         }
         responseData.status = 401;
