@@ -60,9 +60,9 @@ export default [
         group: [
             // Chat List Routes
             {
-                url: '/chats',
-                method: 'get',
-                handler: ChatListController.getChatList,
+                url: '/get-contact-list',
+                method: 'post',
+                handler: ChatListController.getContactList,
             },
             {
                 url: '/chats',

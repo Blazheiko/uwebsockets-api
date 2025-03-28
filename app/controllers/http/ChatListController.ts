@@ -3,58 +3,34 @@ import { HttpContext } from './../../../vendor/types/types.js';
 import { prisma } from '#database/prisma.js';
 
 export default {
-    async getChatList({ session }: HttpContext): Promise<any> {
+    async getContactList({ session, httpData}: HttpContext): Promise<any> {
         logger.info('getChatList');
         const sessionInfo = session?.sessionInfo;
-        if (!sessionInfo) {
+        if (!sessionInfo)
             return { status: 'error', message: 'Session not found' };
-        }
-        const userId = sessionInfo.data?.userId;
-        if (!userId) {
+
+        const sessionUserId = sessionInfo.data?.userId;
+        const userId = httpData.payload?.userId;
+        if (!userId || !sessionUserId)
             return { status: 'unauthorized', message: 'User ID not found' };
-        }
 
-        // Получаем данные текущего пользователя
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: {
-                id: true,
-                name: true,
-                email: true
-            }
-        });
-
-        if (!user) {
-            return { status: 'error', message: 'User not found' };
+        if ( +userId !== +sessionUserId ) {
+            logger.error('User used the wrong session');
+            return { status: 'unauthorized', message: 'User used the wrong session' };
         }
 
         // Получаем список чатов с контактами
-        const chats = await prisma.contactList.findMany({
-            where: {
-                OR: [
-                    { userId },
-                    { contactId: userId }
-                ]
-            },
+        const contactList = await prisma.contactList.findMany({
+            where: { userId },
             include: {
                 contact: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true
-                    }
+                    select: { id: true, name: true }
                 }
             },
-            orderBy: {
-                updatedAt: 'desc'
-            }
+            orderBy: { updatedAt: 'desc' }
         });
 
-        return { 
-            status: 'ok',
-            user,
-            chats
-        };
+        return { status: 'ok', contactList };
     },
 
     async createChat({ session, httpData }: HttpContext): Promise<any> {
