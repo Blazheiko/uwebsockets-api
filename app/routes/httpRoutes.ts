@@ -10,29 +10,29 @@ export default [
     //     method: 'get',
     //     handler: MainController.ping,
     // },
-    {
-        url: '/save-user',
-        method: 'post',
-        handler: MainController.saveUser,
-    },
-    {
-        url: '/test-middleware',
-        method: 'get',
-        handler: MainController.testMiddleware,
-        middlewares: ['test1'],
-    },
-    {
-        url: '/test-api-session',
-        method: 'get',
-        handler: MainController.testApiSession,
-        middlewares: ['session_api'],
-    },
-    {
-        url: '/test-params/:id/:name',
-        method: 'get',
-        handler: MainController.testParams,
-        middlewares: ['test1'],
-    },
+    // {
+    //     url: '/save-user',
+    //     method: 'post',
+    //     handler: MainController.saveUser,
+    // },
+    // {
+    //     url: '/test-middleware',
+    //     method: 'get',
+    //     handler: MainController.testMiddleware,
+    //     middlewares: ['test1'],
+    // },
+    // {
+    //     url: '/test-api-session',
+    //     method: 'get',
+    //     handler: MainController.testApiSession,
+    //     middlewares: ['session_api'],
+    // },
+    // {
+    //     url: '/test-params/:id/:name',
+    //     method: 'get',
+    //     handler: MainController.testParams,
+    //     middlewares: ['test1'],
+    // },
     {
         group: [
             {
@@ -115,6 +115,28 @@ export default [
                 middlewares: ['session_web'],
                 validator: 'markMessageAsRead',
             },
+                // Invitation Routes
+            {
+                url: '/invitations',
+                method: 'post',
+                handler: InvitationController.createInvitation,
+                middlewares: ['session_web'],
+                validator: 'createInvitation',
+            },
+            {
+                url: '/invitations/user/:userId',
+                method: 'get',
+                handler: InvitationController.getUserInvitations,
+                middlewares: ['session_web'],
+                validator: 'getUserInvitations',
+            },
+            {
+                url: '/invitations/use/:token',
+                method: 'post',
+                handler: InvitationController.useInvitation,
+                middlewares: ['session_web'],
+                validator: 'useInvitation',
+            },
         ],
         middlewares: ['session_web'],
         prefix: 'api/chat',
@@ -162,32 +184,5 @@ export default [
         middlewares: ['session_web'],
         prefix: 'api',
     },
-    {
-        group: [
-            // Invitation Routes
-            {
-                url: '/invitations',
-                method: 'post',
-                handler: InvitationController.createInvitation,
-                middlewares: ['session_web'],
-                validator: 'createInvitation',
-            },
-            {
-                url: '/invitations/user/:userId',
-                method: 'get',
-                handler: InvitationController.getUserInvitations,
-                middlewares: ['session_web'],
-                validator: 'getUserInvitations',
-            },
-            {
-                url: '/invitations/use/:token',
-                method: 'post',
-                handler: InvitationController.useInvitation,
-                middlewares: ['session_web'],
-                validator: 'useInvitation',
-            },
-        ],
-        middlewares: ['session_web'],
-        prefix: 'api',
-    },
+
 ];

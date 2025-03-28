@@ -5,9 +5,7 @@ import { generateKey, hashPassword, validatePassword } from 'metautil';
 import redis from '#database/redis.js';
 // import configSession from '#config/session.js';
 import configApp from '#config/app.js';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '#database/prisma.js';
 
 export default {
     async register(context: HttpContext) {

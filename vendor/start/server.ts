@@ -224,7 +224,7 @@ const handleError = (res: HttpResponse, error: unknown) => {
     }
     
 };
-const staticRoutes = ['/','/chat','/login','/register','/chat','/account','/news','/news/create','/news/edit', '/news/:id','/manifesto'];
+const staticRoutes = ['/','/chat','/login','/register','/chat','/account','/news','/news/create','/news/edit', '/news/:id','/manifesto','/join-chat','/invitations'];
 
 const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteItem) => {
     logger.info('Handler method:' + route.method + ' url:' + route.url);

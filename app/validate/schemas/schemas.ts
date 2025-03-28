@@ -39,55 +39,15 @@ const schemas: Record<string, any> = {
     markMessageAsRead: vine.object({
         messageId: vine.number().positive(),
     }),
+    createInvitation: vine.object({
+        userId: vine.number().positive(),
+    }),
+    getUserInvitations: vine.object({
+        userId: vine.number().positive(),
+    }),
+    useInvitation: vine.object({
+        token: vine.string().minLength(1).maxLength(40),
+    }),
 };
-
-// export const createInvitation = {
-//   body: {
-//     type: 'object',
-//     required: ['userId'],
-//     properties: {
-//       userId: {
-//         type: 'number',
-//         description: 'ID пользователя, создающего приглашение',
-//       },
-//     },
-//   },
-// };
-
-// export const getUserInvitations = {
-//   params: {
-//     type: 'object',
-//     required: ['userId'],
-//     properties: {
-//       userId: {
-//         type: 'string',
-//         description: 'ID пользователя, чьи приглашения нужно получить',
-//       },
-//     },
-//   },
-// };
-
-// export const useInvitation = {
-//   params: {
-//     type: 'object',
-//     required: ['token'],
-//     properties: {
-//       token: {
-//         type: 'string',
-//         description: 'Токен приглашения',
-//       },
-//     },
-//   },
-//   body: {
-//     type: 'object',
-//     required: ['invitedId'],
-//     properties: {
-//       invitedId: {
-//         type: 'number',
-//         description: 'ID пользователя, который принимает приглашение',
-//       },
-//     },
-//   },
-// };
 
 export default schemas;

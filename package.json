@@ -8,6 +8,7 @@
     "#app/*": "./dist/app/*",
     "#config/*": "./dist/config/*",
     "#database/*": "./dist/database/*",
+    "#prisma/*": "./dist/prisma/*",
     "#routes/*": "./dist/routes/*",
     "#start/*": "./dist/start/*",
     "#utils/*": "./dist/utils/*",

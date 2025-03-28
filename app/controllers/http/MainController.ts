@@ -1,5 +1,4 @@
 // import { generateToken } from 'metautil';
-// import configApp from '#config/app.js';
 // import redis from '#database/redis.js';
 import logger from '#logger';
 import User from '#app/models/User.js';
@@ -90,7 +89,7 @@ export default {
             JSON.stringify({ sessionId: sessionInfo.id, userId: user.id }),
         );
         
-        return { status: 'ok', user: User.serialize(user),  wsUrl: `ws://127.0.0.1:8088/websocket/${token}` };
+        return { status: 'ok', user: User.serialize(user),  wsUrl: `ws://${configApp.host}:${configApp.port}/websocket/${token}` };
     },
     
     async setHeaderAndCookie({ responseData }: HttpContext): Promise<any> {
