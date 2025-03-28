@@ -37,18 +37,25 @@ export default {
         if (existingContact) {
             throw new Error('Contact already exists in contact list');
         }
+        let contact = null;
 
-        const contact = await prisma.contactList.create({
-            data: {
-                userId: payload.userId,
-                contactId: payload.contactId,
-                status: payload.status || 'pending'
-            },
-            include: {
-                user: true,
-                contact: true
-            }
-        });
+        try {
+            contact = await prisma.contactList.create({
+                data: {
+                    userId: payload.userId,
+                    contactId: payload.contactId,
+                    status: payload.status || 'pending',
+                    rename: payload.rename || null,
+                },
+                include: {
+                    user: false,
+                    contact: true
+                }
+            });
+        }catch (e) {
+            logger.error(e);
+            throw new Error('Error creating contact');
+        }
 
         return serializeModel(contact, schema, hidden);
     },

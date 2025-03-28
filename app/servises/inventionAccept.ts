@@ -1,31 +1,50 @@
 import { prisma } from '#database/prisma.js';
+import ContactList from '../models/ContactList.js';
+import logger from '../../logger.js';
 
 export default async (token: string, userId: number) => {
     console.log('inventionAccept');
-    if(token){
-        const invention = await prisma.invitation.findFirst({ where: { token , isUsed: false} });
-        if(invention){
-            await prisma.invitation.update({
-                where: { id: invention.id },
-                data: {
-                    isUsed: true,
-                    invitedId: userId
-                }
-            });
-            await prisma.contactList.create({
-                data: {
-                    userId: userId,
-                    contactId: invention.userId,
-                    status: 'accepted'
-                }
-            })
-            await prisma.contactList.create({
-                data: {
-                    userId: invention.userId,
-                    contactId: userId,
-                    status: 'accepted'
-                }
-            })
+    if(!token || !userId) return;
+
+    const invention = await prisma.invitation.findFirst({ where: { token , isUsed: false} });
+    if(!invention || invention.invitedId === userId) return;
+
+    await prisma.invitation.update({
+        where: { id: invention.id },
+        data: {
+            isUsed: true,
+            invitedId: userId
         }
+    });
+
+    const contact = await prisma.contactList.findFirst({
+            where: {userId, contactId: invention.userId},
+            select: {id: true}
+        })
+    if(!contact) {
+        await prisma.contactList.create({
+            data: {
+                userId: userId,
+                contactId: invention.userId,
+                status: 'accepted',
+                rename: null
+            }
+        })
+    }
+
+    const contactOwner = await prisma.contactList.findFirst({
+        where: {userId: invention.userId, contactId: userId,},
+        select: {id: true}
+    })
+
+    if(!contactOwner) {
+        await prisma.contactList.create({
+            data: {
+                userId: invention.userId,
+                contactId: userId,
+                status: 'accepted',
+                rename: invention.name
+            }
+        })
     }
 }
