@@ -6,12 +6,14 @@ import redis from '#database/redis.js';
 // import configSession from '#config/session.js';
 import configApp from '#config/app.js';
 import { prisma } from '#database/prisma.js';
+import inventionAccept from '../../servises/inventionAccept.js';
+import generateWsToken from '../../servises/generateWsToken.js';
 
 export default {
     async register(context: HttpContext) {
         logger.info('register handler');
         const { httpData, auth, session } = context;
-        const {name , email , password} = httpData.payload;
+        const {name , email , password, token } = httpData.payload;
         const exist = await prisma.user.findUnique({ where: { email } });
         if(exist) {
             return { status: 'error', message: 'Email already exist' };
@@ -27,31 +29,30 @@ export default {
         });
         await session.destroySession()
         const res = await auth.login(userCreated);
-        return { status: (res ? 'success':'error'), user: User.serialize(userCreated) };
+        const sessionInfo = session.sessionInfo
+        let wsToken = '';
+        if (sessionInfo) wsToken = await generateWsToken(sessionInfo, userCreated.id)
+        if(token) await inventionAccept(token, userCreated.id)
+        return { status: (res ? 'success':'error'), user: User.serialize(userCreated), wsUrl: wsToken ? `ws://${configApp.host}:${configApp.port}/websocket/${wsToken}`: '' };
 
     },
     async login(context: HttpContext){
         logger.info('login handler');
-        const { httpData, responseData, auth , session} = context;
-        const { email , password } = httpData.payload;
+        const { httpData, responseData, auth, session } = context;
+        const { email , password , token } = httpData.payload;
         const user = await prisma.user.findUnique({ where: { email } });
         if(user){
             const valid = await validatePassword(password, user.password);
-            let token = '';
             if (valid) {
                 const res = await auth.login(user);
                 const sessionInfo = session.sessionInfo
                 logger.info(sessionInfo);
-                if(sessionInfo) {
-                    token = generateKey(configApp.characters, 16);
-                    await redis.setex(
-                        `auth:ws:${token}`,
-                        60,
-                        JSON.stringify({ sessionId: sessionInfo.id, userId: user.id }),
-                    );
-                }
 
-                return { status: (res ? 'success':'error'), user: User.serialize(user) , wsUrl: `ws://127.0.0.1:8088/websocket/${token}` };
+                let wsToken = '';
+                if (sessionInfo) wsToken = await generateWsToken(sessionInfo, user.id)
+                if (token) await inventionAccept(token, user.id)
+
+                return { status: (res ? 'success':'error'), user: User.serialize(user), wsUrl: wsToken ? `ws://${configApp.host}:${configApp.port}/websocket/${wsToken}`: '' };
             }
         }
         responseData.status = 401;

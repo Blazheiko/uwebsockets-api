@@ -5,10 +5,12 @@ const schemas: Record<string, any> = {
         name: vine.string().minLength(1).maxLength(100),
         email: vine.string().email().minLength(1).maxLength(255),
         password: vine.string().minLength(8).maxLength(32),
+        token: vine.string().maxLength(60).optional(),
     }),
     login: vine.object({
         email: vine.string().email().maxLength(255),
         password: vine.string().minLength(8).maxLength(32),
+        token: vine.string().maxLength(60).optional(),
     }),
 
     // Chat List schemas
@@ -41,6 +43,7 @@ const schemas: Record<string, any> = {
     }),
     createInvitation: vine.object({
         userId: vine.number().positive(),
+        name: vine.string().minLength(1).maxLength(100),
     }),
     getUserInvitations: vine.object({
         userId: vine.number().positive(),

@@ -24,29 +24,29 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  contacts         ContactList[] @relation("UserContacts")
-  contactOf        ContactList[] @relation("ContactOfUser")
-  sentMessages     Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
-  createdInvitations Invitation[] @relation("CreatedInvitations")
-  receivedInvitations Invitation[] @relation("ReceivedInvitations")
+  contacts            ContactList[] @relation("UserContacts")
+  contactOf           ContactList[] @relation("ContactOfUser")
+  sentMessages        Message[]     @relation("SentMessages")
+  receivedMessages    Message[]     @relation("ReceivedMessages")
+  createdInvitations  Invitation[]  @relation("CreatedInvitations")
+  receivedInvitations Invitation[]  @relation("ReceivedInvitations")
 
   @@map("users")
 }
 
 model ContactList {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
-  contactId Int      @map("contact_id")
-  rename    String?  @db.VarChar(100)
-  status    String   @default("pending") // pending, accepted, blocked, favorite
-  unreadCount Int    @default(0) @map("unread_count")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  contactId   Int      @map("contact_id")
+  rename      String?  @db.VarChar(100)
+  status      String   @default("pending") // pending, accepted, blocked, favorite
+  unreadCount Int      @default(0) @map("unread_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
-  user    User     @relation("UserContacts", fields: [userId], references: [id])
-  contact User     @relation("ContactOfUser", fields: [contactId], references: [id])
+  user    User @relation("UserContacts", fields: [userId], references: [id])
+  contact User @relation("ContactOfUser", fields: [contactId], references: [id])
 
   @@unique([userId, contactId])
   @@map("contact_list")
@@ -60,36 +60,37 @@ enum MessageType {
 }
 
 model Message {
-  id        Int      @id @default(autoincrement())
-  senderId  Int      @map("sender_id")
-  receiverId Int     @map("receiver_id")
-  type      MessageType @default(TEXT)
-  content   String   @db.Text
-  src       String?  // URL или путь к файлу для медиа-сообщений
-  isRead    Boolean  @default(false) @map("is_read")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id         Int         @id @default(autoincrement())
+  senderId   Int         @map("sender_id")
+  receiverId Int         @map("receiver_id")
+  type       MessageType @default(TEXT)
+  content    String      @db.Text
+  src        String? // URL или путь к файлу для медиа-сообщений
+  isRead     Boolean     @default(false) @map("is_read")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
 
   // Relations
-  sender   User     @relation("SentMessages", fields: [senderId], references: [id])
-  receiver User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
 
   @@map("messages")
 }
 
 model Invitation {
-  id          Int      @id @default(autoincrement())
-  token       String   @unique
-  userId      Int      @map("user_id")
-  invitedId   Int?     @map("invited_id")
-  isUsed      Boolean  @default(false) @map("is_used")
-  expiresAt   DateTime @map("expires_at")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  name      String   @db.VarChar(100)
+  userId    Int      @map("user_id")
+  invitedId Int?     @map("invited_id")
+  isUsed    Boolean  @default(false) @map("is_used")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  user User? @relation("CreatedInvitations", fields: [userId], references: [id])
-  invited   User? @relation("ReceivedInvitations", fields: [invitedId], references: [id])
+  user    User? @relation("CreatedInvitations", fields: [userId], references: [id])
+  invited User? @relation("ReceivedInvitations", fields: [invitedId], references: [id])
 
   @@map("invitations")
 }

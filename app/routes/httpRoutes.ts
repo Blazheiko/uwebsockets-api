@@ -2,7 +2,7 @@ import MainController from '#app/controllers/http/MainController.js';
 import AuthController from '../controllers/http/AuthController.js';
 import ChatListController from '../controllers/http/ChatListController.js';
 import MessageController from '../controllers/http/MessageController.js';
-import { InvitationController } from '../controllers/http/InvitationController.js';
+import InvitationController from '../controllers/http/InvitationController.js';
 
 export default [
     // {
@@ -63,20 +63,17 @@ export default [
                 url: '/chats',
                 method: 'get',
                 handler: ChatListController.getChatList,
-                middlewares: ['session_web'],
             },
             {
                 url: '/chats',
                 method: 'post',
                 handler: ChatListController.createChat,
-                middlewares: ['session_web'],
                 validator: 'createChat',
             },
             {
                 url: '/chats/:chatId',
                 method: 'delete',
                 handler: ChatListController.deleteChat,
-                middlewares: ['session_web'],
                 validator: 'deleteChat',
             },
             // Message Routes
@@ -84,35 +81,30 @@ export default [
                 url: '/messages/:contactId',
                 method: 'get',
                 handler: MessageController.getMessages,
-                middlewares: ['session_web'],
                 validator: 'getMessages',
             },
             {
                 url: '/messages',
                 method: 'post',
                 handler: MessageController.sendMessage,
-                middlewares: ['session_web'],
                 validator: 'sendMessage',
             },
             {
                 url: '/messages/:messageId',
                 method: 'delete',
                 handler: MessageController.deleteMessage,
-                middlewares: ['session_web'],
                 validator: 'deleteMessage',
             },
             {
                 url: '/messages/:messageId',
                 method: 'put',
                 handler: MessageController.editMessage,
-                middlewares: ['session_web'],
                 validator: 'editMessage',
             },
             {
                 url: '/messages/:messageId/read',
                 method: 'put',
                 handler: MessageController.markAsRead,
-                middlewares: ['session_web'],
                 validator: 'markMessageAsRead',
             },
                 // Invitation Routes
@@ -120,21 +112,18 @@ export default [
                 url: '/invitations',
                 method: 'post',
                 handler: InvitationController.createInvitation,
-                middlewares: ['session_web'],
                 validator: 'createInvitation',
             },
             {
                 url: '/invitations/user/:userId',
                 method: 'get',
                 handler: InvitationController.getUserInvitations,
-                middlewares: ['session_web'],
                 validator: 'getUserInvitations',
             },
             {
                 url: '/invitations/use/:token',
                 method: 'post',
                 handler: InvitationController.useInvitation,
-                middlewares: ['session_web'],
                 validator: 'useInvitation',
             },
         ],

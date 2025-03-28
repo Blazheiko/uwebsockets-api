@@ -6,12 +6,13 @@ export default {
   // Создание нового приглашения
   async createInvitation(context: HttpContext) {
     logger.info('createInvitation');
-    const { httpData, auth, session } = context;
-    const {userId} = httpData.payload;
+    const { httpData, session } = context;
+    const {userId , name } = httpData.payload;
   
     const expiresIn = 7; // Срок действия приглашения в днях
-
-    if (!userId) {
+    const sessionInfo = session?.sessionInfo;
+    const userIdFromSession = sessionInfo?.data?.userId;
+    if (!userId || !userIdFromSession || +userId !== +userIdFromSession || !name) {
       logger.error('User ID is required');
       return { status: 'error', message: 'User ID is required' };
     }
@@ -21,9 +22,12 @@ export default {
 
     const invitation = await prisma.invitation.create({
       data: {
-        token: randomUUID(),
+        name: name,
+        token: Buffer.from(randomUUID()).toString('base64'),
         userId: parseInt(userId),
         expiresAt,
+        // Pass the name as a custom field if needed
+        // or remove it if not part of the Invitation model
       },
     });
 

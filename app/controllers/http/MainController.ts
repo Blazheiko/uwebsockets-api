@@ -9,6 +9,7 @@ import { generateKey } from 'metautil';
 import redis from '#database/redis.js';
 import configApp from '#config/app.js';
 import configSession from '#config/session.js';
+import generateWsToken from '../../servises/generateWsToken.js';
 
 export default {
     async ping() {
@@ -68,6 +69,7 @@ export default {
         console.log('testParams');
         return { params, query, status: 'ok' };
     },
+
     async init({ responseData, session }: HttpContext): Promise<any> {
         logger.info('init');
         const sessionInfo = session?.sessionInfo;
@@ -82,14 +84,16 @@ export default {
         if (!user) {
             return { status: 'unauthorized', message: 'User not found' };
         }
-        const token = generateKey(configApp.characters, 16);
-        await redis.setex(
-            `auth:ws:${token}`,
-            60,
-            JSON.stringify({ sessionId: sessionInfo.id, userId: user.id }),
-        );
+        let wsToken = '';
+        if (sessionInfo) wsToken = await generateWsToken(sessionInfo, user.id)
+        // const token = generateKey(configApp.characters, 16);
+        // await redis.setex(
+        //     `auth:ws:${token}`,
+        //     60,
+        //     JSON.stringify({ sessionId: sessionInfo.id, userId: user.id }),
+        // );
         
-        return { status: 'ok', user: User.serialize(user),  wsUrl: `ws://${configApp.host}:${configApp.port}/websocket/${token}` };
+        return { status: 'ok', user: User.serialize(user),  wsUrl: wsToken ? `ws://${configApp.host}:${configApp.port}/websocket/${wsToken}`: '' };
     },
     
     async setHeaderAndCookie({ responseData }: HttpContext): Promise<any> {
