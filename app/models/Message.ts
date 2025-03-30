@@ -1,7 +1,6 @@
 import { prisma } from '#database/prisma.js';
 import { DateTime } from 'luxon';
 import { serializeModel } from '#vendor/utils/model.js';
-import logger from '#logger';
 import { MessageType } from '@prisma/client';
 
 const schema = {
@@ -14,7 +13,6 @@ const hidden: string[] = [];
 
 export default {
     async create(payload: any) {
-        logger.info('create message');
         if (!payload || typeof payload !== 'object')
             return new Error('Payload must be object');
         
@@ -75,7 +73,6 @@ export default {
     },
 
     async findById(id: number) {
-        logger.info(`find message by id: ${id}`);
         const message = await prisma.message.findUnique({
             where: { id },
             include: {
@@ -109,7 +106,6 @@ export default {
     },
 
     async delete(id: number) {
-        logger.info(`delete message with id: ${id}`);
         const result = await prisma.message.delete({
             where: { id }
         });
@@ -117,7 +113,6 @@ export default {
     },
 
     async findConversation(userId1: number, userId2: number) {
-        logger.info(`find conversation between users: ${userId1} and ${userId2}`);
         const messages = await prisma.message.findMany({
             where: {
                 OR: [
@@ -137,8 +132,6 @@ export default {
     },
 
     async markAsRead(messageId: number, userId: number) {
-        logger.info(`mark message ${messageId} as read for user ${userId}`);
-        
         // Start transaction to update message and contact list
         const result = await prisma.$transaction(async (prisma) => {
             // Get message to find sender
@@ -186,7 +179,6 @@ export default {
     },
 
     async getUnreadCount(userId: number) {
-        logger.info(`get unread messages count for user ${userId}`);
         const count = await prisma.message.count({
             where: {
                 receiverId: userId,

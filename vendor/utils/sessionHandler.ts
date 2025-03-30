@@ -1,62 +1,13 @@
 import redis from '#database/redis.js';
 import { DateTime } from 'luxon';
 import crypto from 'crypto';
-import { Auth, HttpContext, HttpData, ResponseData, Session, SessionData, SessionInfo } from '../types/types.js';
+import { HttpContext, SessionData, SessionInfo } from '../types/types.js';
 import sessionConfig from '#config/session.js';
-import logger from '#logger';
-import cookies from '../../config/cookies.js';
+import getRedisSessionStorage from '#vendor/utils/session/getRedisSessionStorage.js';
+// import logger from '#logger';
 
-
+const { saveSession, getSession, updateSessionData, changeSessionData, destroySession } = getRedisSessionStorage();
 const generateSessionId = () : string => crypto.randomUUID();
-
-const saveSession = async (sessionInfo: SessionInfo): Promise<void> => {
-    const userId = sessionInfo?.data?.userId ? sessionInfo.data.userId: 'guest';
-    await redis.setex(
-        `session:${userId}:${sessionInfo.id}`,
-        sessionConfig.age,
-        JSON.stringify(sessionInfo)
-    );
-};
-
-const getSession = async (sessionId: string | undefined, userId = 'guest' ): Promise<SessionInfo | null> => {
-    if (!sessionId) return null;
-    const sessionJson: string | null = await redis.getex(`session:${userId}:${sessionId}`, 'EX', sessionConfig.age);
-    if (!sessionJson) return null;
-    try {
-        return JSON.parse(sessionJson);
-    }catch (e) {
-        logger.error(e);
-    }
-    return null;
-};
-
-const updateSessionData = async (sessionId: string, newData: SessionData, userId='guest'): Promise<SessionInfo | null> => {
-    const session = await getSession(sessionId , userId );
-    if (!session) return null;
-    const updatedSession: SessionInfo = {
-        ...session,
-        data: { ...session.data, ...newData },
-        updatedAt: DateTime.now().toISO()
-    };
-    await saveSession(updatedSession);
-    return updatedSession;
-};
-
-const  changeSessionData = async (sessionId: string, newData: SessionData, userId = 'guest'): Promise<SessionInfo | null> => {
-    const session = await getSession(sessionId, userId);
-    if (!session) return null;
-    const updatedSession: SessionInfo = {
-        ...session,
-        data: newData,
-        updatedAt: DateTime.now().toISO()
-    };
-    await saveSession(updatedSession);
-    return updatedSession;
-};
-
-const destroySession = async (sessionId: string, userId = 'guest' ): Promise<void> => {
-    await redis.del(`session:${userId}:${sessionId}`);
-}
 
 const createSessionInfo = async (data: SessionData = {}): Promise<SessionInfo> => {
     // const sessionId = generateSessionId();
@@ -107,7 +58,6 @@ const sessionHandler = async ( context: HttpContext, accessToken: string | undef
         secure: sessionConfig.cookie.secure,
         maxAge: sessionConfig.age,
     });
-    //2025-03-27T16:14 2025-03-27T16:19:01.022Z
 
     context.session.sessionInfo = sessionInfo;
     context.session.updateSessionData = async ( newData: SessionData) => await updateSessionData( sessionInfo!.id, newData );

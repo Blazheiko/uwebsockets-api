@@ -1,4 +1,3 @@
-import logger from '#logger';
 import User from '#app/models/User.js';
 import { HttpContext } from '../../../vendor/types/types.js';
 import { generateKey, hashPassword, validatePassword } from 'metautil';
@@ -11,8 +10,8 @@ import generateWsToken from '../../servises/generateWsToken.js';
 
 export default {
     async register(context: HttpContext) {
+        const { httpData, auth, session, logger } = context;
         logger.info('register handler');
-        const { httpData, auth, session } = context;
         const {name , email , password, token } = httpData.payload;
         const exist = await prisma.user.findUnique({ where: { email } });
         if(exist) {
@@ -37,8 +36,9 @@ export default {
 
     },
     async login(context: HttpContext){
+
+        const { httpData, responseData, auth, session, logger } = context;
         logger.info('login handler');
-        const { httpData, responseData, auth, session } = context;
         const { email , password , token } = httpData.payload;
         const user = await prisma.user.findUnique({ where: { email } });
         if(user){
@@ -59,8 +59,8 @@ export default {
         return 'unauthorized';
     },
     async logout(context: HttpContext){
+        const { auth, logger } = context;
         logger.info('logout handler');
-        const { auth } = context;
         const res = await auth.logout();
         return { status: (res ? 'success':'error')}
     }

@@ -1,4 +1,7 @@
 import {  WebSocket } from "uWebSockets.js";
+import { Logger } from 'pino';
+
+
 
 export interface MyWebSocket extends WebSocket<any> {
   // sendJson: (data: any) => void;
@@ -21,16 +24,20 @@ export interface Cookie {
   sameSite?: string,
 }
 export interface HttpContext {
+  requestId: string;
+  logger: Logger;
   httpData: HttpData,
   responseData: ResponseData,
   session: Session,
   auth: any,
 }
 export interface WsContext {
+  requestId: string;
   wsData: WsData,
   responseData: WsResponseData,
   session: Session | null,
   auth: any,
+  logger: Logger,
 }
 
 export interface Auth {

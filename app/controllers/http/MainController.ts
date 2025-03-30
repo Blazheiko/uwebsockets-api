@@ -1,6 +1,6 @@
 // import { generateToken } from 'metautil';
 // import redis from '#database/redis.js';
-import logger from '#logger';
+
 import User from '#app/models/User.js';
 import httpRoutes from '#app/routes/httpRoutes.js';
 import wsRoutes from '#app/routes/wsRoutes.js';
@@ -16,7 +16,7 @@ export default {
         return { status: 'ok' };
     },
     
-    async testHeaders({ httpData }: HttpContext): Promise<any> {
+    async testHeaders({ httpData, logger }: HttpContext): Promise<any> {
         logger.info('testHeaders');
         const headers: any[] = [];
         httpData.headers.forEach((value, key) => {
@@ -25,7 +25,7 @@ export default {
         return { status: 'ok' , headers };
     },
 
-    async getSetCookies({ httpData }: HttpContext): Promise<any> {
+    async getSetCookies({ httpData, logger }: HttpContext): Promise<any> {
         logger.info('testCookies');
         const cookies: any[] = [];
         httpData.cookies.forEach((value, key) => {
@@ -34,7 +34,7 @@ export default {
 
         return { status: 'ok' , cookies };
     },
-    async testSession({ session, httpData }: HttpContext): Promise<any> {
+    async testSession({ session, httpData, logger }: HttpContext): Promise<any> {
         logger.info('testSession');
         logger.info(session);
         const cookies: any[] = [];
@@ -45,7 +45,7 @@ export default {
 
         return { status: 'ok' , cookies , sessionInfo };
     },
-    async testApiSession({ session, httpData }: HttpContext): Promise<any> {
+    async testApiSession({ session, httpData, logger }: HttpContext): Promise<any> {
         logger.info('testApiSession');
         const headers: any[] = [];
         httpData.headers.forEach((value, key) => {
@@ -70,7 +70,7 @@ export default {
         return { params, query, status: 'ok' };
     },
 
-    async init({ responseData, session }: HttpContext): Promise<any> {
+    async init({ responseData, session , logger}: HttpContext): Promise<any> {
         logger.info('init');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
@@ -96,7 +96,7 @@ export default {
         return { status: 'ok', user: User.serialize(user),  wsUrl: wsToken ? `ws://${configApp.host}:${configApp.port}/websocket/${wsToken}`: '' };
     },
     
-    async setHeaderAndCookie({ responseData }: HttpContext): Promise<any> {
+    async setHeaderAndCookie({ responseData, logger }: HttpContext): Promise<any> {
         logger.info('set-header-and-cookie');
         responseData.headers.push({ name: 'test-header', value: 'test' });
         responseData.setCookie({
@@ -110,11 +110,11 @@ export default {
         responseData.setCookie('cookieTest2', 'test');
         return { status: 'ok' };
     },
-    async testMiddleware({ responseData }: HttpContext): Promise<any> {
+    async testMiddleware({ responseData, logger }: HttpContext): Promise<any> {
         logger.info('testMiddleware handler');
         return { m: responseData.middlewareData, status: 'ok' };
     },
-    async saveUser({ httpData }: HttpContext): Promise<any> {
+    async saveUser({ httpData, logger}: HttpContext): Promise<any> {
         logger.info('saveUser');
         const { payload } = httpData;
         const user = await User.create({

@@ -1,9 +1,8 @@
-import logger from '#logger';
 import { HttpContext } from './../../../vendor/types/types.js';
 import { prisma } from '#database/prisma.js';
 
 export default {
-    async getMessages({ session, httpData }: HttpContext): Promise<any> {
+    async getMessages({ session, httpData, logger }: HttpContext): Promise<any> {
         logger.info('getMessages');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
@@ -49,40 +48,26 @@ export default {
         return { status: 'ok', messages };
     },
 
-    async sendMessage({ session, httpData }: HttpContext): Promise<any> {
+    async sendMessage({ session, httpData, logger }: HttpContext): Promise<any> {
         logger.info('sendMessage');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
             return { status: 'error', message: 'Session not found' };
         }
-        const userId = sessionInfo.data?.userId;
-        if (!userId) {
+        const sessionUserId = sessionInfo.data?.userId;
+        if (!sessionUserId) {
             return { status: 'unauthorized', message: 'User ID not found' };
         }
 
-        const { contactId, content } = httpData.payload;
-        if (!contactId || !content) {
+        const { contactId, content, userId } = httpData.payload;
+        logger.info(httpData.payload);
+        if (!contactId || !content || +userId !== +sessionUserId) {
             return { status: 'error', message: 'Contact ID and content are required' };
         }
 
         // Verify contact exists
         const contact = await prisma.contactList.findFirst({
-            where: {
-                OR: [
-                    {
-                        AND: [
-                            { userId },
-                            { contactId }
-                        ]
-                    },
-                    {
-                        AND: [
-                            { userId: contactId },
-                            { contactId: userId }
-                        ]
-                    }
-                ]
-            }
+            where: { userId: contactId , contactId: userId }
         });
 
         if (!contact) {
@@ -96,10 +81,6 @@ export default {
                 content,
                 type: 'TEXT'
             },
-            include: {
-                sender: true,
-                receiver: true
-            }
         });
 
         // Update contact's unread count
@@ -116,7 +97,7 @@ export default {
         return { status: 'ok', message };
     },
 
-    async deleteMessage({ session, httpData }: HttpContext): Promise<any> {
+    async deleteMessage({ session, httpData, logger }: HttpContext): Promise<any> {
         logger.info('deleteMessage');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
@@ -150,7 +131,7 @@ export default {
         return { status: 'ok', message: 'Message deleted successfully' };
     },
 
-    async editMessage({ session, httpData }: HttpContext): Promise<any> {
+    async editMessage({ session, httpData, logger}: HttpContext): Promise<any> {
         logger.info('editMessage');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
@@ -192,7 +173,7 @@ export default {
         return { status: 'ok', message: updatedMessage };
     },
 
-    async markAsRead({ session, httpData }: HttpContext): Promise<any> {
+    async markAsRead({ session, httpData, logger }: HttpContext): Promise<any> {
         logger.info('markAsRead');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {

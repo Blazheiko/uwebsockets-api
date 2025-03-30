@@ -1,12 +1,10 @@
 import { randomUUID } from 'crypto';
 import { prisma } from '#database/prisma.js';
 import { HttpContext } from '../../../vendor/types/types.js';
-import logger from '#logger';
 export default {
   // Создание нового приглашения
-  async createInvitation(context: HttpContext) {
+  async createInvitation({ httpData, session, logger }: HttpContext) {
     logger.info('createInvitation');
-    const { httpData, session } = context;
     const {userId , name } = httpData.payload;
   
     const expiresIn = 7; // Срок действия приглашения в днях
@@ -36,9 +34,9 @@ export default {
   },
 
   // Получение всех приглашений пользователя
-  async getUserInvitations(context: HttpContext) {
+  async getUserInvitations({ httpData, responseData, logger }: HttpContext) {
     logger.info('getUserInvitations');
-    const { httpData, responseData } = context;
+
     const { userId } = httpData.payload;
 
     if (!userId) {
@@ -65,9 +63,9 @@ export default {
   },
 
   // Проверка и использование приглашения
-  async useInvitation(context: HttpContext) {
+  async useInvitation({ httpData, responseData, logger }: HttpContext) {
     logger.info('useInvitation');
-    const { httpData, responseData } = context;
+
     const { token, invitedId } = httpData.payload;
 
     if (!token || !invitedId) {

@@ -1,15 +1,21 @@
-import { Auth, HttpContext, HttpData, ResponseData, Session } from '../types/types.js';
+import {
+    Auth,
+    Session,
+    WsContext,
+    WsData,
+    WsResponseData
+} from '../types/types.js';
 
 import logger from '#logger';
 import { randomUUID } from 'crypto';
 
 
 const getDefaultSession = (): Session => ({
-        sessionInfo: null,
-        updateSessionData: () => null,
-        changeSessionData: () => null,
-        destroySession: () => 0,
-    })
+    sessionInfo: null,
+    updateSessionData: () => null,
+    changeSessionData: () => null,
+    destroySession: () => 0,
+})
 const getDefaultAuth = (): Auth => ({
     getUserId: () => null,
     check: () => false,
@@ -20,17 +26,17 @@ const getDefaultAuth = (): Auth => ({
 
 const session: Session =  getDefaultSession();
 const auth: any = getDefaultAuth();
-export default ( httpData: HttpData, responseData: ResponseData ): HttpContext => {
+export default ( wsData: WsData, responseData: WsResponseData ): WsContext => {
     const requestId = randomUUID();
     const requestLogger = logger.child({ requestId });
-
 
     return {
         requestId,
         logger: requestLogger,
-        httpData,
-        responseData,
-        session ,
+        wsData,
+        responseData ,
+        session,
         auth
-    };
+    }
+
 }

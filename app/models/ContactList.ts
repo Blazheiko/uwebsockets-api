@@ -13,7 +13,6 @@ const hidden: string[] = [];
 
 export default {
     async create(payload: any) {
-        logger.info('create contact list entry');
         if (!payload || typeof payload !== 'object')
             return new Error('Payload must be object');
         
@@ -61,7 +60,6 @@ export default {
     },
 
     async findById(id: number) {
-        logger.info(`find contact list entry by id: ${id}`);
         const contact = await prisma.contactList.findUnique({
             where: { id },
             include: {
@@ -95,7 +93,6 @@ export default {
     },
 
     async delete(id: number) {
-        logger.info(`delete contact list entry with id: ${id}`);
         const result = await prisma.contactList.delete({
             where: { id }
         });
@@ -103,7 +100,6 @@ export default {
     },
 
     async findByUserId(userId: number) {
-        logger.info(`find contact list for user: ${userId}`);
         const contacts = await prisma.contactList.findMany({
             where: { userId },
             include: {

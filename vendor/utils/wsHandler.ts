@@ -57,7 +57,8 @@ const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: bool
         if (message) {
             if (message.event === 'service:ping') handlePong(ws);
             else{
-                const result = await wsApiHandler(message);
+                const userData = ws.getUserData();
+                const result = await wsApiHandler(message , userData);
                 if (result) sendJson(ws, result, token);
             }
         }
@@ -77,11 +78,16 @@ const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: bool
 const onClose = async (ws: MyWebSocket, code: number, message: any) => {
     logger.info('onClose code:', code);
     logger.info('onClose message:', message);
-   
-    // if (ws?.timeout) clearTimeout(ws.timeout);
-    const token = ws.getUserData().token;
-    if (token) await redis.del(`auth:ws:${token}`);
-    wsStorage.delete(ws);
+    try {
+        // if (ws?.timeout) clearTimeout(ws.timeout);
+        const token = ws.getUserData().token;
+        if (token) await redis.del(`auth:ws:${token}`);
+        wsStorage.delete(ws);
+    }catch (e) {
+        logger.error('Error onClose');
+        logger.error(e);
+    }
+
     
 };
 

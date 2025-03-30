@@ -1,9 +1,8 @@
-import logger from '#logger';
 import { HttpContext } from './../../../vendor/types/types.js';
 import { prisma } from '#database/prisma.js';
 
 export default {
-    async getContactList({ session, httpData}: HttpContext): Promise<any> {
+    async getContactList({ session, httpData , logger}: HttpContext): Promise<any> {
         logger.info('getChatList');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo)
@@ -33,7 +32,7 @@ export default {
         return { status: 'ok', contactList };
     },
 
-    async createChat({ session, httpData }: HttpContext): Promise<any> {
+    async createChat({ session, httpData, logger }: HttpContext): Promise<any> {
         logger.info('createChat');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
@@ -101,7 +100,7 @@ export default {
         return { status: 'ok', chat };
     },
 
-    async deleteChat({ session, httpData }: HttpContext): Promise<any> {
+    async deleteChat({ session, httpData, logger }: HttpContext): Promise<any> {
         logger.info('deleteChat');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {

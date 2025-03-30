@@ -1,14 +1,13 @@
-// import logger from '#logger';
 import { getWsRoutes } from '#vendor/start/router.js';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
 import validators from '#vendor/start/validators.js';
 import { WsData, WsResponseData, WsRoutes } from '../types/types.js';
+import createWsContext from './createWsContext.js';
 
 const wsRoutes: WsRoutes = getWsRoutes();
 
-export default async (message: { event: string; payload?: any }) => {
-    // logger.info('ws API Handler');
-    // logger.info(message);
+export default async (message: { event: string; payload?: any }, userData: unknown) => {
+
     const responseData: WsResponseData = {
         payload: {},
         event: message.event,
@@ -23,11 +22,13 @@ export default async (message: { event: string; payload?: any }) => {
                 if (validator) payload = await validator.validate(payload);
             }
             const wsData: WsData = {
-                middlewareData: {},
+                middlewareData: { userData },
                 status: '200',
                 payload: payload ? Object.freeze({ ...payload }) : null,
             };
-            const context = { wsData, responseData , session : null , auth: null};
+
+            // const context = { wsData, responseData , session : null , auth: null};
+            const context = createWsContext(wsData, responseData );
             if (route.middlewares?.length) {
 
                 await executeMiddlewares(route.middlewares, context);
@@ -37,8 +38,7 @@ export default async (message: { event: string; payload?: any }) => {
         }
         responseData.status = 404;
     } catch (e: any) {
-        // logger.error('error wsApiHandler');
-        // logger.error(e);
+
         if (e.code === 'E_VALIDATION_ERROR') {
             // logger.error('WS E_VALIDATION_ERROR');
             responseData.status = 422;

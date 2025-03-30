@@ -84,7 +84,7 @@ export default [
                 validator: 'getMessages',
             },
             {
-                url: '/messages',
+                url: '/send-chat-messages',
                 method: 'post',
                 handler: MessageController.sendMessage,
                 validator: 'sendMessage',
