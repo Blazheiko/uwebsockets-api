@@ -4,8 +4,9 @@ import crypto from 'crypto';
 import { HttpContext, SessionData, SessionInfo } from '../types/types.js';
 import sessionConfig from '#config/session.js';
 import getRedisSessionStorage from '#vendor/utils/session/getRedisSessionStorage.js';
-// import logger from '#logger';
+import logger from '#logger';
 
+logger.info(`Session storage: ${sessionConfig.storage}`);
 const { saveSession, getSession, updateSessionData, changeSessionData, destroySession } = getRedisSessionStorage();
 const generateSessionId = () : string => crypto.randomUUID();
 

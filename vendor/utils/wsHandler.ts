@@ -22,10 +22,13 @@ const closeAllWs = async () => {
 
 const handlePong = (ws: MyWebSocket) => {
     const token = ws.getUserData().token;
-    if (token) sendJson(ws, {
+    if (token) {
+        updateExpiration(token)
+        sendJson(ws, {
             event: 'service:pong',
             data: {},
-        }, token);
+        });
+    }
 };
 
 const unAuthorizedMessage = (token: string) => ({
@@ -44,7 +47,7 @@ const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: bool
     // if (isBinary) logger.info('isBinary', isBinary);
 
     try {
-        if (token) tokenData = await redis.get(`auth:ws:${token}`);
+        if (token) tokenData = await redis.getex(`auth:ws:${token}`, 'EX', 120);
         // let message = null;
         if(!tokenData) {
             ws.cork(() => {
@@ -59,7 +62,7 @@ const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: bool
             else{
                 const userData = ws.getUserData();
                 const result = await wsApiHandler(message , userData);
-                if (result) sendJson(ws, result, token);
+                if (result) sendJson(ws, result );
             }
         }
        
@@ -71,7 +74,7 @@ const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: bool
                     status: '422',
                     message: 'Validation failure',
                     messages: err.messages,
-                }, token);
+                });
         }
     }
 };
@@ -109,41 +112,18 @@ const updateExpiration = (token: string) => {
 //     }, 120_000);
 // };
 
-const sendJson = (ws: MyWebSocket, data: any, token: string) => {
+const sendJson = (ws: MyWebSocket, data: any) => {
     try {
         ws.cork(() => {
             ws.send(JSON.stringify(data));
         })
-        updateExpiration(token);
+        // updateExpiration(token);
     } catch (e) {
         logger.error('Error sendJson');
     }
 };
 const onOpen = async (ws: MyWebSocket) => {
-    // ws.sendJson = (data: any) => {
-    //     try {
-    //         ws.send(JSON.stringify(data));
-    //         updateTimeout(ws);
-    //     } catch (e) {
-    //         logger.error('Error sendJson');
-    //     }
-    // };
-    // ws.UUID = generateUUID();
-    // const token = req.getParameter(0);
-    // let dataAccess: { sessionId: string, userId: number } | null = null;
-
-    // if (token) dataAccess = await checkUserAccess(token);
-    // if (!dataAccess && !aborted) {
-    //     logger.warn('Access ws denied');
-    //     res.cork(() => {
-    //         res.writeStatus('401 Unauthorized');
-    //         res.end('Access denied');
-    //     });
-
-    // }
-
-    // if (this.server.closing) this.serverClosingHandler(ws)
-
+    
     const userData = ws.getUserData();
     // const user = getUserByToken(userData.token);
     const token = userData.token;
@@ -167,7 +147,7 @@ const onOpen = async (ws: MyWebSocket) => {
                 activity_timeout: 30
             }
         };
-        sendJson(ws, broadcastMessage, token);
+        sendJson(ws, broadcastMessage );
         wsStorage.add(ws);
     }
 };

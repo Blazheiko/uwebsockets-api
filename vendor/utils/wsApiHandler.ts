@@ -28,7 +28,7 @@ export default async (message: { event: string; payload?: any }, userData: unkno
             };
 
             // const context = { wsData, responseData , session : null , auth: null};
-            const context = createWsContext(wsData, responseData );
+            const context = await createWsContext(wsData, responseData );
             if (route.middlewares?.length) {
 
                 await executeMiddlewares(route.middlewares, context);

@@ -1,6 +1,7 @@
 import { duration } from 'metautil';
 export default {
-    enabled: true,
+    // enabled: true,
+    storage: 'redis',
     cookieName: 'uapi',
     age: Math.floor( duration('2h')/1000 ), // d - days, h - hours, m - minutes, s - seconds
 

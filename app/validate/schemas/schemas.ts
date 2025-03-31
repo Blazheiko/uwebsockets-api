@@ -23,18 +23,22 @@ const schemas: Record<string, any> = {
 
     // Message schemas
     getMessages: vine.object({
+        userId: vine.number().positive(),
         contactId: vine.number().positive(),
     }),
     sendMessage: vine.object({
+        userId: vine.number().positive(),
         contactId: vine.number().positive(),
         content: vine.string().minLength(1).maxLength(10000),
         type: vine.enum(['TEXT', 'IMAGE', 'VIDEO', 'AUDIO']).optional(),
         src: vine.string().optional(),
     }),
     deleteMessage: vine.object({
+        userId: vine.number().positive(),
         messageId: vine.number().positive(),
     }),
     editMessage: vine.object({
+        userId: vine.number().positive(),
         messageId: vine.number().positive(),
         content: vine.string().minLength(1).maxLength(10000),
     }),

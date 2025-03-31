@@ -8,13 +8,14 @@ import {
 
 import logger from '#logger';
 import { randomUUID } from 'crypto';
+import getRedisSessionStorage from '#vendor/utils/session/getRedisSessionStorage.js';
 
-
-const getDefaultSession = (): Session => ({
-    sessionInfo: null,
-    updateSessionData: () => null,
-    changeSessionData: () => null,
-    destroySession: () => 0,
+const { saveSession, getSession, updateSessionData, changeSessionData, destroySession } = getRedisSessionStorage();
+const getCurrentSession = async (sessionId: string , userId: number): Promise<Session> => ({
+    sessionInfo: await getSession(sessionId , String(userId)),
+    updateSessionData: updateSessionData,
+    changeSessionData: changeSessionData,
+    destroySession: destroySession,
 })
 const getDefaultAuth = (): Auth => ({
     getUserId: () => null,
@@ -24,11 +25,16 @@ const getDefaultAuth = (): Auth => ({
     logoutAll: () => false,
 });
 
-const session: Session =  getDefaultSession();
-const auth: any = getDefaultAuth();
-export default ( wsData: WsData, responseData: WsResponseData ): WsContext => {
+
+// const auth: any = getDefaultAuth();
+export default async ( wsData: WsData, responseData: WsResponseData ): Promise<WsContext> => {
     const requestId = randomUUID();
     const requestLogger = logger.child({ requestId });
+    const userData = wsData.middlewareData.userData;
+    let session: Session | null = null;
+    if (userData && userData.sessionId && userData.userId) {
+        session =  await getCurrentSession(userData.sessionId , userData.userId);
+    }
 
     return {
         requestId,
@@ -36,7 +42,7 @@ export default ( wsData: WsData, responseData: WsResponseData ): WsContext => {
         wsData,
         responseData ,
         session,
-        auth
+        auth: null
     }
 
 }

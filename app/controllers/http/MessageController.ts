@@ -61,6 +61,7 @@ export default {
 
         const { contactId, content, userId } = httpData.payload;
         logger.info(httpData.payload);
+        logger.info({ userId });
         if (!contactId || !content || +userId !== +sessionUserId) {
             return { status: 'error', message: 'Contact ID and content are required' };
         }
