@@ -78,8 +78,8 @@ export default [
             },
             // Message Routes
             {
-                url: '/messages/:contactId',
-                method: 'get',
+                url: '/get-messages',
+                method: 'post',
                 handler: MessageController.getMessages,
                 validator: 'getMessages',
             },

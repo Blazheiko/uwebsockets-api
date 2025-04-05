@@ -1,5 +1,7 @@
 import { HttpContext } from './../../../vendor/types/types.js';
 import { prisma } from '#database/prisma.js';
+import sendMessage from '#app/servises/chat/sendMessage.js';
+import getChatMessages from '#app/servises/chat/getChatMessages.js';
 
 export default {
     async getMessages({ session, httpData, logger }: HttpContext): Promise<any> {
@@ -8,44 +10,22 @@ export default {
         if (!sessionInfo) {
             return { status: 'error', message: 'Session not found' };
         }
-        const userId = sessionInfo.data?.userId;
-        if (!userId) {
+        const { contactId, userId } = httpData.payload;
+        const sessionUserId = sessionInfo.data?.userId;
+        if (!userId || !sessionUserId || +userId !== +sessionUserId) {
             return { status: 'unauthorized', message: 'User ID not found' };
         }
 
-        const { contactId } = httpData.payload;
         if (!contactId) {
             return { status: 'error', message: 'Contact ID is required' };
         }
 
-        const messages = await prisma.message.findMany({
-            where: {
-                OR: [
-                    {
-                        AND: [
-                            { senderId: userId },
-                            { receiverId: contactId }
-                        ]
-                    },
-                    {
-                        AND: [
-                            { senderId: contactId },
-                            { receiverId: userId }
-                        ]
-                    }
-                ]
-            },
-            include: {
-                sender: true,
-                receiver: true
-            },
-            orderBy: {
-                createdAt: 'desc'
-            },
-            take: 50
-        });
+        const data = await getChatMessages(userId, contactId);
+        if (!data) {
+            return { status: 'error', message: 'Messages not found' };
+        }
 
-        return { status: 'ok', messages };
+        return { status: 'ok', messages: data.messages, contact: data.contact };
     },
 
     async sendMessage({ session, httpData, logger }: HttpContext): Promise<any> {
@@ -66,34 +46,7 @@ export default {
             return { status: 'error', message: 'Contact ID and content are required' };
         }
 
-        // Verify contact exists
-        const contact = await prisma.contactList.findFirst({
-            where: { userId: contactId , contactId: userId }
-        });
-
-        if (!contact) {
-            return { status: 'error', message: 'Contact not found or access denied' };
-        }
-
-        const message = await prisma.message.create({
-            data: {
-                senderId: userId,
-                receiverId: contactId,
-                content,
-                type: 'TEXT'
-            },
-        });
-
-        // Update contact's unread count
-        await prisma.contactList.update({
-            where: { id: contact.id },
-            data: {
-                unreadCount: {
-                    increment: 1
-                },
-                updatedAt: new Date()
-            }
-        });
+        const message = await sendMessage(content, userId, contactId);
 
         return { status: 'ok', message };
     },
