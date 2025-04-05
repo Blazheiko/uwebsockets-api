@@ -20,10 +20,13 @@ export default async (content: string, userId: number, contactId: number) => {
     await prisma.contactList.update({
         where: { id: contact.id },
         data: {
-               unreadCount: {
-               increment: 1
-               },
-               updatedAt: new Date()
+               unreadCount: { increment: 1 },
+        }
+    });
+    await prisma.contactList.update({
+        where: { userId_contactId: { userId: userId, contactId: contactId } },
+        data: {
+            updatedAt: new Date()
         }
     });
 

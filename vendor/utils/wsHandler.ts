@@ -50,9 +50,15 @@ const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: bool
         if (token) tokenData = await redis.getex(`auth:ws:${token}`, 'EX', 120);
         // let message = null;
         if(!tokenData) {
+            
             ws.cork(() => {
-                ws.send(JSON.stringify(unAuthorizedMessage(token)));
-                ws.end(4001);
+                try {
+                    ws.send(JSON.stringify(unAuthorizedMessage(token)));
+                    ws.end(4001);
+                } catch (e) {
+                    logger.error('Error ws send unAuthorizedMessage');
+                    logger.error(e);
+                }
             })
             return;
         }
@@ -113,14 +119,15 @@ const updateExpiration = (token: string) => {
 // };
 
 const sendJson = (ws: MyWebSocket, data: any) => {
-    try {
-        ws.cork(() => {
+    if (!ws) return;
+    ws.cork(() => {
+        try {
             ws.send(JSON.stringify(data));
-        })
-        // updateExpiration(token);
-    } catch (e) {
-        logger.error('Error sendJson');
-    }
+        } catch (e) {
+            logger.error('Error sendJson');
+            logger.error(e);
+        }
+    })
 };
 const onOpen = async (ws: MyWebSocket) => {
     
