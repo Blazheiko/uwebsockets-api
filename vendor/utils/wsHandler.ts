@@ -129,25 +129,30 @@ const sendJson = (ws: MyWebSocket, data: any) => {
         }
     })
 };
+
 const onOpen = async (ws: MyWebSocket) => {
-    
-    const userData = ws.getUserData();
-    // const user = getUserByToken(userData.token);
-    const token = userData.token;
-    let dataAccess: { sessionId: string, userId: number } | null = null;
+    try {
+        const userData = ws.getUserData();
+        const token = userData.token;
+        let dataAccess: { sessionId: string, userId: number } | null = null;
 
-    if (token) dataAccess = await checkUserAccess(token);
-    // const token = redis.get(`auth:ws:${userData.token}`);
-    if (!token || !dataAccess) {
-        const errorMessage = unAuthorizedMessage(userData.token);
-        logger.info(errorMessage);
-        ws.cork(() => {
-            ws.send(JSON.stringify(errorMessage));
-            ws.end(4001);
-        })
+        if (token) dataAccess = await checkUserAccess(token);
 
-    }else{
-        let broadcastMessage = {
+        if (!token || !dataAccess) {
+            const errorMessage = unAuthorizedMessage(userData.token);
+            logger.info(errorMessage);
+            ws.cork(() => {
+                try {
+                    ws.send(JSON.stringify(errorMessage));
+                    ws.end(4001);
+                } catch (e) {
+                    logger.error('Error sending unauthorized message:', e);
+                }
+            });
+            return;
+        }
+
+        const broadcastMessage = {
             event: 'service:connection_established',
             data: {
                 socket_id: userData.uuid,
@@ -155,7 +160,23 @@ const onOpen = async (ws: MyWebSocket) => {
             }
         };
         sendJson(ws, broadcastMessage );
-        wsStorage.add(ws);
+
+        // ws.cork(() => {
+        //     try {
+        //         ws.send(JSON.stringify(broadcastMessage));
+        //         wsStorage.add(ws);
+        //     } catch (e) {
+        //         logger.error('Error establishing connection:', e);
+        //         // ws.end(4001);
+        //     }
+        // });
+    } catch (e) {
+        logger.error('Error in onOpen:', e);
+        try {
+            ws.end(4001);
+        } catch (closeError) {
+            logger.error('Error closing connection:', closeError);
+        }
     }
 };
 

@@ -1,4 +1,5 @@
 import { prisma } from "#database/prisma.js";
+import logger from "#logger";
 
 export default async (content: string, userId: number, contactId: number) => {
    if (!contactId || !content || !userId) return null;
@@ -20,15 +21,18 @@ export default async (content: string, userId: number, contactId: number) => {
     await prisma.contactList.update({
         where: { id: contact.id },
         data: {
-               unreadCount: { increment: 1 },
+            unreadCount: { increment: 1 },
+            lastMessageId: message.id
         }
     });
-    await prisma.contactList.update({
+    const updated = await prisma.contactList.update({
         where: { userId_contactId: { userId: userId, contactId: contactId } },
         data: {
-            updatedAt: new Date()
+            updatedAt: new Date(),
+            lastMessageId: message.id
         }
     });
+    logger.info(`updated: ${updated}`);
 
     return message;
 }

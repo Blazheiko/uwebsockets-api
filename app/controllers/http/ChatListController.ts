@@ -24,7 +24,8 @@ export default {
             include: {
                 contact: {
                     select: { id: true, name: true }
-                }
+                },
+                lastMessage: true
             },
             orderBy: { updatedAt: 'desc' }
         });

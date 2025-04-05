@@ -41,12 +41,14 @@ model ContactList {
   rename      String?  @db.VarChar(100)
   status      String   @default("pending") // pending, accepted, blocked, favorite
   unreadCount Int      @default(0) @map("unread_count")
+  lastMessageId Int?   @map("last_message_id")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
   user    User @relation("UserContacts", fields: [userId], references: [id])
   contact User @relation("ContactOfUser", fields: [contactId], references: [id])
+  lastMessage Message? @relation("LastMessage", fields: [lastMessageId], references: [id])
 
   @@unique([userId, contactId])
   @@map("contact_list")
@@ -73,6 +75,7 @@ model Message {
   // Relations
   sender   User @relation("SentMessages", fields: [senderId], references: [id])
   receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  contactList  ContactList[] @relation("LastMessage")
 
   @@map("messages")
 }
