@@ -6,6 +6,16 @@ import { HttpRequest, HttpResponse, us_socket_context_t } from 'uWebSockets.js';
 import { MyWebSocket } from '../types/types.js';
 
 const wsStorage: Set<MyWebSocket> = new Set();
+// const userStorage: Map<number, Set<MyWebSocket>> = new Map();
+
+// const broadcastMessage = (userId: number, event: string, message: any) => {
+//     logger.info(`broadcastMessage: ${userId} ${event} ${message}`);
+//     // const userWs = userStorage.get(userId);
+//     // if (userWs) {
+//     //     logger.info(`userWs: ${userId}`);
+//     //     userWs.forEach(ws => sendJson(ws, { event: `broadcast:${event}`, data: {message} }))
+//     // };
+// }
 
 const closeAllWs = async () => {
     for (const ws of wsStorage) {
@@ -96,8 +106,6 @@ const onClose = async (ws: MyWebSocket, code: number, message: any) => {
         logger.error('Error onClose');
         logger.error(e);
     }
-
-    
 };
 
 const updateExpiration = (token: string) => {
@@ -118,16 +126,34 @@ const updateExpiration = (token: string) => {
 //     }, 120_000);
 // };
 
+// const sendJson = (ws: MyWebSocket, data: any) => {
+//     if (!ws || typeof ws.cork !== 'function') return;
+//     ws.cork(() => {
+//         try {
+//             ws.send(JSON.stringify(data));
+//         } catch (e) {
+//             logger.error('Error sendJson');
+//             logger.error(e);
+//         }
+//     })
+// };
 const sendJson = (ws: MyWebSocket, data: any) => {
-    if (!ws) return;
-    ws.cork(() => {
-        try {
+    if (!ws || typeof ws.cork !== 'function') {
+        logger.warn('Attempted to send message to closed or invalid WebSocket');
+        return;
+    }
+    try {
+        ws.cork(() => {
             ws.send(JSON.stringify(data));
-        } catch (e) {
-            logger.error('Error sendJson');
-            logger.error(e);
+        });
+    } catch (e) {
+        logger.error('Error in sendJson:', e);
+        try {
+            ws.close();
+        } catch (closeError) {
+            logger.error('Error closing WebSocket after send failure:', closeError);
         }
-    })
+    }
 };
 
 const onOpen = async (ws: MyWebSocket) => {
@@ -138,7 +164,7 @@ const onOpen = async (ws: MyWebSocket) => {
 
         if (token) dataAccess = await checkUserAccess(token);
 
-        if (!token || !dataAccess) {
+        if (!token || !dataAccess || !userData.userId) {
             const errorMessage = unAuthorizedMessage(userData.token);
             logger.info(errorMessage);
             ws.cork(() => {
@@ -159,7 +185,12 @@ const onOpen = async (ws: MyWebSocket) => {
                 activity_timeout: 30
             }
         };
+        ws.subscribe(`user:${userData.userId}`);
         sendJson(ws, broadcastMessage );
+        // wsStorage.add(ws);
+        // const userWs = userStorage.get(userData.userId);
+        // if (userWs) userWs.add(ws);
+        // else userStorage.set(userData.userId, new Set([ws]));
 
         // ws.cork(() => {
         //     try {

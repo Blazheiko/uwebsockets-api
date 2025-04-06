@@ -41,6 +41,15 @@ import {
 import contextHandler from '../utils/contextHandler.js';
 import { startStaticServer, staticHandler, staticIndexHandler } from './staticServer.js';
 
+const server: TemplatedApp = uWS.App();
+
+const broadcastMessage = (userId: number, event: string, message: any) => {
+    logger.info(`broadcastMessage: ${userId} ${event}`);
+    if(server && state.listenSocket)
+        server.publish(`user:${userId}`, JSON.stringify({ event: `broadcast:${event}`, data: {message} }));
+    
+}
+
 const configureWebsockets = (server: TemplatedApp) => {
     return server.ws('/websocket/:token', {
         compression: 0,
@@ -320,7 +329,7 @@ const setCorsHeader = (res: HttpResponse) => {
 };
 // let server = null;
 const initServer = () => {
-    const server: TemplatedApp = uWS.App();
+    
     configureWebsockets(server);
     configureHttp(server);
     if(appConfig.unixPath){
@@ -352,4 +361,4 @@ const stopServer = (type = 'handle') => {
     state.listenSocket = null;
 };
 
-export { initServer, stopServer };
+export { initServer, stopServer, broadcastMessage };
