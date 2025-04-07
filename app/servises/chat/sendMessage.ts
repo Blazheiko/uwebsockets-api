@@ -35,7 +35,7 @@ export default async (content: string, userId: number, contactId: number) => {
     });
     logger.info(`updated: ${updated}`);
 
-    broadcastMessage(contactId, 'new_message', message);
+    broadcastMessage(contactId, 'new_message', { message });
 
     return message;
 }

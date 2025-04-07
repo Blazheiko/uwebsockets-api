@@ -4,8 +4,8 @@ export default [
     {
         group: [
             {
-                url: 'test',
-                handler: WSApiController.test,
+                url: 'event_typing',
+                handler: WSApiController.eventTyping,
                 description: '',
             },
             {

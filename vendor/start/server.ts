@@ -43,10 +43,10 @@ import { startStaticServer, staticHandler, staticIndexHandler } from './staticSe
 
 const server: TemplatedApp = uWS.App();
 
-const broadcastMessage = (userId: number, event: string, message: any) => {
+const broadcastMessage = (userId: number, event: string, payload: any) => {
     logger.info(`broadcastMessage: ${userId} ${event}`);
     if(server && state.listenSocket)
-        server.publish(`user:${userId}`, JSON.stringify({ event: `broadcast:${event}`, status: 200, payload: {message} }));
+        server.publish(`user:${userId}`, JSON.stringify({ event: `broadcast:${event}`, status: 200, payload }));
     
 }
 

@@ -1,11 +1,14 @@
 import logger from '#logger';
 import User from '#app/models/User.js';
 import { WsContext, WsData, WsResponseData } from '../../../vendor/types/types.js';
-
+import { broadcastMessage } from '#vendor/start/server.js';
 export default {
-    test({ responseData}: WsContext) {
-        logger.info('ws test');
-        responseData.payload = { test: true };
+    eventTyping({ wsData, responseData}: WsContext) {
+        logger.info('ws eventTyping');
+        const { payload } = wsData;
+        logger.info(payload);
+        broadcastMessage(payload.contactId, 'event_typing', payload);
+        responseData.payload = { status: 'ok'};
 
         return responseData;
     },
