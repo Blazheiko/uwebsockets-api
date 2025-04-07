@@ -8,9 +8,8 @@ export default {
         const { payload } = wsData;
         logger.info(payload);
         broadcastMessage(payload.contactId, 'event_typing', payload);
-        responseData.payload = { status: 'ok'};
 
-        return responseData;
+        return { status: 'ok'};
     },
     error() {
         logger.info('ws error');
@@ -28,8 +27,7 @@ export default {
             password: payload.password,
         });
         // console.log(user);
-        responseData.payload = { status: 'ok', user };
 
-        return responseData;
+        return { status: 'ok', user };
     },
 };

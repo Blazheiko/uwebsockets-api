@@ -29,12 +29,12 @@ export default async (message: { event: string; payload?: any }, userData: unkno
 
             // const context = { wsData, responseData , session : null , auth: null};
             const context = await createWsContext(wsData, responseData );
-            if (route.middlewares?.length) {
-
-                await executeMiddlewares(route.middlewares, context);
+            if (route.middlewares?.length === 0 || await executeMiddlewares(route.middlewares, context)) {
+                const handler = route.handler;
+                responseData.payload = await handler(context);
             }
-            const handler = route.handler;
-            return await handler(context);
+            
+            return responseData;
         }
         responseData.status = 404;
     } catch (e: any) {

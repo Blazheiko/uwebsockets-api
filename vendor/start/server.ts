@@ -251,7 +251,7 @@ const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteI
             const responseData = getResponseData();
             const context = contextHandler( httpData, responseData )
 
-            if( await executeMiddlewares(route.middlewares, context ) && responseData.status >= 200 && responseData.status < 300 )
+            if( (route.middlewares?.length === 0 || await executeMiddlewares(route.middlewares, context )) && responseData.status >= 200 && responseData.status < 300 )
                 responseData.payload = await route.handler( context );
 
             if (aborted) return;
