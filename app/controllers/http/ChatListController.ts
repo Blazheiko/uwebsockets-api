@@ -1,6 +1,6 @@
 import { HttpContext } from './../../../vendor/types/types.js';
 import { prisma } from '#database/prisma.js';
-
+import { getOnlineUser } from '#vendor/utils/wsHandler.js';
 export default {
     async getContactList({ session, httpData , logger}: HttpContext): Promise<any> {
         logger.info('getChatList');
@@ -29,8 +29,9 @@ export default {
             },
             orderBy: { updatedAt: 'desc' }
         });
+        const onlineUsers = getOnlineUser(contactList.map(contact => contact.contactId));
 
-        return { status: 'ok', contactList };
+        return { status: 'ok', contactList, onlineUsers };
     },
 
     async createChat({ session, httpData, logger }: HttpContext): Promise<any> {

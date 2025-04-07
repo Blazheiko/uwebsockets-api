@@ -50,6 +50,10 @@ const broadcastMessage = (userId: number, event: string, payload: any) => {
     
 }
 
+const broadcastOnline = (userId: number, status: string) => {
+    server.publish(`change_online`, JSON.stringify({ event: `broadcast:change_online`, status: 200, payload:{ userId, status } }));
+}
+
 const configureWebsockets = (server: TemplatedApp) => {
     return server.ws('/websocket/:token', {
         compression: 0,
@@ -361,4 +365,4 @@ const stopServer = (type = 'handle') => {
     state.listenSocket = null;
 };
 
-export { initServer, stopServer, broadcastMessage };
+export { initServer, stopServer, broadcastMessage, broadcastOnline };

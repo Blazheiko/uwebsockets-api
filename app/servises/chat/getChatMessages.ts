@@ -1,8 +1,9 @@
 import { prisma } from "#database/prisma.js";
+import { getOnlineUser } from "#vendor/utils/wsHandler.js";
 import { Message } from "@prisma/client";
 import { ContactList } from "@prisma/client";
 
-export default async (userId: number, contactId: number): Promise<{ messages: Message[], contact: ContactList } | null> => {
+export default async (userId: number, contactId: number): Promise<{ messages: Message[], contact: ContactList, onlineUsers: number[] } | null> => {
     if (!userId || !contactId) return null;
     
     const contact = await prisma.contactList.findFirst({
@@ -51,5 +52,8 @@ export default async (userId: number, contactId: number): Promise<{ messages: Me
         },
         take: 50
     });
-    return { messages, contact: contact as ContactList };
+
+    const onlineUsers = getOnlineUser([contact.contactId]);
+
+    return { messages, contact: contact as ContactList , onlineUsers };
 }

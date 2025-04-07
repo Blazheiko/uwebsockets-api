@@ -25,7 +25,7 @@ export default {
             return { status: 'error', message: 'Messages not found' };
         }
 
-        return { status: 'ok', messages: data.messages, contact: data.contact };
+        return { status: 'ok', ...data };
     },
 
     async sendMessage({ session, httpData, logger }: HttpContext): Promise<any> {

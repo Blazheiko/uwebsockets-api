@@ -4,10 +4,22 @@ import { generateUUID } from 'metautil';
 import redis from '#database/redis.js';
 import { HttpRequest, HttpResponse, us_socket_context_t } from 'uWebSockets.js';
 import { MyWebSocket } from '../types/types.js';
+import { broadcastOnline } from '#vendor/start/server.js';
 
 const wsStorage: Set<MyWebSocket> = new Set();
-// const userStorage: Map<number, Set<MyWebSocket>> = new Map();
+const userStorage: Map<number, Map<string, { ip: string, userAgent: string }>> = new Map();
 
+const getUserConnections = (userId: number) => {
+    return userStorage.get(userId);
+}
+
+const getOnlineUser = (usersOnline: number[]) => {
+    const onlineUsers: number[] = [];
+    for (const userId of usersOnline) {
+        if(userStorage.has(userId)) onlineUsers.push(userId);
+    }
+    return onlineUsers;
+}
 
 const closeAllWs = async () => {
     for (const ws of wsStorage) {
@@ -20,6 +32,7 @@ const closeAllWs = async () => {
         }
     }
     wsStorage.clear();
+    userStorage.clear();
 };
 
 const handlePong = (ws: MyWebSocket) => {
@@ -87,14 +100,24 @@ const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: bool
         }
     }
 };
+
 const onClose = async (ws: MyWebSocket, code: number, message: any) => {
     logger.info('onClose code:', code);
     logger.info('onClose message:', message);
     try {
-        // if (ws?.timeout) clearTimeout(ws.timeout);
         const token = ws.getUserData().token;
         if (token) await redis.del(`auth:ws:${token}`);
         wsStorage.delete(ws);
+        const userData = ws.getUserData();
+        logger.info(userData);
+        const userConnection = userStorage.get(userData.userId);
+        if (userConnection) {
+            userConnection.delete(userData.uuid);
+            if(userConnection.size === 0) {
+                userStorage.delete(userData.userId);
+                broadcastOnline(userData.userId, 'offline');
+            }
+        }
     }catch (e) {
         logger.error('Error onClose');
         logger.error(e);
@@ -119,17 +142,6 @@ const updateExpiration = (token: string) => {
 //     }, 120_000);
 // };
 
-// const sendJson = (ws: MyWebSocket, data: any) => {
-//     if (!ws || typeof ws.cork !== 'function') return;
-//     ws.cork(() => {
-//         try {
-//             ws.send(JSON.stringify(data));
-//         } catch (e) {
-//             logger.error('Error sendJson');
-//             logger.error(e);
-//         }
-//     })
-// };
 const sendJson = (ws: MyWebSocket, data: any) => {
     if (!ws || typeof ws.cork !== 'function') {
         logger.warn('Attempted to send message to closed or invalid WebSocket');
@@ -180,11 +192,16 @@ const onOpen = async (ws: MyWebSocket) => {
             }
         };
         ws.subscribe(`user:${userData.userId}`);
+        ws.subscribe(`change_online`);
         sendJson(ws, broadcastMessage );
-        // wsStorage.add(ws);
-        // const userWs = userStorage.get(userData.userId);
-        // if (userWs) userWs.add(ws);
-        // else userStorage.set(userData.userId, new Set([ws]));
+        wsStorage.add(ws);
+
+        const userConnection = userStorage.get(userData.userId);
+        if (userConnection) userConnection.set(userData.uuid, { ip: userData.ip, userAgent: userData.userAgent });
+        else {
+            userStorage.set(userData.userId, new Map([[userData.uuid, { ip: userData.ip, userAgent: userData.userAgent }]]));
+            broadcastOnline(userData.userId, 'online');
+        }
 
         // ws.cork(() => {
         //     try {
@@ -282,4 +299,4 @@ const handleUpgrade = async (res: HttpResponse, req: HttpRequest, context: us_so
     }
 };
 
-export { onMessage, onOpen, onClose, handleUpgrade, closeAllWs };
+export { onMessage, onOpen, onClose, handleUpgrade, closeAllWs, getUserConnections, getOnlineUser };
