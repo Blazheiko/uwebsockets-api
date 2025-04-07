@@ -46,7 +46,7 @@ const server: TemplatedApp = uWS.App();
 const broadcastMessage = (userId: number, event: string, message: any) => {
     logger.info(`broadcastMessage: ${userId} ${event}`);
     if(server && state.listenSocket)
-        server.publish(`user:${userId}`, JSON.stringify({ event: `broadcast:${event}`, data: {message} }));
+        server.publish(`user:${userId}`, JSON.stringify({ event: `broadcast:${event}`, status: 200, payload: {message} }));
     
 }
 

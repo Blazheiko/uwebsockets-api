@@ -8,14 +8,6 @@ import { MyWebSocket } from '../types/types.js';
 const wsStorage: Set<MyWebSocket> = new Set();
 // const userStorage: Map<number, Set<MyWebSocket>> = new Map();
 
-// const broadcastMessage = (userId: number, event: string, message: any) => {
-//     logger.info(`broadcastMessage: ${userId} ${event} ${message}`);
-//     // const userWs = userStorage.get(userId);
-//     // if (userWs) {
-//     //     logger.info(`userWs: ${userId}`);
-//     //     userWs.forEach(ws => sendJson(ws, { event: `broadcast:${event}`, data: {message} }))
-//     // };
-// }
 
 const closeAllWs = async () => {
     for (const ws of wsStorage) {
@@ -36,15 +28,16 @@ const handlePong = (ws: MyWebSocket) => {
         updateExpiration(token)
         sendJson(ws, {
             event: 'service:pong',
-            data: {},
+            status: 200,
+            payload: null,
         });
     }
 };
 
 const unAuthorizedMessage = (token: string) => ({
     event: 'service:error',
-    data: {
-        code: 4001,
+    status: 4001,
+    payload: {
         message: `Token ${token} does not exist.`,
     }
 });
@@ -180,7 +173,8 @@ const onOpen = async (ws: MyWebSocket) => {
 
         const broadcastMessage = {
             event: 'service:connection_established',
-            data: {
+            status: 200,
+            payload: {
                 socket_id: userData.uuid,
                 activity_timeout: 30
             }
