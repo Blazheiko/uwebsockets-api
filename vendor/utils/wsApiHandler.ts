@@ -1,12 +1,13 @@
 import { getWsRoutes } from '#vendor/start/router.js';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
 import validators from '#vendor/start/validators.js';
-import { WsData, WsResponseData, WsRoutes } from '../types/types.js';
+import { Session, SessionInfo, WsData, WsResponseData, WsRoutes } from '../types/types.js';
 import createWsContext from './createWsContext.js';
+import logger from '../../logger.js';
 
 const wsRoutes: WsRoutes = getWsRoutes();
 
-export default async (message: { event: string; payload?: any }, userData: unknown) => {
+export default async (message: { event: string; payload?: any }, userData: unknown, session: Session) => {
 
     const responseData: WsResponseData = {
         payload: {},
@@ -28,8 +29,8 @@ export default async (message: { event: string; payload?: any }, userData: unkno
             };
 
             // const context = { wsData, responseData , session : null , auth: null};
-            const context = await createWsContext(wsData, responseData );
-            if (route.middlewares?.length === 0 || await executeMiddlewares(route.middlewares, context)) {
+            const context = await createWsContext(wsData, responseData, session );
+            if (!route.middlewares || route.middlewares.length === 0 || await executeMiddlewares(route.middlewares, context)) {
                 const handler = route.handler;
                 responseData.payload = await handler(context);
             }

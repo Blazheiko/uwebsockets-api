@@ -1,7 +1,7 @@
 import redis from '#database/redis.js';
 import { DateTime } from 'luxon';
 import crypto from 'crypto';
-import { HttpContext, SessionData, SessionInfo } from '../types/types.js';
+import { HttpContext, Session, SessionData, SessionInfo, WsContext } from '../types/types.js';
 import sessionConfig from '#config/session.js';
 import getRedisSessionStorage from '#vendor/utils/session/getRedisSessionStorage.js';
 import logger from '#logger';
@@ -26,7 +26,7 @@ const createSessionInfo = async (data: SessionData = {}): Promise<SessionInfo> =
 
 const createCookieValue = (sessionId: string, userId: string | undefined): string => (userId ? `${userId}.${sessionId}` : sessionId)
 
-const sessionHandler = async ( context: HttpContext, accessToken: string | undefined, userId: string | undefined  ) => {
+export const sessionHandler = async (context: HttpContext, accessToken: string | undefined, userId: string | undefined  ) => {
 
     const { responseData } = context;
     // let userId = undefined;
@@ -95,4 +95,17 @@ const sessionHandler = async ( context: HttpContext, accessToken: string | undef
     };
 }
 
-export default sessionHandler;
+export const wsSessionHandler = async (sessionId: string, userId: string): Promise<Session | null> => {
+
+    let sessionInfo = await getSession(sessionId, userId);
+    if (!sessionInfo || !sessionInfo.data || sessionInfo.data.userId != userId) return null;
+
+    return  {
+        sessionInfo: sessionInfo,
+        updateSessionData: async ( newData: SessionData) => await updateSessionData( sessionInfo!.id, newData ),
+        changeSessionData: async ( newData: SessionData) => await changeSessionData( sessionInfo!.id, newData ),
+        destroySession: async () => await destroySession(sessionInfo!.id),
+    }
+}
+
+// export default { sessionHandler, wsSessionHandler };

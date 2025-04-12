@@ -1,7 +1,7 @@
 import { HttpContext } from '../types/types.js';
 import sessionConfig from '#config/session.js';
-import logger from '../../logger.js';
-import sessionHandler from './sessionHandler.js';
+// import logger from '../../logger.js';
+import { sessionHandler } from './sessionHandler.js';
 
 const sessionWeb = async (context: HttpContext, next: Function) => {
 

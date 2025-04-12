@@ -5,6 +5,7 @@ import redis from '#database/redis.js';
 import { HttpRequest, HttpResponse, us_socket_context_t } from 'uWebSockets.js';
 import { MyWebSocket } from '../types/types.js';
 import { broadcastOnline } from '#vendor/start/server.js';
+import { wsSessionHandler } from '#vendor/utils/sessionHandler.js';
 
 const wsStorage: Set<MyWebSocket> = new Set();
 const userStorage: Map<number, Map<string, { ip: string, userAgent: string }>> = new Map();
@@ -36,54 +37,62 @@ const closeAllWs = async () => {
 };
 
 const handlePong = (ws: MyWebSocket) => {
-    const token = ws.getUserData().token;
-    if (token) {
-        updateExpiration(token)
-        sendJson(ws, {
-            event: 'service:pong',
-            status: 200,
-            payload: null,
-        });
-    }
+    const { sessionId, userId } = ws.getUserData();
+    // if (sessionId && userId)  {
+    //     // updateExpiration(token)
+    //     sendJson(ws, {
+    //         event: 'service:pong',
+    //         status: 200,
+    //         payload: null,
+    //     });
+    // }
+    logger.info('handlePong');
+    sendJson(ws, {
+        event: 'service:pong',
+        status: 200,
+        payload: null,
+    });
 };
 
-const unAuthorizedMessage = (token: string) => ({
+const unAuthorizedMessage = () => ({
     event: 'service:error',
     status: 4001,
     payload: {
-        message: `Token ${token} does not exist.`,
+        message: `Session expired. Please login again.`,
     }
 });
 
 const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: boolean) => {
-    const token = ws.getUserData().token;
+    const userData = ws.getUserData();
     const message = JSON.parse(ab2str(wsMessage));
 
-    let tokenData = null;
+    // let tokenData = null;
     // if (isBinary) logger.info('isBinary', isBinary);
 
     try {
-        if (token) tokenData = await redis.getex(`auth:ws:${token}`, 'EX', 120);
+        // if (token) tokenData = await redis.getex(`auth:ws:${token}`, 'EX', 120);
         // let message = null;
-        if(!tokenData) {
-            
+        let session = null;
+        if(userData.sessionId && userData.userId) session = await wsSessionHandler(userData.sessionId, userData.userId);
+
+        if(!session) {
             ws.cork(() => {
                 try {
-                    ws.send(JSON.stringify(unAuthorizedMessage(token)));
+                    ws.send(JSON.stringify(unAuthorizedMessage()));
                     ws.end(4001);
                 } catch (e) {
                     logger.error('Error ws send unAuthorizedMessage');
                     logger.error(e);
                 }
             })
+
             return;
         }
 
         if (message) {
             if (message.event === 'service:ping') handlePong(ws);
             else{
-                const userData = ws.getUserData();
-                const result = await wsApiHandler(message , userData);
+                const result = await wsApiHandler(message , userData, session);
                 if (result) sendJson(ws, result );
             }
         }
@@ -163,14 +172,15 @@ const sendJson = (ws: MyWebSocket, data: any) => {
 
 const onOpen = async (ws: MyWebSocket) => {
     try {
+        logger.info('onOpen ws');
         const userData = ws.getUserData();
         const token = userData.token;
-        let dataAccess: { sessionId: string, userId: number } | null = null;
+        // let dataAccess: { sessionId: string, userId: number } | null = null;
+        //
+        // if (token) dataAccess = await checkUserAccess(token);
 
-        if (token) dataAccess = await checkUserAccess(token);
-
-        if (!token || !dataAccess || !userData.userId) {
-            const errorMessage = unAuthorizedMessage(userData.token);
+        if (!token || !userData || !userData.userId || !userData.sessionId) {
+            const errorMessage = unAuthorizedMessage();
             logger.info(errorMessage);
             ws.cork(() => {
                 try {
@@ -180,6 +190,7 @@ const onOpen = async (ws: MyWebSocket) => {
                     logger.error('Error sending unauthorized message:', e);
                 }
             });
+
             return;
         }
 
@@ -202,16 +213,8 @@ const onOpen = async (ws: MyWebSocket) => {
             userStorage.set(userData.userId, new Map([[userData.uuid, { ip: userData.ip, userAgent: userData.userAgent }]]));
             broadcastOnline(userData.userId, 'online');
         }
+        logger.info('onOpen ws end');
 
-        // ws.cork(() => {
-        //     try {
-        //         ws.send(JSON.stringify(broadcastMessage));
-        //         wsStorage.add(ws);
-        //     } catch (e) {
-        //         logger.error('Error establishing connection:', e);
-        //         // ws.end(4001);
-        //     }
-        // });
     } catch (e) {
         logger.error('Error in onOpen:', e);
         try {
@@ -267,14 +270,6 @@ const handleUpgrade = async (res: HttpResponse, req: HttpRequest, context: us_so
 
     if (token) dataAccess = await checkUserAccess(token);
 
-    // if (!dataAccess && !aborted) {
-    //     logger.warn('Access ws denied');
-    //     res.cork(() => {
-    //         res.writeStatus('401 Unauthorized');
-    //         res.end('Access denied');
-    //     });
-
-    // }else 
     if(!aborted) {
         res.cork(() => {
 
