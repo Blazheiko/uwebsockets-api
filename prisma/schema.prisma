@@ -30,6 +30,8 @@ model User {
   receivedMessages    Message[]     @relation("ReceivedMessages")
   createdInvitations  Invitation[]  @relation("CreatedInvitations")
   receivedInvitations Invitation[]  @relation("ReceivedInvitations")
+  notes               Notes[]       @relation("UserNotes")
+  calendarEvents      Calendar[]    @relation("UserCalendarEvents")
 
   @@map("users")
 }
@@ -96,4 +98,50 @@ model Invitation {
   invited User? @relation("ReceivedInvitations", fields: [invitedId], references: [id])
 
   @@map("invitations")
+}
+
+model Notes {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(255)
+  description String   @db.Text
+  userId      Int      @map("user_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user   User         @relation("UserNotes", fields: [userId], references: [id])
+  photos NotesPhoto[] @relation("NotePhotos")
+
+  @@map("notes")
+}
+
+model NotesPhoto {
+  id        Int      @id @default(autoincrement())
+  noteId    Int      @map("note_id")
+  src       String   @db.VarChar(500) // URL или путь к файлу фотографии
+  filename  String?  @db.VarChar(255) // Оригинальное имя файла
+  size      Int?     // Размер файла в байтах
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  note Notes @relation("NotePhotos", fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@map("notes_photos")
+}
+
+model Calendar {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(255)
+  description String   @db.Text
+  startTime   DateTime @map("start_time")
+  endTime     DateTime @map("end_time")
+  userId      Int      @map("user_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation("UserCalendarEvents", fields: [userId], references: [id])
+
+  @@map("calendar")
 }
