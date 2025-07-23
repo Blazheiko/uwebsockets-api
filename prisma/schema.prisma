@@ -32,6 +32,8 @@ model User {
   receivedInvitations Invitation[]  @relation("ReceivedInvitations")
   notes               Notes[]       @relation("UserNotes")
   calendarEvents      Calendar[]    @relation("UserCalendarEvents")
+  tasks               Task[]        @relation("UserTasks")
+  projects            Project[]     @relation("UserProjects")
 
   @@map("users")
 }
@@ -61,6 +63,21 @@ enum MessageType {
   IMAGE
   VIDEO
   AUDIO
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }
 
 model Message {
@@ -144,4 +161,51 @@ model Calendar {
   user User @relation("UserCalendarEvents", fields: [userId], references: [id])
 
   @@map("calendar")
+}
+
+model Task {
+  id             Int          @id @default(autoincrement())
+  title          String       @db.VarChar(255)
+  description    String?      @db.Text
+  userId         Int          @map("user_id")
+  projectId      Int?         @map("project_id")
+  status         TaskStatus   @default(TODO)
+  priority       TaskPriority @default(MEDIUM)
+  progress       Int          @default(0) // 0-100 процентов
+  isCompleted    Boolean      @default(false) @map("is_completed")
+  tags           String?      @db.VarChar(500) // Теги для дополнительной категоризации (не для проектов)
+  dueDate        DateTime?    @map("due_date")
+  startDate      DateTime?    @map("start_date")
+  estimatedHours Float?       @map("estimated_hours")
+  actualHours    Float?       @map("actual_hours")
+  parentTaskId   Int?         @map("parent_task_id")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  user       User     @relation("UserTasks", fields: [userId], references: [id])
+  project    Project? @relation("ProjectTasks", fields: [projectId], references: [id])
+  parentTask Task?    @relation("SubTasks", fields: [parentTaskId], references: [id])
+  subTasks   Task[]   @relation("SubTasks")
+
+  @@map("tasks")
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  color       String?  @db.VarChar(7) // HEX цвет для UI (#FF5733)
+  isActive    Boolean  @default(true) @map("is_active")
+  userId      Int      @map("user_id")
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user  User   @relation("UserProjects", fields: [userId], references: [id])
+  tasks Task[] @relation("ProjectTasks")
+
+  @@map("projects")
 }

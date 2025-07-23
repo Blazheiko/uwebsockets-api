@@ -1,8 +1,12 @@
 import MainController from '#app/controllers/http/MainController.js';
-import AuthController from '../controllers/http/AuthController.js';
-import ChatListController from '../controllers/http/ChatListController.js';
-import MessageController from '../controllers/http/MessageController.js';
-import InvitationController from '../controllers/http/InvitationController.js';
+import AuthController from '#app/controllers/http/AuthController.js';
+import ChatListController from '#app/controllers/http/ChatListController.js';
+import MessageController from '#app/controllers/http/MessageController.js';
+import InvitationController from '#app/controllers/http/InvitationController.js';
+import NotesController from '#app/controllers/http/NotesController.js';
+import CalendarController from '#app/controllers/http/CalendarController.js';
+import TaskController from '#app/controllers/http/TaskController.js';
+import ProjectController from '#app/controllers/http/ProjectController.js';
 
 export default [
     // {
@@ -172,6 +176,220 @@ export default [
         ],
         middlewares: ['session_web'],
         prefix: 'api',
+    },
+    {
+        group: [
+            // Notes Routes
+            {
+                url: '/notes',
+                method: 'get',
+                handler: NotesController.getNotes,
+            },
+            {
+                url: '/notes',
+                method: 'post',
+                handler: NotesController.createNote,
+                validator: 'createNote',
+            },
+            {
+                url: '/notes/:noteId',
+                method: 'get',
+                handler: NotesController.getNote,
+                validator: 'getNote',
+            },
+            {
+                url: '/notes/:noteId',
+                method: 'put',
+                handler: NotesController.updateNote,
+                validator: 'updateNote',
+            },
+            {
+                url: '/notes/:noteId',
+                method: 'delete',
+                handler: NotesController.deleteNote,
+                validator: 'deleteNote',
+            },
+            // Notes Photo Routes
+            {
+                url: '/notes/:noteId/photos',
+                method: 'post',
+                handler: NotesController.addPhoto,
+                validator: 'addNotePhoto',
+            },
+            {
+                url: '/notes/:noteId/photos/:photoId',
+                method: 'delete',
+                handler: NotesController.deletePhoto,
+                validator: 'deleteNotePhoto',
+            },
+        ],
+        middlewares: ['session_web'],
+        prefix: 'api/notes',
+    },
+    {
+        group: [
+            // Calendar Routes
+            {
+                url: '/events',
+                method: 'get',
+                handler: CalendarController.getEvents,
+            },
+            {
+                url: '/events',
+                method: 'post',
+                handler: CalendarController.createEvent,
+                validator: 'createEvent',
+            },
+            {
+                url: '/events/:eventId',
+                method: 'get',
+                handler: CalendarController.getEvent,
+                validator: 'getEvent',
+            },
+            {
+                url: '/events/:eventId',
+                method: 'put',
+                handler: CalendarController.updateEvent,
+                validator: 'updateEvent',
+            },
+            {
+                url: '/events/:eventId',
+                method: 'delete',
+                handler: CalendarController.deleteEvent,
+                validator: 'deleteEvent',
+            },
+            // Calendar specific routes
+            {
+                url: '/events/date/:date',
+                method: 'get',
+                handler: CalendarController.getEventsByDate,
+                validator: 'getEventsByDate',
+            },
+            {
+                url: '/events/range',
+                method: 'post',
+                handler: CalendarController.getEventsByRange,
+                validator: 'getEventsByRange',
+            },
+        ],
+        middlewares: ['session_web'],
+        prefix: 'api/calendar',
+    },
+    {
+        group: [
+            // Task Routes
+            {
+                url: '/tasks',
+                method: 'get',
+                handler: TaskController.getTasks,
+            },
+            {
+                url: '/tasks',
+                method: 'post',
+                handler: TaskController.createTask,
+                validator: 'createTask',
+            },
+            {
+                url: '/tasks/:taskId',
+                method: 'get',
+                handler: TaskController.getTask,
+                validator: 'getTask',
+            },
+            {
+                url: '/tasks/:taskId',
+                method: 'put',
+                handler: TaskController.updateTask,
+                validator: 'updateTask',
+            },
+            {
+                url: '/tasks/:taskId',
+                method: 'delete',
+                handler: TaskController.deleteTask,
+                validator: 'deleteTask',
+            },
+            // Task specific routes
+            {
+                url: '/tasks/:taskId/status',
+                method: 'put',
+                handler: TaskController.updateTaskStatus,
+                validator: 'updateTaskStatus',
+            },
+            {
+                url: '/tasks/:taskId/progress',
+                method: 'put',
+                handler: TaskController.updateTaskProgress,
+                validator: 'updateTaskProgress',
+            },
+            {
+                url: '/tasks/project/:projectId',
+                method: 'get',
+                handler: TaskController.getTasksByProject,
+                validator: 'getTasksByProject',
+            },
+            {
+                url: '/tasks/:parentTaskId/subtasks',
+                method: 'get',
+                handler: TaskController.getSubTasks,
+                validator: 'getSubTasks',
+            },
+        ],
+        middlewares: ['session_web'],
+        prefix: 'api/tasks',
+    },
+    {
+        group: [
+            // Project Routes
+            {
+                url: '/projects',
+                method: 'get',
+                handler: ProjectController.getProjects,
+            },
+            {
+                url: '/projects',
+                method: 'post',
+                handler: ProjectController.createProject,
+                validator: 'createProject',
+            },
+            {
+                url: '/projects/:projectId',
+                method: 'get',
+                handler: ProjectController.getProject,
+                validator: 'getProject',
+            },
+            {
+                url: '/projects/:projectId',
+                method: 'put',
+                handler: ProjectController.updateProject,
+                validator: 'updateProject',
+            },
+            {
+                url: '/projects/:projectId',
+                method: 'delete',
+                handler: ProjectController.deleteProject,
+                validator: 'deleteProject',
+            },
+            // Project specific routes
+            {
+                url: '/projects/:projectId/tasks',
+                method: 'get',
+                handler: ProjectController.getProjectTasks,
+                validator: 'getProjectTasks',
+            },
+            {
+                url: '/projects/:projectId/statistics',
+                method: 'get',
+                handler: ProjectController.getProjectStatistics,
+                validator: 'getProjectStatistics',
+            },
+            {
+                url: '/projects/:projectId/archive',
+                method: 'put',
+                handler: ProjectController.archiveProject,
+                validator: 'archiveProject',
+            },
+        ],
+        middlewares: ['session_web'],
+        prefix: 'api/projects',
     },
 
 ];
