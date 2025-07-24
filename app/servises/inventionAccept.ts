@@ -13,7 +13,7 @@ export default async (token: string, userId: number) => {
         where: { id: invention.id },
         data: {
             isUsed: true,
-            invitedId: userId
+            invitedId: Number(userId)
         }
     });
 
@@ -24,8 +24,8 @@ export default async (token: string, userId: number) => {
     if(!contact) {
         await prisma.contactList.create({
             data: {
-                userId: userId,
-                contactId: invention.userId,
+                userId: Number(userId),
+                contactId: Number(invention.userId),
                 status: 'accepted',
                 rename: null
             }
@@ -40,8 +40,8 @@ export default async (token: string, userId: number) => {
     if(!contactOwner) {
         await prisma.contactList.create({
             data: {
-                userId: invention.userId,
-                contactId: userId,
+                userId: Number(invention.userId),
+                contactId: Number(userId),
                 status: 'accepted',
                 rename: invention.name
             }

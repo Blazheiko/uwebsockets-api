@@ -10,8 +10,19 @@ import redis from '#database/redis.js';
 import configApp from '#config/app.js';
 import configSession from '#config/session.js';
 import generateWsToken from '../../servises/generateWsToken.js';
+import { prisma } from '#database/prisma.js';
 
 export default {
+    // async joinСhat({ httpData, logger }: HttpContext): Promise<any> {
+    //     logger.info('MainController.joinСhat');
+    //     const { token } = httpData.params as { token: string };
+    //     logger.info(token);
+    //     const invitation = await prisma.invitation.findUnique({ where: { token } });
+    //     console.log(invitation);
+        
+    //     return { status: 'ok' };
+    // },
+
     async ping() {
         return { status: 'ok' };
     },

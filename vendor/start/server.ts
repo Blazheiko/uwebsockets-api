@@ -115,6 +115,7 @@ const parseCookies = (cookieHeader: string):Map <string, string> => {
 const setCookies = (res: HttpResponse, cookies: Record<string, Cookie>) => {
 
     for (const cookie of Object.values(cookies)) {
+        console.log('cookie', cookie);
         const cookieHeader = `${cookie.name}=${encodeURIComponent(cookie.value)}`;
         const pathPart = cookie.path ? `; Path=${cookie.path}` : '';
         const expiresPart = cookie.expires ? `; Expires=${cookie.expires.toUTCString()}` : '';
@@ -237,7 +238,8 @@ const handleError = (res: HttpResponse, error: unknown) => {
     }
     
 };
-const staticRoutes = ['/','/chat','/login','/register','/chat','/account','/news','/news/create','/news/edit', '/news/:id','/manifesto','/join-chat','/invitations'];
+
+const staticRoutes = ['/','/chat','/login','/register','/chat','/account','/news','/news/create','/news/edit', '/news/:id','/manifesto','/invitations','/join-chat'];
 
 const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteItem) => {
     logger.info('Handler method:' + route.method + ' url:' + route.url);

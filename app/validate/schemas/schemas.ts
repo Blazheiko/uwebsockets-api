@@ -53,7 +53,7 @@ const schemas: Record<string, any> = {
         userId: vine.number().positive(),
     }),
     useInvitation: vine.object({
-        token: vine.string().minLength(1).maxLength(40),
+        token: vine.string().minLength(1).maxLength(50),
     }),
 };
 

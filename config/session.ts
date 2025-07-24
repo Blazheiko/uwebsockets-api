@@ -1,4 +1,5 @@
 import { duration } from 'metautil';
+import { env } from 'node:process';
 export default {
     // enabled: true,
     storage: 'redis',
@@ -11,8 +12,8 @@ export default {
     cookie: {
         path: '/',
         httpOnly: true,
-        secure: true,
-        sameSite: 'lax',
+        secure: env.APP_ENV !== 'local',
+        sameSite: 'None',
     },
 
 };

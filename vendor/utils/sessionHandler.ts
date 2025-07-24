@@ -58,6 +58,7 @@ export const sessionHandler = async (context: HttpContext, accessToken: string |
         httpOnly: sessionConfig.cookie.httpOnly,
         secure: sessionConfig.cookie.secure,
         maxAge: sessionConfig.age,
+        sameSite: sessionConfig.cookie.sameSite,
     });
 
     context.session.sessionInfo = sessionInfo;

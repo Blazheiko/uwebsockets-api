@@ -55,6 +55,7 @@ export default {
                 return { status: (res ? 'success':'error'), user: User.serialize(user), wsUrl: wsToken ? `ws://${configApp.host}:${configApp.port}/websocket/${wsToken}`: '' };
             }
         }
+        logger.info('unauthorized');
         responseData.status = 401;
         return 'unauthorized';
     },

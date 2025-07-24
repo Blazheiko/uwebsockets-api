@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { prisma } from '#database/prisma.js';
 import { HttpContext } from '../../../vendor/types/types.js';
+import inventionAccept from '#app/servises/inventionAccept.js';
 export default {
   // Создание нового приглашения
   async createInvitation({ httpData, session, logger }: HttpContext) {
@@ -63,43 +64,28 @@ export default {
   },
 
   // Проверка и использование приглашения
-  async useInvitation({ httpData, responseData, logger }: HttpContext) {
+  async useInvitation({ httpData, responseData, logger, session }: HttpContext) {
     logger.info('useInvitation');
 
-    const { token, invitedId } = httpData.payload;
+    const { token } = httpData.payload;
 
-    if (!token || !invitedId) {
+    logger.info(token);
+
+    if (!token ) {
       responseData.status = 400;
-      return { status: 'error', message: 'Token and invited user ID are required' };
+      return { status: 'error', message: 'Token are required' };
     }
 
-    const invitation = await prisma.invitation.findUnique({
-      where: { token },
-    });
-
-    if (!invitation) {
-      responseData.status = 404;
-      return { status: 'error', message: 'Invitation not found' };
+    const sessionInfo = session?.sessionInfo;
+    if (sessionInfo) {
+      const userId = sessionInfo.data?.userId;
+      if( userId ){
+        await inventionAccept(token, Number(userId))
+        logger.info('inventionAccept');
+        return { status: 'success'};
+      }
     }
 
-    if (invitation.isUsed) {
-      responseData.status = 400;
-      return { status: 'error', message: 'Invitation has already been used' };
-    }
-
-    if (invitation.expiresAt < new Date()) {
-      responseData.status = 400;
-      return { status: 'error', message: 'Invitation has expired' };
-    }
-
-    const updatedInvitation = await prisma.invitation.update({
-      where: { id: invitation.id },
-      data: {
-        isUsed: true,
-        invitedId: parseInt(invitedId),
-      },
-    });
-
-    return { status: 'success', invitation: updatedInvitation };
+    return { status: 'awaiting', };
   },
 }; 

@@ -10,9 +10,9 @@ import ProjectController from '#app/controllers/http/ProjectController.js';
 
 export default [
     // {
-    //     url: '/',
+    //     url: '/join-chat/:token',
     //     method: 'get',
-    //     handler: MainController.ping,
+    //     handler: MainController.joinСhat,
     // },
     // {
     //     url: '/save-user',
@@ -125,7 +125,7 @@ export default [
                 validator: 'getUserInvitations',
             },
             {
-                url: '/invitations/use/:token',
+                url: '/invitations/use',
                 method: 'post',
                 handler: InvitationController.useInvitation,
                 validator: 'useInvitation',
