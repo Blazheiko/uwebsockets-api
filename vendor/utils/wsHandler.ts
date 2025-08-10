@@ -46,7 +46,7 @@ const handlePong = (ws: MyWebSocket) => {
     //         payload: null,
     //     });
     // }
-    logger.info('handlePong');
+    // logger.info('handlePong');
     sendJson(ws, {
         event: 'service:pong',
         status: 200,
@@ -96,7 +96,7 @@ const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: bool
                 if (result) sendJson(ws, result );
             }
         }
-       
+
     } catch (err: any) {
         logger.error('Error parse onMessage');
         logger.error(err);
