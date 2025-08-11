@@ -30,8 +30,8 @@ export default {
         const res = await auth.login(userCreated);
         const sessionInfo = session.sessionInfo
         let wsToken = '';
-        if (sessionInfo) wsToken = await generateWsToken(sessionInfo, userCreated.id)
-        if(token) await inventionAccept(token, userCreated.id)
+        if (sessionInfo) wsToken = await generateWsToken(sessionInfo, Number(userCreated.id))
+        if(token) await inventionAccept(token, Number(userCreated.id))
         return { status: (res ? 'success':'error'), user: User.serialize(userCreated), wsUrl: wsToken ? `ws://${configApp.host}:${configApp.port}/websocket/${wsToken}`: '' };
 
     },
@@ -49,8 +49,8 @@ export default {
                 logger.info(sessionInfo);
 
                 let wsToken = '';
-                if (sessionInfo) wsToken = await generateWsToken(sessionInfo, user.id)
-                if (token) await inventionAccept(token, user.id)
+                if (sessionInfo) wsToken = await generateWsToken(sessionInfo, Number(user.id))
+                if (token) await inventionAccept(token, Number(user.id))
 
                 return { status: (res ? 'success':'error'), user: User.serialize(user), wsUrl: wsToken ? `ws://${configApp.host}:${configApp.port}/websocket/${wsToken}`: '' };
             }

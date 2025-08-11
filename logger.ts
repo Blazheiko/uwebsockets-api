@@ -5,9 +5,14 @@ import appConfig from '#config/app.js';
 const logger: any =
     appConfig.env === 'prod' || appConfig.env === 'production'
         // @ts-ignore
-        ? pino()
+        ? pino({serializers: {
+                bigint: (value: any) => value.toString()
+            }})
         // @ts-ignore
         : pino({
+              serializers: {
+                  bigint: (value: any) => value.toString()
+              },
               transport: {
                   target: 'pino-pretty',
               },

@@ -7,7 +7,7 @@ export default async (token: string, userId: number) => {
     if(!token || !userId) return;
 
     const invention = await prisma.invitation.findFirst({ where: { token , isUsed: false} });
-    if(!invention || invention.invitedId === userId) return;
+    if(!invention || Number(invention.invitedId) === userId) return;
 
     await prisma.invitation.update({
         where: { id: invention.id },

@@ -143,7 +143,7 @@ export default {
                 throw new Error(`Message with id ${messageId} not found`);
             }
 
-            if (message.receiverId !== userId) {
+            if (Number(message.receiverId) !== userId) {
                 throw new Error('User is not the receiver of this message');
             }
 

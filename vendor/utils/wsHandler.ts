@@ -78,7 +78,8 @@ const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: bool
         if(!session) {
             ws.cork(() => {
                 try {
-                    ws.send(JSON.stringify(unAuthorizedMessage()));
+                    ws.send(JSON.stringify(unAuthorizedMessage(), (_, v) =>
+                        typeof v === 'bigint' ? v.toString() : v))
                     ws.end(4001);
                 } catch (e) {
                     logger.error('Error ws send unAuthorizedMessage');
@@ -158,7 +159,8 @@ const sendJson = (ws: MyWebSocket, data: any) => {
     }
     try {
         ws.cork(() => {
-            ws.send(JSON.stringify(data));
+            ws.send(JSON.stringify(data, (_, v) =>
+                typeof v === 'bigint' ? v.toString() : v));
         });
     } catch (e) {
         logger.error('Error in sendJson:', e);
@@ -184,7 +186,8 @@ const onOpen = async (ws: MyWebSocket) => {
             logger.info(errorMessage);
             ws.cork(() => {
                 try {
-                    ws.send(JSON.stringify(errorMessage));
+                    ws.send(JSON.stringify(errorMessage, (_, v) =>
+                        typeof v === 'bigint' ? v.toString() : v));
                     ws.end(4001);
                 } catch (e) {
                     logger.error('Error sending unauthorized message:', e);

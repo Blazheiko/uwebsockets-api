@@ -19,14 +19,14 @@ export default {
     //     logger.info(token);
     //     const invitation = await prisma.invitation.findUnique({ where: { token } });
     //     console.log(invitation);
-        
+
     //     return { status: 'ok' };
     // },
 
     async ping() {
         return { status: 'ok' };
     },
-    
+
     async testHeaders({ httpData, logger }: HttpContext): Promise<any> {
         logger.info('testHeaders');
         const headers: any[] = [];
@@ -62,7 +62,7 @@ export default {
         httpData.headers.forEach((value, key) => {
             headers.push({ key, value});
         });
-        
+
         const sessionInfo = session?.sessionInfo;
 
         return { status: 'ok' ,headers, sessionInfo };
@@ -96,17 +96,17 @@ export default {
             return { status: 'unauthorized', message: 'User not found' };
         }
         let wsToken = '';
-        if (sessionInfo) wsToken = await generateWsToken(sessionInfo, user.id)
+        if (sessionInfo) wsToken = await generateWsToken(sessionInfo, Number(user.id))
         // const token = generateKey(configApp.characters, 16);
         // await redis.setex(
         //     `auth:ws:${token}`,
         //     60,
         //     JSON.stringify({ sessionId: sessionInfo.id, userId: user.id }),
         // );
-        
+
         return { status: 'ok', user: User.serialize(user),  wsUrl: wsToken ? `ws://${configApp.host}:${configApp.port}/websocket/${wsToken}`: '' };
     },
-    
+
     async setHeaderAndCookie({ responseData, logger }: HttpContext): Promise<any> {
         logger.info('set-header-and-cookie');
         responseData.headers.push({ name: 'test-header', value: 'test' });

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,48 +8,207 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String   @db.VarChar(100)
-  email     String   @unique
-  password  String   @map("password")
-  phone     String?  @unique @db.VarChar(20)
-  isAdmin   Boolean  @default(false)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  contacts            ContactList[] @relation("UserContacts")
-  contactOf           ContactList[] @relation("ContactOfUser")
-  sentMessages        Message[]     @relation("SentMessages")
-  receivedMessages    Message[]     @relation("ReceivedMessages")
-  createdInvitations  Invitation[]  @relation("CreatedInvitations")
-  receivedInvitations Invitation[]  @relation("ReceivedInvitations")
-  notes               Notes[]       @relation("UserNotes")
-  calendarEvents      Calendar[]    @relation("UserCalendarEvents")
-  tasks               Task[]        @relation("UserTasks")
-  projects            Project[]     @relation("UserProjects")
+  id                  BigInt            @id @default(autoincrement())
+  name                String            @db.VarChar(100)
+  email               String            @unique
+  password            String            @map("password")
+  phone               String?           @unique @db.VarChar(20)
+  isAdmin             Boolean           @default(false)
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+  calendarEvents      Calendar[]        @relation("UserCalendarEvents")
+  contactOf           ContactList[]     @relation("ContactOfUser")
+  contacts            ContactList[]     @relation("UserContacts")
+  receivedInvitations Invitation[]      @relation("ReceivedInvitations")
+  createdInvitations  Invitation[]      @relation("CreatedInvitations")
+  receivedMessages    Message[]         @relation("ReceivedMessages")
+  sentMessages        Message[]         @relation("SentMessages")
+  notes               Notes[]           @relation("UserNotes")
+  assignedProjects    ProjectAssignee[] @relation("AssignedProjects")
+  projects            Project[]         @relation("UserProjects")
+  tasks               Task[]            @relation("UserTasks")
 
   @@map("users")
 }
 
 model ContactList {
-  id          Int      @id @default(autoincrement())
-  userId      Int      @map("user_id")
-  contactId   Int      @map("contact_id")
-  rename      String?  @db.VarChar(100)
-  status      String   @default("pending") // pending, accepted, blocked, favorite
-  unreadCount Int      @default(0) @map("unread_count")
-  lastMessageId Int?   @map("last_message_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  user    User @relation("UserContacts", fields: [userId], references: [id])
-  contact User @relation("ContactOfUser", fields: [contactId], references: [id])
-  lastMessage Message? @relation("LastMessage", fields: [lastMessageId], references: [id])
+  id            BigInt   @id @default(autoincrement())
+  userId        BigInt   @map("user_id")
+  contactId     BigInt   @map("contact_id")
+  status        String   @default("pending")
+  unreadCount   Int      @default(0) @map("unread_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  rename        String?  @db.VarChar(100)
+  lastMessageId BigInt?  @map("last_message_id")
+  contact       User     @relation("ContactOfUser", fields: [contactId], references: [id])
+  lastMessage   Message? @relation("LastMessage", fields: [lastMessageId], references: [id])
+  user          User     @relation("UserContacts", fields: [userId], references: [id])
 
   @@unique([userId, contactId])
+  @@index([contactId], map: "contact_list_contact_id_fkey")
+  @@index([lastMessageId], map: "contact_list_last_message_id_fkey")
   @@map("contact_list")
+}
+
+model Message {
+  id          BigInt        @id @default(autoincrement())
+  senderId    BigInt        @map("sender_id")
+  receiverId  BigInt        @map("receiver_id")
+  type        MessageType   @default(TEXT)
+  content     String        @db.Text
+  src         String?
+  isRead      Boolean       @default(false) @map("is_read")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  contactList ContactList[] @relation("LastMessage")
+  receiver    User          @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  sender      User          @relation("SentMessages", fields: [senderId], references: [id])
+
+  @@index([receiverId], map: "messages_receiver_id_fkey")
+  @@index([senderId], map: "messages_sender_id_fkey")
+  @@map("messages")
+}
+
+model Invitation {
+  id        BigInt   @id @default(autoincrement())
+  token     String   @unique
+  userId    BigInt   @map("user_id")
+  invitedId BigInt?  @map("invited_id")
+  isUsed    Boolean  @default(false) @map("is_used")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  name      String   @db.VarChar(100)
+  invited   User?    @relation("ReceivedInvitations", fields: [invitedId], references: [id])
+  user      User     @relation("CreatedInvitations", fields: [userId], references: [id])
+
+  @@index([invitedId], map: "invitations_invited_id_fkey")
+  @@index([userId], map: "invitations_user_id_fkey")
+  @@map("invitations")
+}
+
+model Notes {
+  id          BigInt       @id @default(autoincrement())
+  title       String       @db.VarChar(255)
+  description String       @db.Text
+  userId      BigInt       @map("user_id")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  user        User         @relation("UserNotes", fields: [userId], references: [id])
+  photos      NotesPhoto[] @relation("NotePhotos")
+
+  @@index([userId], map: "notes_user_id_fkey")
+  @@map("notes")
+}
+
+model NotesPhoto {
+  id        BigInt   @id @default(autoincrement())
+  noteId    BigInt   @map("note_id")
+  src       String   @db.VarChar(500)
+  filename  String?  @db.VarChar(255)
+  size      Int?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  note      Notes    @relation("NotePhotos", fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@index([noteId], map: "notes_photos_note_id_fkey")
+  @@map("notes_photos")
+}
+
+model Calendar {
+  id          BigInt   @id @default(autoincrement())
+  title       String   @db.VarChar(255)
+  description String   @db.Text
+  startTime   DateTime @map("start_time")
+  endTime     DateTime @map("end_time")
+  userId      BigInt   @map("user_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  user        User     @relation("UserCalendarEvents", fields: [userId], references: [id])
+
+  @@index([userId], map: "calendar_user_id_fkey")
+  @@map("calendar")
+}
+
+model Task {
+  id             BigInt       @id @default(autoincrement())
+  title          String       @db.VarChar(255)
+  description    String?      @db.Text
+  userId         BigInt       @map("user_id")
+  projectId      BigInt?      @map("project_id")
+  status         TaskStatus   @default(TODO)
+  priority       TaskPriority @default(MEDIUM)
+  progress       Int          @default(0)
+  isCompleted    Boolean      @default(false) @map("is_completed")
+  tags           String?      @db.VarChar(500)
+  dueDate        DateTime?    @map("due_date")
+  startDate      DateTime?    @map("start_date")
+  estimatedHours Float?       @map("estimated_hours")
+  actualHours    Float?       @map("actual_hours")
+  parentTaskId   BigInt?      @map("parent_task_id")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  parentTask     Task?        @relation("SubTasks", fields: [parentTaskId], references: [id])
+  subTasks       Task[]       @relation("SubTasks")
+  project        Project?     @relation("ProjectTasks", fields: [projectId], references: [id])
+  user           User         @relation("UserTasks", fields: [userId], references: [id])
+
+  @@index([parentTaskId], map: "tasks_parent_task_id_fkey")
+  @@index([projectId], map: "tasks_project_id_fkey")
+  @@index([userId], map: "tasks_user_id_fkey")
+  @@map("tasks")
+}
+
+model Project {
+  id          BigInt            @id @default(autoincrement())
+  title       String            @db.VarChar(255)
+  description String?           @db.Text
+  color       String?           @db.VarChar(50)
+  isActive    Boolean           @default(true) @map("is_active")
+  startDate   DateTime?         @map("start_date")
+  endDate     DateTime?         @map("end_date")
+  userId      BigInt            @map("user_id")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+  dueDate     DateTime?         @map("due_date") @db.Date
+  priority    ProjectPriority   @default(medium)
+  progress    Int               @default(0) @db.SmallInt
+  status      ProjectStatus     @default(planning)
+  tags        Json?
+  assignees   ProjectAssignee[] @relation("ProjectAssignees")
+  projectTags ProjectTag[]      @relation("ProjectTags")
+  user        User              @relation("UserProjects", fields: [userId], references: [id])
+  tasks       Task[]            @relation("ProjectTasks")
+
+  @@index([userId], map: "projects_user_id_fkey")
+  @@map("projects")
+}
+
+model ProjectTag {
+  id        BigInt   @id @default(autoincrement())
+  projectId BigInt   @map("project_id")
+  tag       String   @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
+  project   Project  @relation("ProjectTags", fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, tag])
+  @@map("project_tags")
+}
+
+model ProjectAssignee {
+  id        BigInt   @id @default(autoincrement())
+  projectId BigInt   @map("project_id")
+  userId    BigInt   @map("user_id")
+  label     String?  @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  project   Project  @relation("ProjectAssignees", fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation("AssignedProjects", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId], map: "project_assignees_user_id_fkey")
+  @@map("project_assignees")
 }
 
 enum MessageType {
@@ -80,132 +233,16 @@ enum TaskPriority {
   URGENT
 }
 
-model Message {
-  id         Int         @id @default(autoincrement())
-  senderId   Int         @map("sender_id")
-  receiverId Int         @map("receiver_id")
-  type       MessageType @default(TEXT)
-  content    String      @db.Text
-  src        String? // URL или путь к файлу для медиа-сообщений
-  isRead     Boolean     @default(false) @map("is_read")
-  createdAt  DateTime    @default(now()) @map("created_at")
-  updatedAt  DateTime    @updatedAt @map("updated_at")
-
-  // Relations
-  sender   User @relation("SentMessages", fields: [senderId], references: [id])
-  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
-  contactList  ContactList[] @relation("LastMessage")
-
-  @@map("messages")
+enum ProjectStatus {
+  planning
+  in_progress
+  on_hold
+  completed
+  archived
 }
 
-model Invitation {
-  id        Int      @id @default(autoincrement())
-  token     String   @unique
-  name      String   @db.VarChar(100)
-  userId    Int      @map("user_id")
-  invitedId Int?     @map("invited_id")
-  isUsed    Boolean  @default(false) @map("is_used")
-  expiresAt DateTime @map("expires_at")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  user    User? @relation("CreatedInvitations", fields: [userId], references: [id])
-  invited User? @relation("ReceivedInvitations", fields: [invitedId], references: [id])
-
-  @@map("invitations")
-}
-
-model Notes {
-  id          Int      @id @default(autoincrement())
-  title       String   @db.VarChar(255)
-  description String   @db.Text
-  userId      Int      @map("user_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  user   User         @relation("UserNotes", fields: [userId], references: [id])
-  photos NotesPhoto[] @relation("NotePhotos")
-
-  @@map("notes")
-}
-
-model NotesPhoto {
-  id        Int      @id @default(autoincrement())
-  noteId    Int      @map("note_id")
-  src       String   @db.VarChar(500) // URL или путь к файлу фотографии
-  filename  String?  @db.VarChar(255) // Оригинальное имя файла
-  size      Int?     // Размер файла в байтах
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  note Notes @relation("NotePhotos", fields: [noteId], references: [id], onDelete: Cascade)
-
-  @@map("notes_photos")
-}
-
-model Calendar {
-  id          Int      @id @default(autoincrement())
-  title       String   @db.VarChar(255)
-  description String   @db.Text
-  startTime   DateTime @map("start_time")
-  endTime     DateTime @map("end_time")
-  userId      Int      @map("user_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  user User @relation("UserCalendarEvents", fields: [userId], references: [id])
-
-  @@map("calendar")
-}
-
-model Task {
-  id             Int          @id @default(autoincrement())
-  title          String       @db.VarChar(255)
-  description    String?      @db.Text
-  userId         Int          @map("user_id")
-  projectId      Int?         @map("project_id")
-  status         TaskStatus   @default(TODO)
-  priority       TaskPriority @default(MEDIUM)
-  progress       Int          @default(0) // 0-100 процентов
-  isCompleted    Boolean      @default(false) @map("is_completed")
-  tags           String?      @db.VarChar(500) // Теги для дополнительной категоризации (не для проектов)
-  dueDate        DateTime?    @map("due_date")
-  startDate      DateTime?    @map("start_date")
-  estimatedHours Float?       @map("estimated_hours")
-  actualHours    Float?       @map("actual_hours")
-  parentTaskId   Int?         @map("parent_task_id")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
-
-  // Relations
-  user       User     @relation("UserTasks", fields: [userId], references: [id])
-  project    Project? @relation("ProjectTasks", fields: [projectId], references: [id])
-  parentTask Task?    @relation("SubTasks", fields: [parentTaskId], references: [id])
-  subTasks   Task[]   @relation("SubTasks")
-
-  @@map("tasks")
-}
-
-model Project {
-  id          Int      @id @default(autoincrement())
-  name        String   @db.VarChar(255)
-  description String?  @db.Text
-  color       String?  @db.VarChar(7) // HEX цвет для UI (#FF5733)
-  isActive    Boolean  @default(true) @map("is_active")
-  userId      Int      @map("user_id")
-  startDate   DateTime? @map("start_date")
-  endDate     DateTime? @map("end_date")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  user  User   @relation("UserProjects", fields: [userId], references: [id])
-  tasks Task[] @relation("ProjectTasks")
-
-  @@map("projects")
+enum ProjectPriority {
+  low
+  medium
+  high
 }

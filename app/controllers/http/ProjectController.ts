@@ -1,11 +1,12 @@
 import { HttpContext } from '../../../vendor/types/types.js';
 import { prisma } from '#database/prisma.js';
+import { ProjectStatus } from '@prisma/client';
 
 export default {
     async getProjects(context: HttpContext) {
         const { auth, logger } = context;
         logger.info('getProjects handler');
-        
+
         if (!auth.isAuthenticated()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -13,7 +14,7 @@ export default {
         try {
             const projects = await prisma.project.findMany({
                 where: { userId: auth.user.id },
-                include: { 
+                include: {
                     tasks: {
                         select: {
                             id: true,
@@ -36,20 +37,22 @@ export default {
     async createProject(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('createProject handler');
-        
+
         if (!auth.isAuthenticated()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
-        const { name, description, color, startDate, endDate } = httpData.payload;
+        const { name, description, color, startDate, endDate, dueDate } = httpData.payload;
 
         try {
             const project = await prisma.project.create({
                 data: {
-                    name,
+                    dueDate: dueDate,
+                    title: name,
                     description,
                     color,
                     userId: auth.user.id,
+                    status: 'planning',
                     startDate: startDate ? new Date(startDate) : null,
                     endDate: endDate ? new Date(endDate) : null
                 },
@@ -65,7 +68,7 @@ export default {
     async getProject(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('getProject handler');
-        
+
         if (!auth.isAuthenticated()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -74,11 +77,11 @@ export default {
 
         try {
             const project = await prisma.project.findFirst({
-                where: { 
+                where: {
                     id: parseInt(projectId),
-                    userId: auth.user.id 
+                    userId: auth.user.id
                 },
-                include: { 
+                include: {
                     tasks: {
                         include: {
                             subTasks: true
@@ -101,7 +104,7 @@ export default {
     async updateProject(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('updateProject handler');
-        
+
         if (!auth.isAuthenticated()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -119,9 +122,9 @@ export default {
             if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate) : null;
 
             const project = await prisma.project.updateMany({
-                where: { 
+                where: {
                     id: parseInt(projectId),
-                    userId: auth.user.id 
+                    userId: auth.user.id
                 },
                 data: updateData
             });
@@ -145,7 +148,7 @@ export default {
     async deleteProject(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('deleteProject handler');
-        
+
         if (!auth.isAuthenticated()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -155,18 +158,18 @@ export default {
         try {
             // First, update all tasks to remove project reference
             await prisma.task.updateMany({
-                where: { 
+                where: {
                     projectId: parseInt(projectId),
-                    userId: auth.user.id 
+                    userId: auth.user.id
                 },
                 data: { projectId: null }
             });
 
             // Then delete the project
             const deleted = await prisma.project.deleteMany({
-                where: { 
+                where: {
                     id: parseInt(projectId),
-                    userId: auth.user.id 
+                    userId: auth.user.id
                 }
             });
 
@@ -184,7 +187,7 @@ export default {
     async getProjectTasks(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('getProjectTasks handler');
-        
+
         if (!auth.isAuthenticated()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -193,11 +196,11 @@ export default {
 
         try {
             const tasks = await prisma.task.findMany({
-                where: { 
+                where: {
                     projectId: parseInt(projectId),
-                    userId: auth.user.id 
+                    userId: auth.user.id
                 },
-                include: { 
+                include: {
                     subTasks: true,
                     parentTask: true
                 },
@@ -214,7 +217,7 @@ export default {
     async getProjectStatistics(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('getProjectStatistics handler');
-        
+
         if (!auth.isAuthenticated()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -223,9 +226,9 @@ export default {
 
         try {
             const project = await prisma.project.findFirst({
-                where: { 
+                where: {
                     id: parseInt(projectId),
-                    userId: auth.user.id 
+                    userId: auth.user.id
                 },
                 include: { tasks: true }
             });
@@ -246,7 +249,7 @@ export default {
             const totalActualHours = tasks.reduce((sum, task) => sum + (task.actualHours || 0), 0);
             const averageProgress = totalTasks > 0 ? tasks.reduce((sum, task) => sum + task.progress, 0) / totalTasks : 0;
 
-            const overdueTasks = tasks.filter(task => 
+            const overdueTasks = tasks.filter(task =>
                 task.dueDate && new Date(task.dueDate) < new Date() && !task.isCompleted
             ).length;
 
@@ -275,7 +278,7 @@ export default {
     async archiveProject(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('archiveProject handler');
-        
+
         if (!auth.isAuthenticated()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -284,11 +287,15 @@ export default {
 
         try {
             const project = await prisma.project.updateMany({
-                where: { 
+                where: {
                     id: parseInt(projectId),
-                    userId: auth.user.id 
+                    userId: auth.user.id
                 },
-                data: { isActive: false }
+                data: {
+                    status: ProjectStatus.archived,
+                    isActive: false,
+                    endDate: new Date()
+                }
             });
 
             if (project.count === 0) {
@@ -306,4 +313,4 @@ export default {
             return { status: 'error', message: 'Failed to archive project' };
         }
     }
-}; 
+};

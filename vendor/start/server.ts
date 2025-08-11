@@ -46,8 +46,9 @@ const server: TemplatedApp = uWS.App();
 const broadcastMessage = (userId: number, event: string, payload: any) => {
     logger.info(`broadcastMessage: ${userId} ${event}`);
     if(server && state.listenSocket)
-        server.publish(`user:${userId}`, JSON.stringify({ event: `broadcast:${event}`, status: 200, payload }));
-    
+        server.publish(`user:${userId}`, JSON.stringify({ event: `broadcast:${event}`, status: 200, payload }, (_, v) =>
+            typeof v === 'bigint' ? v.toString() : v));
+
 }
 
 const broadcastOnline = (userId: number, status: string) => {
@@ -200,6 +201,29 @@ const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem
     });
 };
 
+// const transformBigInts = (obj: any): any => {
+//     if (obj === null || obj === undefined) return obj;
+//
+//     if (typeof obj === 'bigint') {
+//         return obj.toString();
+//     }
+//
+//     if (Array.isArray(obj)) {
+//         return obj.map(transformBigInts);
+//     }
+//
+//     if (typeof obj === 'object') {
+//         const transformed: any = {};
+//         for (const [key, value] of Object.entries(obj)) {
+//             transformed[key] = transformBigInts(value);
+//         }
+//         return transformed;
+//     }
+//
+//     return obj;
+// }
+
+
 const sendResponse = (res: HttpResponse, httpData: HttpData, responseData: ResponseData) => {
     res.writeStatus(`${responseData.status}`);
     if (httpData.isJson)
@@ -209,9 +233,12 @@ const sendResponse = (res: HttpResponse, httpData: HttpData, responseData: Respo
     if (responseData.cookies)
         setCookies(res, responseData.cookies);
     if (corsConfig.enabled) setCorsHeader(res);
-    if(responseData.payload && responseData.status >= 200 && responseData.status < 300) 
-        res.end(JSON.stringify(responseData.payload));
-    else res.end(`${responseData.status}`);
+    if (responseData.payload && responseData.status >= 200 && responseData.status < 300){
+        // const transformedData = transformBigInts(responseData.payload);
+        // res.end(JSON.stringify(transformedData));
+        res.end(JSON.stringify(responseData.payload, (_, v) =>
+            typeof v === 'bigint' ? v.toString() : v));
+    } else res.end(`${responseData.status}`);
 }
 
 interface ValidationError extends Error {
@@ -236,7 +263,7 @@ const handleError = (res: HttpResponse, error: unknown) => {
     } else {
         res.writeStatus('500').end('Server error');
     }
-    
+
 };
 
 const staticRoutes = ['/','/chat','/login','/register','/chat','/account','/news','/news/create','/news/edit', '/news/:id','/manifesto','/invitations','/join-chat'];
@@ -335,7 +362,7 @@ const setCorsHeader = (res: HttpResponse) => {
 };
 // let server = null;
 const initServer = () => {
-    
+
     configureWebsockets(server);
     configureHttp(server);
     if(appConfig.unixPath){

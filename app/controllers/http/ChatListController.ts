@@ -29,7 +29,7 @@ export default {
             },
             orderBy: { updatedAt: 'desc' }
         });
-        const onlineUsers = getOnlineUser(contactList.map(contact => contact.contactId));
+        const onlineUsers = getOnlineUser(contactList.map(contact => Number(contact.contactId)));
 
         return { status: 'ok', contactList, onlineUsers };
     },
@@ -138,4 +138,4 @@ export default {
 
         return { status: 'ok', message: 'Chat deleted successfully' };
     },
-}; 
+};

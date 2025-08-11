@@ -9,7 +9,8 @@ const saveSession = async (sessionInfo: SessionInfo): Promise<void> => {
     await redis.setex(
         `session:${userId}:${sessionInfo.id}`,
         sessionConfig.age,
-        JSON.stringify(sessionInfo)
+        JSON.stringify(sessionInfo, (_, v) =>
+            typeof v === 'bigint' ? v.toString() : v)
     );
 };
 
