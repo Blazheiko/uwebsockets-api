@@ -175,7 +175,6 @@ model Project {
   priority    ProjectPriority   @default(medium)
   progress    Int               @default(0) @db.SmallInt
   status      ProjectStatus     @default(planning)
-  tags        Json?
   assignees   ProjectAssignee[] @relation("ProjectAssignees")
   projectTags ProjectTag[]      @relation("ProjectTags")
   user        User              @relation("UserProjects", fields: [userId], references: [id])

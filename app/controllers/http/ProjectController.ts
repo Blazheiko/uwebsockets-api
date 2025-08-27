@@ -4,16 +4,18 @@ import { ProjectStatus } from '@prisma/client';
 
 export default {
     async getProjects(context: HttpContext) {
-        const { auth, logger } = context;
+        const { auth, logger , responseData} = context;
         logger.info('getProjects handler');
 
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
+            responseData.status = 401;
             return { status: 'error', message: 'Unauthorized' };
         }
 
         try {
+            const userId = auth.getUserId();
             const projects = await prisma.project.findMany({
-                where: { userId: auth.user.id },
+                where: { userId },
                 include: {
                     tasks: {
                         select: {
@@ -27,49 +29,55 @@ export default {
                 },
                 orderBy: { createdAt: 'desc' }
             });
-            return { status: 'success', data: projects };
+            return { status: 'success', projects };
+
         } catch (error) {
-            logger.error('Error getting projects:', error);
-            return { status: 'error', message: 'Failed to get projects' };
+            logger.error('Error getting projects:');
+            console.log(error);
+
         }
+        return { status: 'error', message: 'Failed to get projects' };
     },
 
     async createProject(context: HttpContext) {
-        const { httpData, auth, logger } = context;
+        const { httpData, auth, logger, responseData } = context;
         logger.info('createProject handler');
 
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
+            responseData.status = 401;
             return { status: 'error', message: 'Unauthorized' };
         }
 
-        const { name, description, color, startDate, endDate, dueDate } = httpData.payload;
+        const { title, description, color, startDate, endDate, dueDate } = httpData.payload;
 
         try {
             const project = await prisma.project.create({
                 data: {
-                    dueDate: dueDate,
-                    title: name,
+                    title,
                     description,
                     color,
-                    userId: auth.user.id,
+                    userId: auth.getUserId(),
                     status: 'planning',
+                    dueDate: dueDate ? new Date(dueDate) : null,
                     startDate: startDate ? new Date(startDate) : null,
                     endDate: endDate ? new Date(endDate) : null
                 },
                 include: { tasks: true }
             });
-            return { status: 'success', data: project };
+            return { status: 'success', project };
         } catch (error) {
-            logger.error('Error creating project:', error);
-            return { status: 'error', message: 'Failed to create project' };
+            logger.error('Error creating project:');
+            console.error(error);
         }
+        return { status: 'error', message: 'Failed to create project' };
     },
 
     async getProject(context: HttpContext) {
-        const { httpData, auth, logger } = context;
+        const { httpData, auth, logger, responseData } = context;
         logger.info('getProject handler');
 
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
+            responseData.status = 401;
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -79,7 +87,7 @@ export default {
             const project = await prisma.project.findFirst({
                 where: {
                     id: parseInt(projectId),
-                    userId: auth.user.id
+                    userId: auth.getUserId()
                 },
                 include: {
                     tasks: {
@@ -102,29 +110,32 @@ export default {
     },
 
     async updateProject(context: HttpContext) {
-        const { httpData, auth, logger } = context;
+        const { httpData, auth, logger, responseData } = context;
         logger.info('updateProject handler');
 
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
+            responseData.status = 401;
             return { status: 'error', message: 'Unauthorized' };
         }
 
         const { projectId } = httpData.params as { projectId: string };
-        const { name, description, color, isActive, startDate, endDate } = httpData.payload;
+        const { title, description, color, startDate, endDate, dueDate, isActive, progress } = httpData.payload;
 
         try {
             const updateData: any = {};
-            if (name !== undefined) updateData.name = name;
+            if (title !== undefined) updateData.title = title;
             if (description !== undefined) updateData.description = description;
             if (color !== undefined) updateData.color = color;
+            if (progress !== undefined) updateData.progress = progress;
             if (isActive !== undefined) updateData.isActive = isActive;
             if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : null;
             if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate) : null;
+            if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
 
             const project = await prisma.project.updateMany({
                 where: {
                     id: parseInt(projectId),
-                    userId: auth.user.id
+                    userId: auth.getUserId()
                 },
                 data: updateData
             });
@@ -138,7 +149,7 @@ export default {
                 include: { tasks: true }
             });
 
-            return { status: 'success', data: updatedProject };
+            return { status: 'success', project: updatedProject };
         } catch (error) {
             logger.error('Error updating project:', error);
             return { status: 'error', message: 'Failed to update project' };
@@ -146,10 +157,11 @@ export default {
     },
 
     async deleteProject(context: HttpContext) {
-        const { httpData, auth, logger } = context;
+        const { httpData, auth, logger, responseData } = context;
         logger.info('deleteProject handler');
 
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
+            responseData.status = 401;
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -160,7 +172,7 @@ export default {
             await prisma.task.updateMany({
                 where: {
                     projectId: parseInt(projectId),
-                    userId: auth.user.id
+                    userId: auth.getUserId()
                 },
                 data: { projectId: null }
             });
@@ -169,7 +181,7 @@ export default {
             const deleted = await prisma.project.deleteMany({
                 where: {
                     id: parseInt(projectId),
-                    userId: auth.user.id
+                    userId: auth.getUserId()
                 }
             });
 
@@ -185,10 +197,11 @@ export default {
     },
 
     async getProjectTasks(context: HttpContext) {
-        const { httpData, auth, logger } = context;
+        const { httpData, auth, logger , responseData} = context;
         logger.info('getProjectTasks handler');
 
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
+            responseData.status = 401;
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -198,7 +211,7 @@ export default {
             const tasks = await prisma.task.findMany({
                 where: {
                     projectId: parseInt(projectId),
-                    userId: auth.user.id
+                    userId: auth.getUserId()
                 },
                 include: {
                     subTasks: true,
@@ -215,10 +228,11 @@ export default {
     },
 
     async getProjectStatistics(context: HttpContext) {
-        const { httpData, auth, logger } = context;
+        const { httpData, auth, logger, responseData } = context;
         logger.info('getProjectStatistics handler');
 
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
+            responseData.status = 401;
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -228,7 +242,7 @@ export default {
             const project = await prisma.project.findFirst({
                 where: {
                     id: parseInt(projectId),
-                    userId: auth.user.id
+                    userId: auth.getUserId()
                 },
                 include: { tasks: true }
             });
@@ -276,10 +290,11 @@ export default {
     },
 
     async archiveProject(context: HttpContext) {
-        const { httpData, auth, logger } = context;
+        const { httpData, auth, logger,responseData } = context;
         logger.info('archiveProject handler');
 
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
+            responseData.status = 401;
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -289,7 +304,7 @@ export default {
             const project = await prisma.project.updateMany({
                 where: {
                     id: parseInt(projectId),
-                    userId: auth.user.id
+                    userId: auth.getUserId()
                 },
                 data: {
                     status: ProjectStatus.archived,

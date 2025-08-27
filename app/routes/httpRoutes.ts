@@ -345,7 +345,7 @@ export default [
                 handler: ProjectController.getProjects,
             },
             {
-                url: '/projects',
+                url: '/projects/create',
                 method: 'post',
                 handler: ProjectController.createProject,
                 validator: 'createProject',
@@ -389,7 +389,7 @@ export default [
             },
         ],
         middlewares: ['session_web'],
-        prefix: 'api/projects',
+        prefix: 'api',
     },
 
 ];
