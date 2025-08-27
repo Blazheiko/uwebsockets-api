@@ -334,7 +334,7 @@ export default [
             },
         ],
         middlewares: ['session_web'],
-        prefix: 'api/tasks',
+        prefix: 'api',
     },
     {
         group: [

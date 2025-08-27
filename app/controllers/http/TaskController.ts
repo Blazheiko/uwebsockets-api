@@ -6,13 +6,13 @@ export default {
         const { auth, logger } = context;
         logger.info('getTasks handler');
         
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
         try {
             const tasks = await prisma.task.findMany({
-                where: { userId: auth.user.id },
+                where: { userId: auth.getUserId() },
                 include: { 
                     project: true,
                     subTasks: true,
@@ -20,7 +20,7 @@ export default {
                 },
                 orderBy: { createdAt: 'desc' }
             });
-            return { status: 'success', data: tasks };
+            return { status: 'success', tasks };
         } catch (error) {
             logger.error('Error getting tasks:', error);
             return { status: 'error', message: 'Failed to get tasks' };
@@ -31,7 +31,7 @@ export default {
         const { httpData, auth, logger } = context;
         logger.info('createTask handler');
         
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -53,7 +53,7 @@ export default {
                 data: {
                     title,
                     description,
-                    userId: auth.user.id,
+                    userId: auth.getUserId(),
                     projectId: projectId ? parseInt(projectId) : null,
                     status: status || 'TODO',
                     priority: priority || 'MEDIUM',
@@ -69,7 +69,7 @@ export default {
                     parentTask: true
                 }
             });
-            return { status: 'success', data: task };
+            return { status: 'success', task };
         } catch (error) {
             logger.error('Error creating task:', error);
             return { status: 'error', message: 'Failed to create task' };
@@ -80,7 +80,7 @@ export default {
         const { httpData, auth, logger } = context;
         logger.info('getTask handler');
         
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -90,7 +90,7 @@ export default {
             const task = await prisma.task.findFirst({
                 where: { 
                     id: parseInt(taskId),
-                    userId: auth.user.id 
+                    userId: auth.getUserId()
                 },
                 include: { 
                     project: true,
@@ -103,7 +103,7 @@ export default {
                 return { status: 'error', message: 'Task not found' };
             }
 
-            return { status: 'success', data: task };
+            return { status: 'success', task };
         } catch (error) {
             logger.error('Error getting task:', error);
             return { status: 'error', message: 'Failed to get task' };
@@ -114,7 +114,7 @@ export default {
         const { httpData, auth, logger } = context;
         logger.info('updateTask handler');
         
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -153,7 +153,7 @@ export default {
             const task = await prisma.task.updateMany({
                 where: { 
                     id: parseInt(taskId),
-                    userId: auth.user.id 
+                    userId: auth.getUserId()
                 },
                 data: updateData
             });
@@ -171,7 +171,7 @@ export default {
                 }
             });
 
-            return { status: 'success', data: updatedTask };
+            return { status: 'success', task: updatedTask };
         } catch (error) {
             logger.error('Error updating task:', error);
             return { status: 'error', message: 'Failed to update task' };
@@ -182,7 +182,7 @@ export default {
         const { httpData, auth, logger } = context;
         logger.info('deleteTask handler');
         
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -192,7 +192,7 @@ export default {
             const deleted = await prisma.task.deleteMany({
                 where: { 
                     id: parseInt(taskId),
-                    userId: auth.user.id 
+                    userId: auth.getUserId()
                 }
             });
 
@@ -211,7 +211,7 @@ export default {
         const { httpData, auth, logger } = context;
         logger.info('updateTaskStatus handler');
         
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -222,7 +222,7 @@ export default {
             const task = await prisma.task.updateMany({
                 where: { 
                     id: parseInt(taskId),
-                    userId: auth.user.id 
+                    userId: auth.getUserId()
                 },
                 data: { 
                     status,
@@ -240,7 +240,7 @@ export default {
                 include: { project: true }
             });
 
-            return { status: 'success', data: updatedTask };
+            return { status: 'success', task: updatedTask };
         } catch (error) {
             logger.error('Error updating task status:', error);
             return { status: 'error', message: 'Failed to update task status' };
@@ -251,7 +251,7 @@ export default {
         const { httpData, auth, logger } = context;
         logger.info('updateTaskProgress handler');
         
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -263,7 +263,7 @@ export default {
             const task = await prisma.task.updateMany({
                 where: { 
                     id: parseInt(taskId),
-                    userId: auth.user.id 
+                    userId: auth.getUserId()
                 },
                 data: { 
                     progress: progressValue,
@@ -281,7 +281,7 @@ export default {
                 include: { project: true }
             });
 
-            return { status: 'success', data: updatedTask };
+            return { status: 'success', task: updatedTask };
         } catch (error) {
             logger.error('Error updating task progress:', error);
             return { status: 'error', message: 'Failed to update task progress' };
@@ -292,7 +292,7 @@ export default {
         const { httpData, auth, logger } = context;
         logger.info('getTasksByProject handler');
         
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -302,7 +302,7 @@ export default {
             const tasks = await prisma.task.findMany({
                 where: { 
                     projectId: parseInt(projectId),
-                    userId: auth.user.id 
+                    userId: auth.getUserId()
                 },
                 include: { 
                     project: true,
@@ -312,7 +312,7 @@ export default {
                 orderBy: { createdAt: 'desc' }
             });
 
-            return { status: 'success', data: tasks };
+            return { status: 'success', tasks };
         } catch (error) {
             logger.error('Error getting tasks by project:', error);
             return { status: 'error', message: 'Failed to get tasks by project' };
@@ -323,7 +323,7 @@ export default {
         const { httpData, auth, logger } = context;
         logger.info('getSubTasks handler');
         
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -333,7 +333,7 @@ export default {
             const subTasks = await prisma.task.findMany({
                 where: { 
                     parentTaskId: parseInt(parentTaskId),
-                    userId: auth.user.id 
+                    userId: auth.getUserId()
                 },
                 include: { 
                     project: true,
@@ -342,7 +342,7 @@ export default {
                 orderBy: { createdAt: 'desc' }
             });
 
-            return { status: 'success', data: subTasks };
+            return { status: 'success', tasks: subTasks };
         } catch (error) {
             logger.error('Error getting subtasks:', error);
             return { status: 'error', message: 'Failed to get subtasks' };
