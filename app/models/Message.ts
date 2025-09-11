@@ -201,12 +201,12 @@ export default {
     },
 
     async findByIdAndUserId(messageId: number, userId: number, userType: 'sender' | 'receiver') {
-        // const whereCondition = userType === 'sender' 
-        //     ? { id: messageId, senderId: userId }
-        //     : { id: messageId, receiverId: userId };
+        const whereCondition = userType === 'sender' 
+            ? { id: messageId, senderId: userId }
+            : { id: messageId, receiverId: userId };
 
         const message = await prisma.message.findFirst({
-            where: { id: messageId, senderId: userId }, //whereCondition,
+            where: whereCondition,
             include: {
                 sender: true,
                 receiver: true
@@ -228,23 +228,26 @@ export default {
     },
 
     async updateContent(userId: number, messageId: number, content: string) {
-        const updatedMessage = await prisma.message.update({
-            where: { id: messageId, senderId: userId },
-            data: {
-                content,
-                updatedAt: new Date()
-            },
-            // include: {
-            //     sender: true,
-            //     receiver: true
-            // }
-        });
-        if (updatedMessage) {
+        try {
+            const updatedMessage = await prisma.message.update({
+                where: { id: messageId, senderId: userId },
+                data: {
+                    content,
+                    updatedAt: new Date()
+                },
+                include: {
+                    sender: true,
+                    receiver: true
+                }
+            });
             return serializeModel(updatedMessage, schema, hidden);
+        } catch (error: any) {
+            // Если запись не найдена для обновления
+            if (error.code === 'P2025') {
+                return null;
+            }
+            // Другие ошибки пробрасываем дальше
+            throw error;
         }
-
-        return null;
-
-        
     },
 }; 
