@@ -68,7 +68,7 @@ export interface SessionInfo {
 }
 
 export interface HttpData {
-  params: object,
+  params: any,
   payload: any,
   query: URLSearchParams
   headers: Map<string, string>,

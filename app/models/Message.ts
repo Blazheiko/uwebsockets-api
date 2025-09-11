@@ -199,4 +199,52 @@ export default {
     serializeArray(messages: any) {
         return messages.map((message: any) => serializeModel(message, schema, hidden));
     },
+
+    async findByIdAndUserId(messageId: number, userId: number, userType: 'sender' | 'receiver') {
+        // const whereCondition = userType === 'sender' 
+        //     ? { id: messageId, senderId: userId }
+        //     : { id: messageId, receiverId: userId };
+
+        const message = await prisma.message.findFirst({
+            where: { id: messageId, senderId: userId }, //whereCondition,
+            include: {
+                sender: true,
+                receiver: true
+            }
+        });
+
+        if (!message) {
+            return null;
+        }
+
+        return serializeModel(message, schema, hidden);
+    },
+
+    async deleteById(messageId: number) {
+        const result = await prisma.message.delete({
+            where: { id: messageId }
+        });
+        return result;
+    },
+
+    async updateContent(userId: number, messageId: number, content: string) {
+        const updatedMessage = await prisma.message.update({
+            where: { id: messageId, senderId: userId },
+            data: {
+                content,
+                updatedAt: new Date()
+            },
+            // include: {
+            //     sender: true,
+            //     receiver: true
+            // }
+        });
+        if (updatedMessage) {
+            return serializeModel(updatedMessage, schema, hidden);
+        }
+
+        return null;
+
+        
+    },
 }; 

@@ -27,6 +27,8 @@ model User {
   assignedProjects    ProjectAssignee[] @relation("AssignedProjects")
   projects            Project[]         @relation("UserProjects")
   tasks               Task[]            @relation("UserTasks")
+  pushSubscriptions   PushSubscription[] @relation("UserPushSubscriptions")
+  pushNotificationLogs PushNotificationLog[] @relation("UserPushNotificationLogs")
 
   @@map("users")
 }
@@ -244,4 +246,55 @@ enum ProjectPriority {
   low
   medium
   high
+}
+
+enum PushNotificationStatus {
+  SENT
+  FAILED
+  PENDING
+}
+
+model PushSubscription {
+  id                 BigInt    @id @default(autoincrement())
+  userId             BigInt    @map("user_id")
+  endpoint           String    @unique @db.VarChar(500)
+  p256dhKey          String    @map("p256dh_key") @db.Text
+  authKey            String    @map("auth_key") @db.Text
+  userAgent          String?   @map("user_agent") @db.Text
+  ipAddress          String?   @map("ip_address") @db.VarChar(45)
+  isActive           Boolean   @default(true) @map("is_active")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  lastUsedAt         DateTime? @map("last_used_at")
+  deviceType         String?   @map("device_type") @db.VarChar(50)
+  browserName        String?   @map("browser_name") @db.VarChar(100)
+  browserVersion     String?   @map("browser_version") @db.VarChar(50)
+  osName             String?   @map("os_name") @db.VarChar(100)
+  osVersion          String?   @map("os_version") @db.VarChar(50)
+  notificationTypes  Json?     @map("notification_types")
+  timezone           String?   @db.VarChar(50)
+  user               User      @relation("UserPushSubscriptions", fields: [userId], references: [id], onDelete: Cascade)
+  notificationLogs   PushNotificationLog[] @relation("SubscriptionLogs")
+
+  @@index([userId], map: "push_subscriptions_user_id_fkey")
+  @@map("push_subscriptions")
+}
+
+model PushNotificationLog {
+  id             BigInt                   @id @default(autoincrement())
+  userId         BigInt?                  @map("user_id")
+  subscriptionId BigInt?                  @map("subscription_id")
+  messageTitle   String?                  @map("message_title") @db.VarChar(255)
+  messageBody    String?                  @map("message_body") @db.Text
+  messageData    Json?                    @map("message_data")
+  sentAt         DateTime                 @default(now()) @map("sent_at")
+  status         PushNotificationStatus?
+  errorMessage   String?                  @map("error_message") @db.Text
+  responseData   Json?                    @map("response_data")
+  user           User?                    @relation("UserPushNotificationLogs", fields: [userId], references: [id], onDelete: SetNull)
+  subscription   PushSubscription?        @relation("SubscriptionLogs", fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([userId], map: "push_notifications_log_user_id_fkey")
+  @@index([subscriptionId], map: "push_notifications_log_subscription_id_fkey")
+  @@map("push_notifications_log")
 }

@@ -37,7 +37,8 @@
     "metautil": "^5.2.0",
     "pino": "^8.17.2",
     "pino-pretty": "^10.3.1",
-    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.51.0"
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.51.0",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",

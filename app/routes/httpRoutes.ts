@@ -7,6 +7,7 @@ import NotesController from '#app/controllers/http/NotesController.js';
 import CalendarController from '#app/controllers/http/CalendarController.js';
 import TaskController from '#app/controllers/http/TaskController.js';
 import ProjectController from '#app/controllers/http/ProjectController.js';
+import PushSubscriptionController from '#app/controllers/http/PushSubscriptionController.js';
 
 export default [
     // {
@@ -386,6 +387,61 @@ export default [
                 method: 'put',
                 handler: ProjectController.archiveProject,
                 validator: 'archiveProject',
+            },
+        ],
+        middlewares: ['session_web'],
+        prefix: 'api',
+    },
+    {
+        group: [
+            // Push Subscription Routes
+            {
+                url: '/push-subscriptions',
+                method: 'get',
+                handler: PushSubscriptionController.getSubscriptions,
+            },
+            {
+                url: '/push-subscriptions',
+                method: 'post',
+                handler: PushSubscriptionController.createSubscription,
+                validator: 'createPushSubscription',
+            },
+            {
+                url: '/push-subscriptions/:subscriptionId',
+                method: 'get',
+                handler: PushSubscriptionController.getSubscription,
+                validator: 'getPushSubscription',
+            },
+            {
+                url: '/push-subscriptions/:subscriptionId',
+                method: 'put',
+                handler: PushSubscriptionController.updateSubscription,
+                validator: 'updatePushSubscription',
+            },
+            {
+                url: '/push-subscriptions/:subscriptionId',
+                method: 'delete',
+                handler: PushSubscriptionController.deleteSubscription,
+                validator: 'deletePushSubscription',
+            },
+            // Push Subscription specific routes
+            {
+                url: '/push-subscriptions/:subscriptionId/logs',
+                method: 'get',
+                handler: PushSubscriptionController.getSubscriptionLogs,
+                validator: 'getPushSubscriptionLogs',
+            },
+            {
+                url: '/push-subscriptions/:subscriptionId/statistics',
+                method: 'get',
+                handler: PushSubscriptionController.getSubscriptionStatistics,
+                validator: 'getPushSubscriptionStatistics',
+            },
+            {
+                url: '/push-subscriptions/:subscriptionId/deactivate',
+                method: 'put',
+                handler: PushSubscriptionController.deactivateSubscription,
+                validator: 'deactivatePushSubscription',
             },
         ],
         middlewares: ['session_web'],

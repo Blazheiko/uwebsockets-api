@@ -1,7 +1,7 @@
 import { HttpContext } from './../../../vendor/types/types.js';
-import { prisma } from '#database/prisma.js';
 import sendMessage from '#app/servises/chat/sendMessage.js';
 import getChatMessages from '#app/servises/chat/getChatMessages.js';
+import Message from '#app/models/Message.js';
 
 export default {
     async getMessages({ session, httpData, logger }: HttpContext): Promise<any> {
@@ -62,25 +62,17 @@ export default {
             return { status: 'unauthorized', message: 'User ID not found' };
         }
 
-        const { messageId } = httpData.payload;
+        const { messageId } = httpData.params;
         if (!messageId) {
             return { status: 'error', message: 'Message ID is required' };
         }
 
-        const message = await prisma.message.findFirst({
-            where: {
-                id: messageId,
-                senderId: userId
-            }
-        });
-
+        const message = await Message.findByIdAndUserId(messageId, userId, 'sender');
         if (!message) {
             return { status: 'error', message: 'Message not found or access denied' };
         }
 
-        await prisma.message.delete({
-            where: { id: messageId }
-        });
+        await Message.deleteById(messageId);
 
         return { status: 'ok', message: 'Message deleted successfully' };
     },
@@ -91,40 +83,25 @@ export default {
         if (!sessionInfo) {
             return { status: 'error', message: 'Session not found' };
         }
-        const userId = sessionInfo.data?.userId;
-        if (!userId) {
+        const { messageId, content, userId } = httpData.payload;
+        const sessionUserId = sessionInfo.data?.userId;
+        if (!userId || +userId !== +sessionUserId) {
             return { status: 'unauthorized', message: 'User ID not found' };
         }
 
-        const { messageId, content } = httpData.payload;
+        
         if (!messageId || !content) {
             return { status: 'error', message: 'Message ID and content are required' };
         }
 
-        const message = await prisma.message.findFirst({
-            where: {
-                id: messageId,
-                senderId: userId
-            }
-        });
+        // const message = await Message.findByIdAndUserId(messageId, userId, 'sender');
+        // if (!message) {
+        //     return { status: 'error', message: 'Message not found or access denied' };
+        // }
 
-        if (!message) {
-            return { status: 'error', message: 'Message not found or access denied' };
-        }
+        const updatedMessage = await Message.updateContent(userId, messageId, content);
 
-        const updatedMessage = await prisma.message.update({
-            where: { id: messageId },
-            data: {
-                content,
-                updatedAt: new Date()
-            },
-            include: {
-                sender: true,
-                receiver: true
-            }
-        });
-
-        return { status: 'ok', message: updatedMessage };
+        return { status: updatedMessage ?'ok':'error', message: updatedMessage };
     },
 
     async markAsRead({ session, httpData, logger }: HttpContext): Promise<any> {
@@ -143,47 +120,17 @@ export default {
             return { status: 'error', message: 'Message ID is required' };
         }
 
-        const message = await prisma.message.findFirst({
-            where: {
-                id: messageId,
-                receiverId: userId
-            }
-        });
-
+        const message = await Message.findByIdAndUserId(messageId, userId, 'receiver');
         if (!message) {
             return { status: 'error', message: 'Message not found or access denied' };
         }
 
-        // Start transaction to update message and contact list
-        const result = await prisma.$transaction(async (prisma) => {
-            // Update message status
-            const updatedMessage = await prisma.message.update({
-                where: { id: messageId },
-                data: { isRead: true },
-                include: {
-                    sender: true,
-                    receiver: true
-                }
-            });
-
-            // Update unread count in contact list
-            await prisma.contactList.update({
-                where: {
-                    userId_contactId: {
-                        userId: userId,
-                        contactId: message.senderId
-                    }
-                },
-                data: {
-                    unreadCount: {
-                        decrement: 1
-                    }
-                }
-            });
-
-            return updatedMessage;
-        });
-
-        return { status: 'ok', message: result };
+        try {
+            const result = await Message.markAsRead(messageId, userId);
+            return { status: 'ok', message: result };
+        } catch (error) {
+            logger.error('Error marking message as read:', error);
+            return { status: 'error', message: 'Failed to mark message as read' };
+        }
     },
 }; 
