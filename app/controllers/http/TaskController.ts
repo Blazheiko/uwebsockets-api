@@ -1,3 +1,4 @@
+import Project from '#app/models/Project.js';
 import { HttpContext } from '../../../vendor/types/types.js';
 import Task from '../../models/Task.js';
 
@@ -11,8 +12,10 @@ export default {
         }
 
         try {
-            const tasks = await Task.findByUserId(auth.getUserId());
-            return { status: 'success', tasks };
+            const userId = auth.getUserId();
+            const tasks = await Task.findByUserId(userId);
+            const projects = await Project.getShortProjects(userId);
+            return { status: 'success', tasks, projects };
         } catch (error) {
             logger.error('Error getting tasks:', error);
             return { status: 'error', message: error instanceof Error ? error.message : 'Failed to get tasks' };

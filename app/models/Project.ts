@@ -83,6 +83,21 @@ export default {
         return serializeModel(project, schema, hidden);
     },
 
+    async getShortProjects(userId: number) {
+        logger.info(`get projects for user: ${userId}`);
+        
+        const projects = await prisma.project.findMany({
+            where: { userId , isActive: true },
+            select: {
+                id: true,
+                title: true,
+                isActive: true
+            }
+        });
+
+        return projects;
+    },
+
     async findByUserId(userId: number) {
         logger.info(`find all projects for user: ${userId}`);
         
