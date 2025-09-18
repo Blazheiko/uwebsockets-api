@@ -61,14 +61,20 @@ model Message {
   content     String        @db.Text
   src         String?
   isRead      Boolean       @default(false) @map("is_read")
+  calendarId  BigInt?       @map("calendar_id")
+  taskId      BigInt?       @map("task_id")
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
+  calendar    Calendar?     @relation("MessageCalendar", fields: [calendarId], references: [id])
+  task        Task?         @relation("MessageTask", fields: [taskId], references: [id])
   contactList ContactList[] @relation("LastMessage")
   receiver    User          @relation("ReceivedMessages", fields: [receiverId], references: [id])
   sender      User          @relation("SentMessages", fields: [senderId], references: [id])
 
+  @@index([calendarId], map: "messages_calendar_id_fkey")
   @@index([receiverId], map: "messages_receiver_id_fkey")
   @@index([senderId], map: "messages_sender_id_fkey")
+  @@index([taskId], map: "messages_task_id_fkey")
   @@map("messages")
 }
 
@@ -119,15 +125,16 @@ model NotesPhoto {
 }
 
 model Calendar {
-  id          BigInt   @id @default(autoincrement())
-  title       String   @db.VarChar(255)
-  description String   @db.Text
-  startTime   DateTime @map("start_time")
-  endTime     DateTime @map("end_time")
-  userId      BigInt   @map("user_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  user        User     @relation("UserCalendarEvents", fields: [userId], references: [id])
+  id          BigInt    @id @default(autoincrement())
+  title       String    @db.VarChar(255)
+  description String    @db.Text
+  startTime   DateTime  @map("start_time")
+  endTime     DateTime  @map("end_time")
+  userId      BigInt    @map("user_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  user        User      @relation("UserCalendarEvents", fields: [userId], references: [id])
+  messages    Message[] @relation("MessageCalendar")
 
   @@index([userId], map: "calendar_user_id_fkey")
   @@map("calendar")
@@ -151,6 +158,7 @@ model Task {
   parentTaskId   BigInt?      @map("parent_task_id")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
+  messages       Message[]    @relation("MessageTask")
   parentTask     Task?        @relation("SubTasks", fields: [parentTaskId], references: [id])
   subTasks       Task[]       @relation("SubTasks")
   project        Project?     @relation("ProjectTasks", fields: [projectId], references: [id])

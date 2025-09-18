@@ -3,6 +3,7 @@ import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import logger from '#logger';
 import appConfig from '#config/app.js';
+import cspConfig from '#config/csp.js';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 
 
@@ -52,12 +53,46 @@ const startStaticServer = () => {
 }
 const staticRoutes = ['/','/chat','/login','/register','/chat','/account','/news','/news/create','/news/edit', '/news/:id','/manifesto'];
 
+const buildCspValue = (): string => {
+    // Prefer full policy string if provided
+    // const policy: unknown = (cspConfig as any)?.policy ?? (cspConfig as any)?.value;
+    // if (typeof policy === 'string' && policy.trim().length > 0) return policy.trim();
+
+    const directives: unknown = (cspConfig as any)?.directives;
+    if (directives && typeof directives === 'object') {
+        const parts: string[] = [];
+        for (const [name, val] of Object.entries(directives as Record<string, unknown>)) {
+            if (Array.isArray(val)) {
+                parts.push(`${name} ${val.join(' ')}`.trim());
+            } else if (typeof val === 'string') {
+                parts.push(`${name} ${val}`.trim());
+            } else if (val === true) {
+                parts.push(`${name}`);
+            }
+        }
+        return parts.join('; ').trim();
+    }
+    return '';
+};
+
+const cspHeaderValue: string = buildCspValue();
+const cspHeaderName: string = (cspConfig as any)?.reportOnly
+    ? 'Content-Security-Policy-Report-Only'
+    : 'Content-Security-Policy';
+const isCspEnabled: boolean = Boolean((cspConfig as any)?.enabled && cspHeaderValue);
+
+const setCspHeader = (res: HttpResponse) => {
+    if (!isCspEnabled) return;
+    res.writeHeader(cspHeaderName, cspHeaderValue);
+};
+
 const staticIndexHandler = (res: HttpResponse, req: HttpRequest) => {
     let data = cache.get('/index.html');
     let statusCode = data? '200': '404';
     let mimeType = MIME_TYPES.html;
     res.cork(() => {
         res.writeStatus(statusCode);
+        setCspHeader(res);
         res.writeHeader('Content-Type', mimeType);
         res.end(data || '');
     });
@@ -80,6 +115,7 @@ const staticHandler = (res: HttpResponse, req: HttpRequest) => {
 
     res.cork(() => {
         res.writeStatus(statusCode);
+        if (ext === 'html') setCspHeader(res);
         res.writeHeader('Content-Type', mimeType);
         res.end(data || '');
     });

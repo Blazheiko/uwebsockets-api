@@ -136,6 +136,8 @@ const setHeaders = (res: HttpResponse, headers: Header[]) => {
         res.writeHeader(header.name, header.value);
     });
 };
+
+// CSP header is applied from staticServer for HTML responses
 const getResponseData = (): ResponseData => {
     let cookies: Record<string, Cookie> = {};
     const headers: Header[] = [];
@@ -324,7 +326,9 @@ const configureHttp = (server: TemplatedApp) => {
     server.any('/*', (res, req) => {
         if (appConfig.serveStatic && req.getMethod() === 'get') {
             const url = req.getUrl();
-            if (url.indexOf('.') !== -1 ) staticHandler(res, req);
+            if (url.indexOf('.') !== -1 ) {
+                staticHandler(res, req);
+            }
         }else if (corsConfig.enabled && req.getMethod() === 'options') {
             //'OPTIONS' method === 'OPTIONS'
             res.cork(() => {
