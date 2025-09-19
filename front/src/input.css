@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ваши кастомные стили из doc.css */
+.method-get { 
+    @apply bg-green-100 text-green-800 border-green-200; 
+}
+
+.method-post { 
+    @apply bg-blue-100 text-blue-800 border-blue-200; 
+}
+
+.method-put { 
+    @apply bg-yellow-100 text-yellow-800 border-yellow-200; 
+}
+
+.method-delete { 
+    @apply bg-red-100 text-red-800 border-red-200; 
+}
+
+.fade-in { 
+    animation: fadeIn 0.5s ease-in-out; 
+}
+
+@keyframes fadeIn { 
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    } 
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    } 
+}
+
+.route-collapsed { 
+    cursor: pointer; 
+    transition: all 0.2s ease-in-out; 
+}
+
+.route-collapsed:hover { 
+    transform: translateY(-1px); 
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); 
+}
+
+.route-details { 
+    max-height: 0; 
+    overflow: hidden; 
+    transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out; 
+}
+
+.route-details.expanded { 
+    max-height: 1000px; 
+    padding-top: 1rem; 
+}
+
+.expand-icon { 
+    transition: transform 0.2s ease-in-out; 
+}
+
+.expand-icon.rotated { 
+    transform: rotate(180deg); 
+}
