@@ -40,6 +40,9 @@ import {
 } from '../types/types.js';
 import contextHandler from '../utils/contextHandler.js';
 import { startStaticServer, staticHandler, staticIndexHandler } from './staticServer.js';
+import configApp from '#config/app.js';
+import httpRoutes from '#app/routes/httpRoutes.js';
+import wsRoutes from '#app/routes/wsRoutes.js';
 
 const server: TemplatedApp = uWS.App();
 
@@ -270,6 +273,30 @@ const handleError = (res: HttpResponse, error: unknown) => {
 
 const staticRoutes = ['/','/chat','/login','/register','/chat','/account','/news','/news/create','/news/edit', '/news/:id','/manifesto','/invitations','/join-chat'];
 
+const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
+    logger.info('docRoutesHandler');
+    if (state.listenSocket && configApp.docPage) {
+        try {
+            res.cork(() => {
+                res.writeStatus(`200`);
+                res.writeHeader('content-type', 'application/json');
+                res.end(JSON.stringify({httpRoutes, wsRoutes}, (_, v) =>
+                    typeof v === 'bigint' ? v.toString() : v));
+               
+            });
+        } catch (error: unknown) {
+            logger.error(error);
+            res.cork(() => {
+                handleError(res, error);
+            });
+        }
+    } else {
+        logger.warn('We just refuse if already shutting down');
+        res.close();
+    }
+};
+
+
 const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteItem) => {
     logger.info('Handler method:' + route.method + ' url:' + route.url);
     if (state.listenSocket) {
@@ -322,6 +349,11 @@ const configureHttp = (server: TemplatedApp) => {
             );
         }
     });
+    if(configApp.docPage && configApp.serveStatic) {
+        server.get('/api/doc/routes', (res, req) => {
+            docRoutesHandler(res, req);
+        });
+    };
 
     server.any('/*', (res, req) => {
         if (appConfig.serveStatic && req.getMethod() === 'get') {

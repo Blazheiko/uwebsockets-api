@@ -74,11 +74,13 @@
         <!-- Filter Buttons -->
         <div class="mb-6">
             <div class="flex flex-wrap gap-2 items-center">
-                <button onclick="filterByMethod('all')" class="filter-btn active px-4 py-2 rounded-lg text-sm font-medium bg-primary-500 text-white">All</button>
+                <button onclick="filterByType('http')" class="filter-btn active px-4 py-2 rounded-lg text-sm font-medium bg-primary-500 text-white">HTTP Routes</button>
+                <button onclick="filterByType('ws')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">WS Routes</button>
+                <!-- <button onclick="filterByMethod('all')" class="filter-btn active px-4 py-2 rounded-lg text-sm font-medium bg-primary-500 text-white">All</button>
                 <button onclick="filterByMethod('get')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">GET</button>
                 <button onclick="filterByMethod('post')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">POST</button>
                 <button onclick="filterByMethod('put')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">PUT</button>
-                <button onclick="filterByMethod('delete')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">DELETE</button>
+                <button onclick="filterByMethod('delete')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">DELETE</button> -->
                 <div class="ml-auto flex gap-2">
                     <button onclick="expandAll()" class="px-4 py-2 rounded-lg text-sm font-medium bg-green-500 hover:bg-green-600 text-white transition-colors duration-200">Expand All</button>
                     <button onclick="collapseAll()" class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-500 hover:bg-gray-600 text-white transition-colors duration-200">Collapse All</button>

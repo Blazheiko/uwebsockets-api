@@ -17,6 +17,10 @@
     @apply bg-red-100 text-red-800 border-red-200; 
 }
 
+.method-ws { 
+    @apply bg-purple-100 text-purple-800 border-purple-200; 
+}
+
 /* Animations */
 .fade-in { 
     animation: fadeIn 0.5s ease-in-out; 
@@ -88,6 +92,10 @@
 
 .dark .method-delete { 
     @apply bg-red-900 text-red-200 border-red-700; 
+}
+
+.dark .method-ws { 
+    @apply bg-purple-900 text-purple-200 border-purple-700; 
 }
 
 .dark .group-item {

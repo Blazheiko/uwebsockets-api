@@ -9,6 +9,7 @@ const config = Object.freeze({
     port: Number(env.APP_PORT),
     unixPath: env.APP_UNIX_PATH,
     serveStatic: env.SERVE_STATIC,
+    docPage: env.DOC_PAGE || false,
     startMigration: env.START_MIGRATION,
     characters:
         'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',

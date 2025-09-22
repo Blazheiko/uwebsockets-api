@@ -1,463 +1,11 @@
 // API Documentation JavaScript
 
-// Route data from httpRoutes.ts
-const routeGroups = [
-    {
-        group: [
-            {
-                url: '/register',
-                method: 'post',
-                handler: 'AuthController.register',
-                validator: 'register',
-                description: 'Register a new user',
-            },
-            {
-                url: '/login',
-                method: 'post',
-                handler: 'AuthController.login',
-                validator: 'login',
-                description: 'Login a user',
-            },
-            {
-                url: '/logout',
-                method: 'post',
-                handler: 'AuthController.logout',
-                description: 'Logout a user',
-            },
-        ],
-        description: 'Auth routes',
-        middlewares: ['session_web'],
-        prefix: 'api/auth',
-    },
-    {
-        group: [
-            {
-                url: '/get-contact-list',
-                method: 'post',
-                handler: 'ChatListController.getContactList', 
-                description: 'Get contact list',
-            },
-            {
-                url: '/chats',
-                method: 'post',
-                handler: 'ChatListController.createChat',
-                validator: 'createChat',
-                description: 'Create a new chat',
-            },
-            {
-                url: '/chats/:chatId',
-                method: 'delete',
-                handler: 'ChatListController.deleteChat',
-                validator: 'deleteChat',
-                description: 'Delete a chat',
-            },
-            {
-                url: '/get-messages',
-                method: 'post',
-                handler: 'MessageController.getMessages',
-                validator: 'getMessages',
-                description: 'Get messages',
-            },
-            {
-                url: '/send-chat-messages',
-                method: 'post',
-                handler: 'MessageController.sendMessage',
-                validator: 'sendMessage',
-                description: 'Send a message',
-            },
-            {
-                url: '/messages/:messageId',
-                method: 'delete',
-                handler: 'MessageController.deleteMessage',
-                validator: 'deleteMessage',
-                description: 'Delete a message',
-            },
-            {
-                url: '/messages/:messageId',
-                method: 'put',
-                handler: 'MessageController.editMessage',
-                validator: 'editMessage',
-                description: 'Edit a message',
-            },
-            {
-                url: '/messages/:messageId/read',
-                method: 'put',
-                handler: 'MessageController.markAsRead',
-                validator: 'markMessageAsRead',
-                description: 'Mark a message as read',
-            },
-            {
-                url: '/invitations',
-                method: 'post',
-                handler: 'InvitationController.createInvitation',
-                validator: 'createInvitation',
-                description: 'Create an invitation',
-            },
-            {
-                url: '/invitations/user/:userId',
-                method: 'get',
-                handler: 'InvitationController.getUserInvitations',
-                validator: 'getUserInvitations',
-                description: 'Get user invitations',
-            },
-            {
-                url: '/invitations/use',
-                method: 'post',
-                handler: 'InvitationController.useInvitation',
-                validator: 'useInvitation',
-                description: 'Use an invitation',
-            },
-        ],
-        middlewares: ['session_web'],
-        prefix: 'api/chat',
-    },
-    {
-        group: [
-            {
-                url: '/init',
-                method: 'get',
-                handler: 'MainController.init',
-                description: 'Initialize the main controller',
-            },
-            {
-                url: '/test-header',
-                method: 'get',
-                handler: 'MainController.testHeaders',
-                description: 'Test headers',
-            },
-            {
-                url: '/test-cookie',
-                method: 'get',
-                handler: 'MainController.getSetCookies',
-                description: 'Test cookies',
-            },
-            {
-                url: '/test-session',
-                method: 'get',
-                handler: 'MainController.testSession',
-                description: 'Test session',
-            },
-            {
-                url: '/save-user',
-                method: 'post',
-                handler: 'MainController.saveUser',
-                validator: 'register',
-                description: 'Save a user',
-            },
-            {
-                url: '/set-header-and-cookie',
-                method: 'get',
-                handler: 'MainController.setHeaderAndCookie',
-                description: 'Set header and cookie',
-            },
-            {
-                url: '/test-middleware',
-                method: 'get',
-                handler: 'MainController.testMiddleware',
-                middlewares: ['test1'],
-                description: 'Test middleware',
-            },
-        ],
-        middlewares: ['session_web'],
-        prefix: 'api',
-    },
-    {
-        group: [
-            {
-                url: '/notes',
-                method: 'get',
-                handler: 'NotesController.getNotes',
-                description: 'Get all notes',
-            },
-            {
-                url: '/notes',
-                method: 'post',
-                handler: 'NotesController.createNote',
-                validator: 'createNote',
-                description: 'Create a new note',
-            },
-            {
-                url: '/notes/:noteId',
-                method: 'get',
-                handler: 'NotesController.getNote',
-                validator: 'getNote',
-                description: 'Get a note by id',
-            },
-            {
-                url: '/notes/:noteId',
-                method: 'put',
-                handler: 'NotesController.updateNote',
-                validator: 'updateNote',
-                description: 'Update a note by id',
-            },
-            {
-                url: '/notes/:noteId',
-                method: 'delete',
-                handler: 'NotesController.deleteNote',
-                validator: 'deleteNote',
-                description: 'Delete a note by id',
-            },
-            {
-                url: '/notes/:noteId/photos',
-                method: 'post',
-                handler: 'NotesController.addPhoto',
-                validator: 'addNotePhoto',
-                description: 'Add a photo to a note',
-            },
-            {
-                url: '/notes/:noteId/photos/:photoId',
-                method: 'delete',
-                handler: 'NotesController.deletePhoto',
-                validator: 'deleteNotePhoto',
-                description: 'Delete a photo from a note',
-            },
-        ],
-        middlewares: ['session_web'],
-        prefix: 'api/notes',
-    },
-    {
-        group: [
-            {
-                url: '/events',
-                method: 'get',
-                handler: 'CalendarController.getEvents',
-                description: 'Get all events',
-            },
-            {
-                url: '/events',
-                method: 'post',
-                handler: 'CalendarController.createEvent',
-                validator: 'createEvent',
-                description: 'Create a new event',
-            },
-            {
-                url: '/events/:eventId',
-                method: 'get',
-                handler: 'CalendarController.getEvent',
-                validator: 'getEvent',
-                description: 'Get an event by id',
-            },
-            {
-                url: '/events/:eventId',
-                method: 'put',
-                handler: 'CalendarController.updateEvent',
-                validator: 'updateEvent',
-                description: 'Update an event by id',
-            },
-            {
-                url: '/events/:eventId',
-                method: 'delete',
-                handler: 'CalendarController.deleteEvent',
-                validator: 'deleteEvent',
-                description: 'Delete an event by id',
-            },
-            {
-                url: '/events/date/:date',
-                method: 'get',
-                handler: 'CalendarController.getEventsByDate',
-                validator: 'getEventsByDate',
-                description: 'Get all events for a date',
-            },
-            {
-                url: '/events/range',
-                method: 'post',
-                handler: 'CalendarController.getEventsByRange',
-                validator: 'getEventsByRange',
-                description: 'Get all events for a range of dates',
-            },
-        ],
-        description: 'Calendar routes',
-        middlewares: ['session_web'],
-        prefix: 'api/calendar',
-    },
-    {
-        group: [
-            {
-                url: '/tasks',
-                method: 'get',
-                handler: 'TaskController.getTasks',
-                description: 'Get all tasks',
-            },
-            {
-                url: '/tasks',
-                method: 'post',
-                handler: 'TaskController.createTask',
-                validator: 'createTask',
-                description: 'Create a new task',
-            },
-            {
-                url: '/tasks/:taskId',
-                method: 'get',
-                handler: 'TaskController.getTask',
-                validator: 'getTask',
-                description: 'Get a task by id',
-            },
-            {
-                url: '/tasks/:taskId',
-                method: 'put',
-                handler: 'TaskController.updateTask',
-                validator: 'updateTask',
-                description: 'Update a task by id',
-            },
-            {
-                url: '/tasks/:taskId',
-                method: 'delete',
-                handler: 'TaskController.deleteTask',
-                validator: 'deleteTask',
-                description: 'Delete a task by id',
-            },
-            {
-                url: '/tasks/:taskId/status',
-                method: 'put',
-                handler: 'TaskController.updateTaskStatus',
-                validator: 'updateTaskStatus',
-                description: 'Update a task status by id',
-            },
-            {
-                url: '/tasks/:taskId/progress',
-                method: 'put',
-                handler: 'TaskController.updateTaskProgress',
-                validator: 'updateTaskProgress',
-                description: 'Update a task progress by id',
-            },
-            {
-                url: '/tasks/project/:projectId',
-                method: 'get',
-                handler: 'TaskController.getTasksByProject',
-                validator: 'getTasksByProject',
-                description: 'Get all tasks for a project',
-            },
-            {
-                url: '/tasks/:parentTaskId/subtasks',
-                method: 'get',
-                handler: 'TaskController.getSubTasks',
-                validator: 'getSubTasks',
-                description: 'Get all subtasks for a task',
-            },
-        ],
-        description: 'Task routes',
-        middlewares: ['session_web'],
-        prefix: 'api',
-    },
-    {
-        group: [
-            {
-                url: '/projects',
-                method: 'get',
-                handler: 'ProjectController.getProjects',
-                description: 'Get all projects',
-            },
-            {
-                url: '/projects/create',
-                method: 'post',
-                handler: 'ProjectController.createProject',
-                validator: 'createProject',
-                description: 'Create a new project',
-            },
-            {
-                url: '/projects/:projectId',
-                method: 'get',
-                handler: 'ProjectController.getProject',
-                validator: 'getProject',
-                description: 'Get a project by id',
-            },
-            {
-                url: '/projects/:projectId',
-                method: 'put',
-                handler: 'ProjectController.updateProject',
-                validator: 'updateProject',
-                description: 'Update a project by id',
-            },
-            {
-                url: '/projects/:projectId',
-                method: 'delete',
-                handler: 'ProjectController.deleteProject',
-                validator: 'deleteProject',
-                description: 'Delete a project by id',
-            },
-            {
-                url: '/projects/:projectId/tasks',
-                method: 'get',
-                handler: 'ProjectController.getProjectTasks',
-                validator: 'getProjectTasks',
-                description: 'Get all tasks for a project',
-            },
-            {
-                url: '/projects/:projectId/statistics',
-                method: 'get',
-                handler: 'ProjectController.getProjectStatistics',
-                validator: 'getProjectStatistics',
-                description: 'Get statistics for a project',
-            },
-            {
-                url: '/projects/:projectId/archive',
-                method: 'put',
-                handler: 'ProjectController.archiveProject',
-                validator: 'archiveProject',
-                description: 'Archive a project by id',
-            },
-        ],
-        description: 'Project routes',
-        middlewares: ['session_web'],
-        prefix: 'api',
-    },
-    {
-        group: [
-            {
-                url: '/push-subscriptions',
-                method: 'get',
-                handler: 'PushSubscriptionController.getSubscriptions',
-            },
-            {
-                url: '/push-subscriptions',
-                method: 'post',
-                handler: 'PushSubscriptionController.createSubscription',
-                validator: 'createPushSubscription',
-            },
-            {
-                url: '/push-subscriptions/:subscriptionId',
-                method: 'get',
-                handler: 'PushSubscriptionController.getSubscription',
-                validator: 'getPushSubscription',
-            },
-            {
-                url: '/push-subscriptions/:subscriptionId',
-                method: 'put',
-                handler: 'PushSubscriptionController.updateSubscription',
-                validator: 'updatePushSubscription',
-            },
-            {
-                url: '/push-subscriptions/:subscriptionId',
-                method: 'delete',
-                handler: 'PushSubscriptionController.deleteSubscription',
-                validator: 'deletePushSubscription',
-            },
-            {
-                url: '/push-subscriptions/:subscriptionId/logs',
-                method: 'get',
-                handler: 'PushSubscriptionController.getSubscriptionLogs',
-                validator: 'getPushSubscriptionLogs',
-            },
-            {
-                url: '/push-subscriptions/:subscriptionId/statistics',
-                method: 'get',
-                handler: 'PushSubscriptionController.getSubscriptionStatistics',
-                validator: 'getPushSubscriptionStatistics',
-            },
-            {
-                url: '/push-subscriptions/:subscriptionId/deactivate',
-                method: 'put',
-                handler: 'PushSubscriptionController.deactivateSubscription',
-                validator: 'deactivatePushSubscription',
-            },
-        ],
-        description: 'Push Subscription routes',
-        middlewares: ['session_web'],
-        prefix: 'api',
-    }
-];
+// Global route data - will be populated from API
+let httpRouteGroups = [];
+let wsRouteGroups = [];
 
 // Global state variables
+let currentRouteType = 'http'; // 'http' or 'ws'
 let currentFilter = 'all';
 let searchTerm = '';
 
@@ -532,24 +80,45 @@ function getResponseFormat(handler) {
 
 // Rendering functions
 function renderRoute(route, prefix, routeId) {
-    const fullUrl = `/${prefix}${route.url}`;
+    // For WebSocket routes, handle URL differently
+    const isWebSocket = currentRouteType === 'ws';
+    let fullUrl;
+    
+    if (isWebSocket) {
+        // WebSocket routes don't have leading slash and use different prefix format
+        fullUrl = route.url;
+    } else {
+        // HTTP routes
+        const cleanUrl = route.url.startsWith('/') ? route.url : `/${route.url}`;
+        fullUrl = cleanUrl;
+    }
+    
     const parameters = extractParameters(route.url);
     const responseFormats = getResponseFormat(route.handler);
     
+    // Handle case where handler might be a function reference or string
+    const handlerName = typeof route.handler === 'string' ? route.handler : 
+                       (route.handler && route.handler.name ? route.handler.name : 'Unknown handler');
+    
+    // For WebSocket routes, show different method badge
+    const methodDisplay = isWebSocket ? 'WS' : route.method.toUpperCase();
+    const methodClass = isWebSocket ? 'method-ws' : getMethodClass(route.method);
+    
     return `
-        <div class="route-item border rounded-lg bg-white dark:bg-gray-800 dark:border-gray-700 transition-shadow duration-200 fade-in" data-method="${route.method}">
+        <div class="route-item border rounded-lg bg-white dark:bg-gray-800 dark:border-gray-700 transition-shadow duration-200 fade-in" data-method="${isWebSocket ? 'ws' : route.method}">
             <!-- Collapsed Header -->
             <div class="route-collapsed p-4" onclick="toggleRoute('${routeId}')">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3 flex-1 min-w-0">
-                        <span class="px-3 py-1 text-xs font-semibold rounded-full border ${getMethodClass(route.method)} flex-shrink-0">
-                            ${route.method.toUpperCase()}
+                        <span class="px-3 py-1 text-xs font-semibold rounded-full border ${methodClass} flex-shrink-0">
+                            ${methodDisplay}
                         </span>
                         <code class="text-sm font-mono text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded truncate">${fullUrl}</code>
                         <span class="text-gray-600 dark:text-gray-300 text-sm truncate">${route.description || 'No description available'}</span>
                     </div>
                     <div class="flex items-center space-x-2 flex-shrink-0">
                         ${route.validator ? '<span class="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full">Validated</span>' : ''}
+                        ${route.middleware ? '<span class="px-2 py-1 text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full">Middleware</span>' : ''}
                         <svg class="expand-icon h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
@@ -564,8 +133,9 @@ function renderRoute(route, prefix, routeId) {
                         <div>
                             <h5 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Details</h5>
                             <div class="space-y-1 text-sm">
-                                <div><span class="font-medium text-gray-700 dark:text-gray-300">Handler:</span> <code class="text-blue-600 dark:text-blue-400">${route.handler}</code></div>
+                                <div><span class="font-medium text-gray-700 dark:text-gray-300">Handler:</span> <code class="text-blue-600 dark:text-blue-400">${handlerName}</code></div>
                                 ${route.validator ? `<div><span class="font-medium text-gray-700 dark:text-gray-300">Validator:</span> <code class="text-purple-600 dark:text-purple-400">${route.validator}</code></div>` : ''}
+                                ${route.middleware ? `<div><span class="font-medium text-gray-700 dark:text-gray-300">Middleware:</span> <code class="text-orange-600 dark:text-orange-400">${route.middleware}</code></div>` : ''}
                                 ${route.middlewares ? `<div><span class="font-medium text-gray-700 dark:text-gray-300">Middlewares:</span> <code class="text-orange-600 dark:text-orange-400">${route.middlewares.join(', ')}</code></div>` : ''}
                             </div>
                             
@@ -646,15 +216,21 @@ function renderGroup(group, index) {
 }
 
 function renderDocumentation() {
+    // Select the appropriate route groups based on current type
+    const routeGroups = currentRouteType === 'http' ? httpRouteGroups : wsRouteGroups;
+    
     const filteredGroups = routeGroups.map(group => {
         if (currentFilter === 'all' && !searchTerm) return group;
         
         const filteredRoutes = group.group.filter(route => {
-            const matchesFilter = currentFilter === 'all' || route.method.toLowerCase() === currentFilter;
+            // For WebSocket routes, we don't filter by method since they don't have HTTP methods
+            const matchesFilter = currentRouteType === 'ws' || currentFilter === 'all' || 
+                (route.method && route.method.toLowerCase() === currentFilter);
+            
             const matchesSearch = !searchTerm || 
                 route.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (route.description && route.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                route.handler.toLowerCase().includes(searchTerm.toLowerCase());
+                (typeof route.handler === 'string' && route.handler.toLowerCase().includes(searchTerm.toLowerCase()));
             
             return matchesFilter && matchesSearch;
         });
@@ -684,18 +260,42 @@ function renderDocumentation() {
 // }
 
 // Event handlers
-function filterByMethod(method) {
-    currentFilter = method;
+// function filterByMethod(method) {
+//     currentFilter = method;
+    
+//     // Update active button
+//     document.querySelectorAll('.filter-btn').forEach(btn => {
+//         btn.classList.remove('active', 'bg-primary-500', 'text-white');
+//         btn.classList.add('bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
+//     });
+//     event.target.classList.add('active', 'bg-primary-500', 'text-white');
+//     event.target.classList.remove('bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
+    
+//     renderDocumentation();
+// }
+
+function filterByType(type) {
+    currentRouteType = type;
     
     // Update active button
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active', 'bg-primary-500', 'text-white');
-        btn.classList.add('bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
-    });
-    event.target.classList.add('active', 'bg-primary-500', 'text-white');
-    event.target.classList.remove('bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
+    updateActiveFilterButton(type);
     
     renderDocumentation();
+}
+
+function updateActiveFilterButton(activeType) {
+    // Remove active classes from all filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active', 'bg-primary-500', 'text-white');
+        btn.classList.add('bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300', 'border', 'border-gray-300', 'dark:border-gray-600');
+    });
+    
+    // Add active classes to the selected button
+    const activeButton = document.querySelector(`button[onclick="filterByType('${activeType}')"]`);
+    if (activeButton) {
+        activeButton.classList.add('active', 'bg-primary-500', 'text-white');
+        activeButton.classList.remove('bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300', 'border', 'border-gray-300', 'dark:border-gray-600');
+    }
 }
 
 function setupSearch() {
@@ -764,10 +364,95 @@ function setupThemeToggle() {
     }
 }
 
+// API functions
+async function fetchRouteData() {
+    try {
+        const response = await fetch('/api/doc/routes');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log({ data });
+        
+        // Set both HTTP and WebSocket routes
+        httpRouteGroups = data.httpRoutes || [];
+        wsRouteGroups = data.wsRoutes || [];
+        
+        return { httpRoutes: httpRouteGroups, wsRoutes: wsRouteGroups };
+    } catch (error) {
+        console.error('Error fetching route data:', error);
+        console.log('Calling showError function...');
+        showError('Failed to load API documentation. Please refresh the page.');
+        return { httpRoutes: [], wsRoutes: [] };
+    }
+}
+
+function showError(message) {
+    console.log('showError called with message:', message);
+    const apiGroupsContainer = document.getElementById('apiGroups');
+    console.log('apiGroupsContainer found:', !!apiGroupsContainer);
+    if (apiGroupsContainer) {
+        console.log('Setting error HTML...');
+        apiGroupsContainer.innerHTML = `
+            <div class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
+                <div class="text-red-800 dark:text-red-200">
+                    <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <h3 class="text-lg font-semibold mb-2">Error Loading Documentation</h3>
+                    <p class="text-sm">${message}</p>
+                    <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+                        Refresh Page
+                    </button>
+                </div>
+            </div>
+        `;
+    } else {
+        console.error('apiGroups container not found in DOM');
+        // Fallback: create error message in body if container not found
+        document.body.innerHTML = `
+            <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <div class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center max-w-md">
+                    <div class="text-red-800 dark:text-red-200">
+                        <h3 class="text-lg font-semibold mb-2">Error Loading Documentation</h3>
+                        <p class="text-sm">${message}</p>
+                        <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+                            Refresh Page
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function showLoading() {
+    const apiGroupsContainer = document.getElementById('apiGroups');
+    if (apiGroupsContainer) {
+        apiGroupsContainer.innerHTML = `
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-8 text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+                <p class="text-gray-600 dark:text-gray-400">Loading API documentation...</p>
+            </div>
+        `;
+    }
+}
+
 // Initialize the documentation
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initializeTheme();
     setupThemeToggle();
-    renderDocumentation();
     setupSearch();
+    
+    // Show loading state
+    showLoading();
+    
+    // Fetch route data from API
+    await fetchRouteData();
+    
+    // Initialize with HTTP routes by default
+    updateActiveFilterButton('http');
+    
+    // Render documentation with fetched data
+    renderDocumentation();
 });
