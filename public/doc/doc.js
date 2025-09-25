@@ -3,6 +3,7 @@
 // Global route data - will be populated from API
 let httpRouteGroups = [];
 let wsRouteGroups = [];
+let validationSchemas = {};
 
 // Global state variables
 let currentRouteType = 'http'; // 'http' or 'ws'
@@ -12,6 +13,44 @@ let searchTerm = '';
 // Utility functions
 function getMethodClass(method) {
     return `method-${method.toLowerCase()}`;
+}
+
+function renderValidationSchema(schema) {
+    if (!schema || typeof schema !== 'object') {
+        return '<div class="text-gray-500 dark:text-gray-400 text-sm">No validation schema available</div>';
+    }
+    
+    const fields = Object.entries(schema).map(([fieldName, fieldInfo]) => {
+        const typeClass = getTypeClass(fieldInfo.type);
+        const requiredBadge = fieldInfo.required 
+            ? '<span class="text-red-500 dark:text-red-400 text-xs ml-1">required</span>'
+            : '<span class="text-gray-400 dark:text-gray-500 text-xs ml-1">optional</span>';
+        
+        return `
+            <div class="flex items-start space-x-2 text-sm border-l-2 border-gray-200 dark:border-gray-600 pl-3 py-1">
+                <div class="flex items-center space-x-2 min-w-0 flex-1">
+                    <span class="px-2 py-1 ${typeClass} rounded text-xs font-mono font-semibold">${fieldName}</span>
+                    <span class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs">${fieldInfo.type}</span>
+                    ${requiredBadge}
+                </div>
+                ${fieldInfo.description ? `<div class="text-gray-600 dark:text-gray-400 text-xs flex-shrink-0 max-w-xs">${fieldInfo.description}</div>` : ''}
+            </div>
+        `;
+    }).join('');
+    
+    return fields || '<div class="text-gray-500 dark:text-gray-400 text-sm">No fields defined</div>';
+}
+
+function getTypeClass(type) {
+    const typeClasses = {
+        'string': 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
+        'number': 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200',
+        'boolean': 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200',
+        'enum': 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200',
+        'unknown': 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+    };
+    
+    return typeClasses[type] || typeClasses['unknown'];
 }
 
 function extractParameters(url) {
@@ -133,11 +172,16 @@ function renderRoute(route, prefix, routeId) {
                         <div>
                             <h5 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Details</h5>
                             <div class="space-y-1 text-sm">
-                                <div><span class="font-medium text-gray-700 dark:text-gray-300">Handler:</span> <code class="text-blue-600 dark:text-blue-400">${handlerName}</code></div>
-                                ${route.validator ? `<div><span class="font-medium text-gray-700 dark:text-gray-300">Validator:</span> <code class="text-purple-600 dark:text-purple-400">${route.validator}</code></div>` : ''}
                                 ${route.middleware ? `<div><span class="font-medium text-gray-700 dark:text-gray-300">Middleware:</span> <code class="text-orange-600 dark:text-orange-400">${route.middleware}</code></div>` : ''}
                                 ${route.middlewares ? `<div><span class="font-medium text-gray-700 dark:text-gray-300">Middlewares:</span> <code class="text-orange-600 dark:text-orange-400">${route.middlewares.join(', ')}</code></div>` : ''}
                             </div>
+                            
+                            ${route.validator && validationSchemas[route.validator] ? `
+                                <h5 class="font-semibold text-gray-900 dark:text-gray-100 mt-4 mb-2">Validation Schema</h5>
+                                <div class="space-y-2">
+                                    ${renderValidationSchema(validationSchemas[route.validator])}
+                                </div>
+                            ` : ''}
                             
                             ${parameters.length > 0 ? `
                                 <h5 class="font-semibold text-gray-900 dark:text-gray-100 mt-4 mb-2">Parameters</h5>
@@ -374,11 +418,12 @@ async function fetchRouteData() {
         const data = await response.json();
         console.log({ data });
         
-        // Set both HTTP and WebSocket routes
+        // Set both HTTP and WebSocket routes, and validation schemas
         httpRouteGroups = data.httpRoutes || [];
         wsRouteGroups = data.wsRoutes || [];
+        validationSchemas = data.validationSchemas || {};
         
-        return { httpRoutes: httpRouteGroups, wsRoutes: wsRouteGroups };
+        return { httpRoutes: httpRouteGroups, wsRoutes: wsRouteGroups, validationSchemas };
     } catch (error) {
         console.error('Error fetching route data:', error);
         console.log('Calling showError function...');

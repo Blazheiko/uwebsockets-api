@@ -43,6 +43,7 @@ import { startStaticServer, staticHandler, staticIndexHandler } from './staticSe
 import configApp from '#config/app.js';
 import httpRoutes from '#app/routes/httpRoutes.js';
 import wsRoutes from '#app/routes/wsRoutes.js';
+import schemas from '#app/validate/schemas/schemas.js';
 
 const server: TemplatedApp = uWS.App();
 
@@ -273,16 +274,26 @@ const handleError = (res: HttpResponse, error: unknown) => {
 
 const staticRoutes = ['/','/chat','/login','/register','/chat','/account','/news','/news/create','/news/edit', '/news/:id','/manifesto','/invitations','/join-chat'];
 
+
 const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
     logger.info('docRoutesHandler');
     if (state.listenSocket && configApp.docPage) {
         try {
+            // Convert schemas to readable format
+            const validationSchemas: Record<string, any> = {};
+
+            for (const key of Object.keys(schemas)) {
+                validationSchemas[key] = schemas[key].doc;
+            }
+            
             res.cork(() => {
                 res.writeStatus(`200`);
                 res.writeHeader('content-type', 'application/json');
-                res.end(JSON.stringify({httpRoutes, wsRoutes}, (_, v) =>
-                    typeof v === 'bigint' ? v.toString() : v));
-               
+                res.end(JSON.stringify({
+                    httpRoutes, 
+                    wsRoutes, 
+                    validationSchemas
+                }));
             });
         } catch (error: unknown) {
             logger.error(error);

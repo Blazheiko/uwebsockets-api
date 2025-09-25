@@ -21,7 +21,7 @@ const testRedis = async () => {
 const compileValidateSchema = () => {
     const schemaKeys = Object.keys(schemas);
     schemaKeys.forEach((key: string) => {
-        validators.set(key, vine.compile(schemas[key]));
+        validators.set(key, vine.compile(schemas[key].validator));
     });
 };
 
