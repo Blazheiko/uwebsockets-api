@@ -10,34 +10,7 @@ import ProjectController from '#app/controllers/http/ProjectController.js';
 import PushSubscriptionController from '#app/controllers/http/PushSubscriptionController.js';
 
 export default [
-    // {
-    //     url: '/join-chat/:token',
-    //     method: 'get',
-    //     handler: MainController.joinСhat,
-    // },
-    // {
-    //     url: '/save-user',
-    //     method: 'post',
-    //     handler: MainController.saveUser,
-    // },
-    // {
-    //     url: '/test-middleware',
-    //     method: 'get',
-    //     handler: MainController.testMiddleware,
-    //     middlewares: ['test1'],
-    // },
-    // {
-    //     url: '/test-api-session',
-    //     method: 'get',
-    //     handler: MainController.testApiSession,
-    //     middlewares: ['session_api'],
-    // },
-    // {
-    //     url: '/test-params/:id/:name',
-    //     method: 'get',
-    //     handler: MainController.testParams,
-    //     middlewares: ['test1'],
-    // },
+ 
     {
         group: [
             {
@@ -67,7 +40,6 @@ export default [
     },
     {
         group: [
-            // Chat List Routes
             {
                 url: '/get-contact-list',
                 method: 'post',
@@ -88,7 +60,6 @@ export default [
                 validator: 'deleteChat',
                 description: 'Delete a chat',
             },
-            // Message Routes
             {
                 url: '/get-messages',
                 method: 'post',
@@ -147,6 +118,7 @@ export default [
                 description: 'Use an invitation',
             },
         ],
+        description: 'Chat routes',
         middlewares: ['session_web'],
         prefix: 'api/chat',
     },
@@ -197,6 +169,7 @@ export default [
                 description: 'Test middleware',
             },
         ],
+        description: 'Main routes',
         middlewares: ['session_web'],
         prefix: 'api',
     },
@@ -253,6 +226,7 @@ export default [
                 description: 'Delete a photo from a note',
             },
         ],
+        description: 'Notes routes',
         middlewares: ['session_web'],
         prefix: 'api/notes',
     },

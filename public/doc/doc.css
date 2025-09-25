@@ -56,7 +56,7 @@
 }
 
 .route-details.expanded { 
-    max-height: 1000px; 
+    max-height: 2000px; 
     padding-top: 1rem; 
 }
 
@@ -104,4 +104,300 @@
 
 .dark code {
     @apply bg-gray-700 text-gray-200;
+}
+
+/* Mobile responsiveness improvements */
+@media (max-width: 640px) {
+    .route-collapsed {
+        @apply p-3;
+    }
+    
+    .route-collapsed:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .group-item {
+        @apply mx-2;
+    }
+    
+    /* Ensure text doesn't overflow on very small screens */
+    code {
+        word-break: break-all;
+        white-space: pre-wrap;
+    }
+    
+    /* Adjust spacing for mobile */
+    .space-y-4 > * + * {
+        margin-top: 1rem;
+    }
+    
+    /* Make buttons more touch-friendly */
+    button {
+        @apply min-h-[44px];
+    }
+}
+
+/* Ensure long URLs don't break layout */
+.break-all {
+    word-break: break-all;
+    overflow-wrap: break-word;
+}
+
+/* Better text wrapping for descriptions */
+.break-words {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+/* Prevent horizontal scroll in pre elements */
+pre {
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Touch-friendly expand/collapse areas */
+@media (hover: none) and (pointer: coarse) {
+    .route-collapsed:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .route-collapsed:active {
+        @apply bg-gray-100;
+    }
+    
+    .dark .route-collapsed:active {
+        @apply bg-gray-700;
+    }
+}
+
+/* Test Form Styles */
+.test-form-section {
+    animation: slideIn 0.3s ease-in-out;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.02) 0%, rgba(34, 197, 94, 0.05) 100%);
+    border-left: 4px solid #22c55e;
+    border-radius: 0.5rem;
+}
+
+.dark .test-form-section {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(34, 197, 94, 0.08) 100%);
+    border-left-color: #16a34a;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.test-result-section {
+    animation: fadeInUp 0.4s ease-in-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Test form input focus states */
+.test-form-section input:focus,
+.test-form-section textarea:focus {
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+.dark .test-form-section input:focus,
+.dark .test-form-section textarea:focus {
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+/* Test button hover effects */
+.test-form-section button[type="submit"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(34, 197, 94, 0.2);
+}
+
+.test-form-section button[type="submit"]:active {
+    transform: translateY(0);
+}
+
+/* Loading spinner animation */
+.test-result-section .animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Status indicators */
+.status-success {
+    @apply bg-green-50 text-green-800 border-green-200;
+}
+
+.status-error {
+    @apply bg-red-50 text-red-800 border-red-200;
+}
+
+.dark .status-success {
+    @apply bg-green-900 text-green-200 border-green-800;
+}
+
+.dark .status-error {
+    @apply bg-red-900 text-red-200 border-red-800;
+}
+
+/* Response details styling */
+.test-result-section details summary:hover {
+    @apply bg-gray-100;
+}
+
+.dark .test-result-section details summary:hover {
+    @apply bg-gray-700;
+}
+
+.test-result-section pre {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.test-result-section pre::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.test-result-section pre::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.test-result-section pre::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+}
+
+.test-result-section pre::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(156, 163, 175, 0.7);
+}
+
+/* Mobile responsiveness for test forms */
+@media (max-width: 640px) {
+    .test-form-section {
+        @apply mx-2;
+    }
+    
+    .test-form-section .flex {
+        @apply flex-col items-start;
+    }
+    
+    .test-form-section .flex label[class*="min-w"] {
+        @apply min-w-full mb-1;
+    }
+    
+    .test-form-section button {
+        @apply w-full justify-center;
+    }
+    
+    .test-form-section .flex.items-center.justify-between {
+        @apply flex-col space-y-2;
+    }
+    
+    .test-result-section pre {
+        @apply text-xs;
+    }
+    
+    .test-result-section .flex.flex-wrap {
+        @apply flex-col items-start space-y-2;
+    }
+}
+
+/* Improved form validation styles */
+.test-form-section input:invalid {
+    @apply border-red-300 focus:border-red-500 focus:ring-red-500;
+}
+
+.test-form-section input:valid {
+    @apply border-green-300 focus:border-green-500;
+}
+
+.dark .test-form-section input:invalid {
+    @apply border-red-600 focus:border-red-500;
+}
+
+.dark .test-form-section input:valid {
+    @apply border-green-600 focus:border-green-500;
+}
+
+/* JSON validation styles */
+.test-form-section textarea.json-invalid {
+    @apply border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-500;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.test-form-section textarea.json-valid {
+    @apply border-green-400 bg-green-50 focus:border-green-500 focus:ring-green-500;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+.dark .test-form-section textarea.json-invalid {
+    @apply border-red-500 bg-red-900 bg-opacity-20 focus:border-red-400 focus:ring-red-400;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.dark .test-form-section textarea.json-valid {
+    @apply border-green-500 bg-green-900 bg-opacity-20 focus:border-green-400 focus:ring-green-400;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+/* JSON error message */
+.json-error-message {
+    @apply text-red-600 text-xs mt-1 font-medium;
+    animation: fadeInError 0.3s ease-in-out;
+}
+
+.dark .json-error-message {
+    @apply text-red-400;
+}
+
+@keyframes fadeInError {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Test button specific styling */
+button[onclick*="toggleTestForm"] {
+    transition: all 0.2s ease-in-out;
+}
+
+button[onclick*="toggleTestForm"]:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+}
+
+button[onclick*="toggleTestForm"]:active {
+    transform: scale(0.98);
 }
