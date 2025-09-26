@@ -62,3 +62,53 @@
 .expand-icon.rotated { 
     transform: rotate(180deg); 
 }
+
+/* Consistent height for form elements */
+.form-element-height {
+    height: 2.5rem !important;
+    border: 1.5px solid transparent;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center;
+    padding: 0 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease-in-out;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Mobile form elements height */
+@media (max-width: 640px) {
+    .form-element-height {
+        height: 2.75rem !important;
+        padding: 0 0.75rem;
+        font-size: 1rem;
+    }
+}
+
+/* Test form button alignment fixes */
+.test-form-section .flex.items-stretch.sm\\:items-end {
+    align-items: stretch;
+}
+
+@media (min-width: 640px) {
+    .test-form-section .flex.items-stretch.sm\\:items-end {
+        align-items: flex-end;
+    }
+}
+
+/* Ensure buttons and inputs have same baseline */
+.test-form-section .form-element-height {
+    flex-shrink: 0;
+}
+
+.test-form-section input.form-element-height {
+    border: 1.5px solid rgba(156, 163, 175, 0.3);
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.dark .test-form-section input.form-element-height {
+    background: rgba(55, 65, 81, 0.8);
+    border-color: rgba(75, 85, 99, 0.5);
+}

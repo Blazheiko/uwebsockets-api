@@ -286,11 +286,22 @@ function renderRoute(route, prefix, routeId) {
                                         </div>
                                     ` : ''}
                                     
-                                    <!-- Submit Button -->
-                                    <div class="flex items-center justify-between">
+                                    <!-- Request Count and Buttons -->
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
+                                        <div class="flex flex-col flex-1 sm:flex-initial">
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Requests count</label>
+                                            <input 
+                                                type="number" 
+                                                name="requestCount"
+                                                min="1" 
+                                                max="1000" 
+                                                value="1"
+                                                class="form-element-height w-full sm:w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm text-center"
+                                            >
+                                        </div>
                                         <button 
                                             type="submit"
-                                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors duration-200 focus:ring-2 focus:ring-green-500 focus:outline-none flex items-center gap-2"
+                                            class="form-element-height px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors duration-200 focus:ring-2 focus:ring-green-500 focus:outline-none flex items-center justify-center gap-2 whitespace-nowrap"
                                         >
                                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
@@ -300,7 +311,7 @@ function renderRoute(route, prefix, routeId) {
                                         <button 
                                             type="button" 
                                             onclick="clearTestResult('${routeId}')"
-                                            class="px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors duration-200 text-sm"
+                                            class="form-element-height px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors duration-200 text-sm flex items-center justify-center whitespace-nowrap"
                                         >
                                             Clear Result
                                         </button>
@@ -488,6 +499,9 @@ function collapseAll() {
     
     allDetails.forEach(detail => detail.classList.remove('expanded'));
     allIcons.forEach(icon => icon.classList.remove('rotated'));
+    
+    // Also close all test forms
+    closeAllTestForms();
 }
 
 // Theme management functions
@@ -626,8 +640,12 @@ function setupJSONValidation(routeId) {
 function toggleTestForm(routeId) {
     const testForm = document.getElementById(`test-form-${routeId}`);
     const detailsElement = document.getElementById(`details-${routeId}`);
+    const isCurrentlyVisible = testForm.style.display !== 'none';
     
-    if (testForm.style.display === 'none') {
+    // Close all other test forms first
+    closeAllTestForms(routeId);
+    
+    if (!isCurrentlyVisible) {
         // Show test form
         testForm.style.display = 'block';
         // Also expand the details if they're not expanded
@@ -644,9 +662,51 @@ function toggleTestForm(routeId) {
             setupJSONValidation(routeId);
         }, 100);
     } else {
-        // Hide test form
+        // If it was already visible, just hide it (since closeAllTestForms already closed it)
         testForm.style.display = 'none';
     }
+}
+
+// Helper function to close all test forms except the specified one
+function closeAllTestForms(exceptRouteId = null) {
+    // Find all test form sections
+    const allTestForms = document.querySelectorAll('[id^="test-form-"]');
+    const allTestResults = document.querySelectorAll('[id^="test-result-"]');
+    
+    allTestForms.forEach(form => {
+        const formId = form.id;
+        const routeId = formId.replace('test-form-', '');
+        
+        // Skip the current form if specified
+        if (exceptRouteId && routeId === exceptRouteId) {
+            return;
+        }
+        
+        // Hide the form
+        form.style.display = 'none';
+        
+        // Also hide any results
+        const resultElement = document.getElementById(`test-result-${routeId}`);
+        if (resultElement) {
+            resultElement.style.display = 'none';
+        }
+        
+        // Clear any JSON validation errors
+        const headersError = document.getElementById(`headers-error-${routeId}`);
+        const bodyError = document.getElementById(`body-error-${routeId}`);
+        if (headersError) headersError.style.display = 'none';
+        if (bodyError) bodyError.style.display = 'none';
+        
+        // Remove validation classes from textareas
+        const headersField = document.querySelector(`form[data-route-id="${routeId}"] textarea[name="headers"]`);
+        const bodyField = document.querySelector(`form[data-route-id="${routeId}"] textarea[name="body"]`);
+        if (headersField) {
+            headersField.classList.remove('json-valid', 'json-invalid');
+        }
+        if (bodyField) {
+            bodyField.classList.remove('json-valid', 'json-invalid');
+        }
+    });
 }
 
 async function sendTestRequest(event, routeId, method, url, validator) {
@@ -654,6 +714,17 @@ async function sendTestRequest(event, routeId, method, url, validator) {
     
     const form = event.target;
     const formData = new FormData(form);
+    
+    // Get request count
+    const requestCount = parseInt(formData.get('requestCount') || '1');
+    if (requestCount < 1 || requestCount > 1000) {
+        displayTestResult(routeId, {
+            error: true,
+            message: 'Request count must be between 1 and 1000',
+            details: `Current value: ${requestCount}`
+        });
+        return;
+    }
     
     // Build the URL with parameters
     let finalUrl = url;
@@ -702,7 +773,8 @@ async function sendTestRequest(event, routeId, method, url, validator) {
     
     // Show loading state
     displayTestResult(routeId, {
-        loading: true
+        loading: true,
+        requestCount: requestCount
     });
     
     // Build fetch options
@@ -716,33 +788,113 @@ async function sendTestRequest(event, routeId, method, url, validator) {
     }
     
     try {
-        const startTime = Date.now();
-        const response = await fetch(finalUrl, fetchOptions);
-        const endTime = Date.now();
-        const responseTime = endTime - startTime;
+        const overallStartTime = Date.now();
+        const results = [];
+        const responseTimes = [];
         
-        let responseData;
-        const contentType = response.headers.get('content-type');
-        
-        if (contentType && contentType.includes('application/json')) {
-            responseData = await response.json();
-        } else {
-            responseData = await response.text();
+        // Execute all requests
+        for (let i = 0; i < requestCount; i++) {
+            const startTime = Date.now();
+            
+            try {
+                const response = await fetch(finalUrl, fetchOptions);
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                responseTimes.push(responseTime);
+                
+                let responseData;
+                const contentType = response.headers.get('content-type');
+                
+                if (contentType && contentType.includes('application/json')) {
+                    responseData = await response.json();
+                } else {
+                    responseData = await response.text();
+                }
+                
+                results.push({
+                    success: response.ok,
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    data: responseData,
+                    responseTime: responseTime,
+                    requestNumber: i + 1
+                });
+                
+            } catch (requestError) {
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                responseTimes.push(responseTime);
+                
+                results.push({
+                    success: false,
+                    status: 0,
+                    statusText: 'Network Error',
+                    headers: {},
+                    data: requestError.message,
+                    responseTime: responseTime,
+                    requestNumber: i + 1,
+                    error: true
+                });
+            }
+            
+            // Update progress for multiple requests
+            if (requestCount > 1) {
+                displayTestResult(routeId, {
+                    loading: true,
+                    requestCount: requestCount,
+                    progress: i + 1
+                });
+            }
         }
         
-        // Display the result
-        displayTestResult(routeId, {
-            success: response.ok,
-            status: response.status,
-            statusText: response.statusText,
-            headers: Object.fromEntries(response.headers.entries()),
-            data: responseData,
-            responseTime: responseTime,
-            url: finalUrl,
-            method: method,
-            requestHeaders: headers,
-            requestBody: body
-        });
+        const overallEndTime = Date.now();
+        const totalTime = overallEndTime - overallStartTime;
+        
+        // Calculate statistics
+        const successfulRequests = results.filter(r => r.success).length;
+        const failedRequests = results.length - successfulRequests;
+        const avgResponseTime = responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length;
+        const minResponseTime = Math.min(...responseTimes);
+        const maxResponseTime = Math.max(...responseTimes);
+        
+        // Display the result with statistics
+        if (requestCount === 1) {
+            // For single request, pass data directly
+            const singleResult = results[0];
+            displayTestResult(routeId, {
+                success: singleResult.success,
+                status: singleResult.status,
+                statusText: singleResult.statusText,
+                headers: singleResult.headers,
+                data: singleResult.data,
+                responseTime: singleResult.responseTime,
+                url: finalUrl,
+                method: method,
+                requestHeaders: headers,
+                requestBody: body
+            });
+        } else {
+            // For multiple requests, use the complex structure
+            displayTestResult(routeId, {
+                success: successfulRequests > 0,
+                firstResult: results[0], // First request result for detailed display
+                statistics: {
+                    totalRequests: requestCount,
+                    successfulRequests: successfulRequests,
+                    failedRequests: failedRequests,
+                    totalTime: totalTime,
+                    avgResponseTime: Math.round(avgResponseTime),
+                    minResponseTime: minResponseTime,
+                    maxResponseTime: maxResponseTime
+                },
+                url: finalUrl,
+                method: method,
+                requestHeaders: headers,
+                requestBody: body,
+                allResults: results
+            });
+        }
         
     } catch (error) {
         displayTestResult(routeId, {
@@ -761,10 +913,23 @@ function displayTestResult(routeId, result) {
     
     if (result.loading) {
         resultContainer.style.display = 'block';
+        const progressText = result.requestCount > 1 
+            ? `Sending ${result.progress || 0}/${result.requestCount} requests...`
+            : 'Sending request...';
+        
+        const progressBar = result.requestCount > 1 && result.progress 
+            ? `<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
+                 <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: ${(result.progress / result.requestCount) * 100}%"></div>
+               </div>`
+            : '';
+        
         responseContainer.innerHTML = `
-            <div class="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
-                <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                <span class="text-blue-800 dark:text-blue-200">Sending request...</span>
+            <div class="flex flex-col gap-3 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
+                <div class="flex items-center gap-3">
+                    <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                    <span class="text-blue-800 dark:text-blue-200">${progressText}</span>
+                </div>
+                ${progressBar}
             </div>
         `;
         return;
@@ -788,17 +953,75 @@ function displayTestResult(routeId, result) {
         return;
     }
     
-    // Success response
+    // Success response - handle both single and multiple requests
     resultContainer.style.display = 'block';
+    
+    const isMultipleRequests = result.statistics && result.statistics.totalRequests > 1;
+    const displayResult = isMultipleRequests ? result.firstResult : result;
+    
+    // Ensure displayResult has proper structure for single requests
+    const safeResult = {
+        status: displayResult.status !== undefined ? displayResult.status : 'Unknown',
+        statusText: displayResult.statusText || 'Unknown',
+        data: displayResult.data !== undefined ? displayResult.data : 'No response data',
+        headers: displayResult.headers || {},
+        responseTime: displayResult.responseTime || 0
+    };
     
     const statusColor = result.success ? 'green' : 'red';
     const statusBgColor = result.success ? 'bg-green-50 dark:bg-green-900' : 'bg-red-50 dark:bg-red-900';
     const statusTextColor = result.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200';
     const statusBorderColor = result.success ? 'border-green-200 dark:border-green-800' : 'border-red-200 dark:border-red-800';
     
+    const statisticsSection = isMultipleRequests ? `
+        <!-- Load Test Statistics -->
+        <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900 rounded-lg border border-blue-200 dark:border-blue-800">
+            <h6 class="font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                Load Test Results
+            </h6>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">${result.statistics.totalRequests}</div>
+                    <div class="text-gray-600 dark:text-gray-400">Total Requests</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600 dark:text-green-400">${result.statistics.successfulRequests}</div>
+                    <div class="text-gray-600 dark:text-gray-400">Successful</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-red-600 dark:text-red-400">${result.statistics.failedRequests}</div>
+                    <div class="text-gray-600 dark:text-gray-400">Failed</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">${result.statistics.totalTime}ms</div>
+                    <div class="text-gray-600 dark:text-gray-400">Total Time</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-blue-200 dark:border-blue-700 text-sm">
+                <div class="text-center">
+                    <div class="text-lg font-semibold text-orange-600 dark:text-orange-400">${result.statistics.avgResponseTime}ms</div>
+                    <div class="text-gray-600 dark:text-gray-400">Average Response Time</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-lg font-semibold text-green-600 dark:text-green-400">${result.statistics.minResponseTime}ms</div>
+                    <div class="text-gray-600 dark:text-gray-400">Min Response Time</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-lg font-semibold text-red-600 dark:text-red-400">${result.statistics.maxResponseTime}ms</div>
+                    <div class="text-gray-600 dark:text-gray-400">Max Response Time</div>
+                </div>
+            </div>
+        </div>
+    ` : '';
+    
     responseContainer.innerHTML = `
         <div class="space-y-4">
-            <!-- Status Info -->
+            ${statisticsSection}
+            
+            <!-- Status Info (First Request Result) -->
             <div class="flex flex-wrap items-center gap-4 p-3 ${statusBgColor} rounded-lg border ${statusBorderColor}">
                 <div class="flex items-center gap-2">
                     <svg class="h-5 w-5 text-${statusColor}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -807,10 +1030,11 @@ function displayTestResult(routeId, result) {
                             '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>'
                         }
                     </svg>
-                    <span class="font-semibold ${statusTextColor}">${result.status} ${result.statusText}</span>
+                    <span class="font-semibold ${statusTextColor}">${safeResult.status} ${safeResult.statusText}</span>
+                    ${isMultipleRequests ? '<span class="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded ml-2">First Request</span>' : ''}
                 </div>
                 <span class="text-sm text-gray-600 dark:text-gray-400">
-                    ${result.responseTime}ms • ${result.method} ${result.url}
+                    ${safeResult.responseTime}ms • ${result.method} ${result.url}
                 </span>
             </div>
             
@@ -836,17 +1060,24 @@ function displayTestResult(routeId, result) {
             <!-- Response Headers -->
             <details class="bg-gray-50 dark:bg-gray-800 rounded-lg border dark:border-gray-600">
                 <summary class="p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Response Headers
+                    Response Headers${isMultipleRequests ? ' (First Request)' : ''}
                 </summary>
                 <div class="px-3 pb-3">
-                    <pre class="text-xs bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-2 rounded border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(result.headers, null, 2)}</code></pre>
+                    <pre class="text-xs bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-2 rounded border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(safeResult.headers, null, 2)}</code></pre>
                 </div>
             </details>
             
             <!-- Response Body -->
             <div>
-                <h6 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Response Body</h6>
-                <pre class="text-sm bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-3 rounded border dark:border-gray-600 overflow-x-auto max-h-96 overflow-y-auto"><code>${typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2)}</code></pre>
+                <h6 class="font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                    Response Body${isMultipleRequests ? ' (First Request)' : ''}
+                    ${isMultipleRequests ? `
+                        <span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+                            Showing 1 of ${result.statistics.totalRequests}
+                        </span>
+                    ` : ''}
+                </h6>
+                <pre class="text-sm bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-3 rounded border dark:border-gray-600 overflow-x-auto max-h-96 overflow-y-auto"><code>${typeof safeResult.data === 'string' ? safeResult.data : JSON.stringify(safeResult.data, null, 2)}</code></pre>
             </div>
         </div>
     `;

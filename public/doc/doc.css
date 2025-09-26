@@ -179,13 +179,25 @@ pre {
 .test-form-section {
     animation: slideIn 0.3s ease-in-out;
     background: linear-gradient(135deg, rgba(34, 197, 94, 0.02) 0%, rgba(34, 197, 94, 0.05) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.2);
     border-left: 4px solid #22c55e;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+        0 2px 4px -1px rgba(0, 0, 0, 0.06),
+        0 0 0 1px rgba(34, 197, 94, 0.05);
+    margin: 1.5rem 0;
+    padding: 1.5rem;
 }
 
 .dark .test-form-section {
     background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(34, 197, 94, 0.08) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.3);
     border-left-color: #16a34a;
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.3), 
+        0 2px 4px -1px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(34, 197, 94, 0.1);
 }
 
 @keyframes slideIn {
@@ -201,6 +213,22 @@ pre {
 
 .test-result-section {
     animation: fadeInUp 0.4s ease-in-out;
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    background: rgba(248, 250, 252, 0.8);
+    border: 1px solid rgba(226, 232, 240, 0.5);
+    border-radius: 0.75rem;
+    box-shadow: 
+        0 1px 3px 0 rgba(0, 0, 0, 0.1),
+        0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.dark .test-result-section {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(51, 65, 85, 0.5);
+    box-shadow: 
+        0 1px 3px 0 rgba(0, 0, 0, 0.3),
+        0 1px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 @keyframes fadeInUp {
@@ -214,25 +242,150 @@ pre {
     }
 }
 
+/* Form Structure Improvements */
+.test-form-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.test-form-section h5 {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid rgba(34, 197, 94, 0.1);
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.dark .test-form-section h5 {
+    border-bottom-color: rgba(34, 197, 94, 0.2);
+}
+
+/* Form elements consistent height */
+.form-element-height {
+    height: 2.5rem !important;
+    border: 1.5px solid transparent;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center;
+    padding: 0 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease-in-out;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Input and Textarea Enhancements */
+.test-form-section input,
+.test-form-section textarea {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: 1.5px solid rgba(156, 163, 175, 0.3);
+    background: rgba(255, 255, 255, 0.8);
+    transition: all 0.2s ease-in-out;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    height: 2.5rem; /* Фиксированная высота для всех input */
+}
+
+.test-form-section textarea {
+    height: auto !important; /* Для textarea оставляем auto высоту */
+    min-height: 5rem;
+    padding: 0.75rem 1rem; /* Больший padding для textarea */
+    display: block !important; /* Override form-element-height for textarea */
+}
+
+.dark .test-form-section input,
+.dark .test-form-section textarea {
+    background: rgba(55, 65, 81, 0.8);
+    border-color: rgba(75, 85, 99, 0.5);
+}
+
 /* Test form input focus states */
 .test-form-section input:focus,
 .test-form-section textarea:focus {
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+    outline: none;
+    border-color: #22c55e;
+    box-shadow: 
+        0 0 0 3px rgba(34, 197, 94, 0.1),
+        0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
 }
 
 .dark .test-form-section input:focus,
 .dark .test-form-section textarea:focus {
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+    border-color: #16a34a;
+    box-shadow: 
+        0 0 0 3px rgba(34, 197, 94, 0.2),
+        0 1px 3px 0 rgba(0, 0, 0, 0.3);
 }
 
-/* Test button hover effects */
+/* Label Styling */
+.test-form-section label {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.dark .test-form-section label {
+    color: #d1d5db;
+}
+
+/* Button Enhancements */
+.test-form-section button[type="submit"] {
+    padding: 0 1.5rem;
+    height: 2.5rem; /* Такая же высота как у input полей */
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: 1.5px solid transparent; /* Добавляем прозрачный border для консистентности */
+    box-shadow: 
+        0 2px 4px 0 rgba(34, 197, 94, 0.2),
+        0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .test-form-section button[type="submit"]:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(34, 197, 94, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 4px 8px 0 rgba(34, 197, 94, 0.25),
+        0 2px 4px 0 rgba(0, 0, 0, 0.1);
 }
 
 .test-form-section button[type="submit"]:active {
     transform: translateY(0);
+    box-shadow: 
+        0 2px 4px 0 rgba(34, 197, 94, 0.2),
+        0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Clear Result Button */
+.test-form-section button[onclick*="clearTestResult"] {
+    padding: 0 1.25rem;
+    height: 2.5rem; /* Такая же высота как у других элементов */
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.8125rem;
+    border: 1.5px solid transparent; /* Консистентный border */
+    box-shadow: 
+        0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.test-form-section button[onclick*="clearTestResult"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 
+        0 2px 4px 0 rgba(0, 0, 0, 0.1);
 }
 
 /* Loading spinner animation */
@@ -298,34 +451,89 @@ pre {
     background-color: rgba(156, 163, 175, 0.7);
 }
 
+/* Mobile form element height */
+@media (max-width: 640px) {
+    .form-element-height {
+        height: 2.75rem !important;
+        padding: 0 0.75rem;
+        font-size: 1rem;
+    }
+}
+
 /* Mobile responsiveness for test forms */
 @media (max-width: 640px) {
     .test-form-section {
-        @apply mx-2;
+        margin: 1rem 0.5rem;
+        padding: 1rem;
+        border-radius: 0.5rem;
+    }
+    
+    .test-form-section form {
+        gap: 1.25rem;
+    }
+    
+    .test-form-section h5 {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
     }
     
     .test-form-section .flex {
-        @apply flex-col items-start;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
     }
     
     .test-form-section .flex label[class*="min-w"] {
-        @apply min-w-full mb-1;
+        min-width: 100%;
+        margin-bottom: 0.25rem;
     }
     
     .test-form-section button {
-        @apply w-full justify-center;
+        width: 100%;
+        justify-content: center;
+        padding: 0 1rem;
     }
     
-    .test-form-section .flex.items-center.justify-between {
-        @apply flex-col space-y-2;
+    .test-form-section .flex.items-center.justify-between,
+    .test-form-section .flex.flex-col.sm\\:flex-row {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .test-form-section input[name="requestCount"] {
+        width: 100%;
+        text-align: left;
+    }
+    
+    .test-result-section {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 0.5rem;
     }
     
     .test-result-section pre {
-        @apply text-xs;
+        font-size: 0.75rem;
+        padding: 0.75rem;
     }
     
     .test-result-section .flex.flex-wrap {
-        @apply flex-col items-start space-y-2;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    /* Better mobile spacing for form fields */
+    .test-form-section input {
+        height: 2.75rem; /* Такая же высота как у кнопок на мобильных */
+        padding: 0.5rem 0.75rem;
+        font-size: 1rem; /* Better for mobile input */
+    }
+    
+    .test-form-section textarea {
+        padding: 0.875rem 0.75rem;
+        font-size: 1rem;
+        min-height: 120px;
     }
 }
 
@@ -400,4 +608,136 @@ button[onclick*="toggleTestForm"]:hover {
 
 button[onclick*="toggleTestForm"]:active {
     transform: scale(0.98);
+}
+
+/* Load Testing Statistics Styles */
+.load-test-stats {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(79, 70, 229, 0.05) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    box-shadow: 
+        0 2px 4px 0 rgba(59, 130, 246, 0.1),
+        0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.dark .load-test-stats {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(79, 70, 229, 0.1) 100%);
+    border-color: rgba(59, 130, 246, 0.25);
+    box-shadow: 
+        0 2px 4px 0 rgba(59, 130, 246, 0.15),
+        0 1px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+.stats-card {
+    transition: all 0.2s ease-in-out;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.dark .stats-card {
+    background: rgba(30, 41, 59, 0.5);
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dark .stats-card:hover {
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.3);
+}
+
+.stats-number {
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.dark .stats-number {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Progress bar animation */
+.progress-bar {
+    transition: width 0.3s ease-in-out;
+}
+
+/* Request count input styling */
+input[name="requestCount"] {
+    transition: all 0.2s ease-in-out;
+}
+
+input[name="requestCount"]:focus {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+/* Enhanced grid responsiveness for stats */
+@media (max-width: 768px) {
+    .load-test-stats .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .stats-number {
+        font-size: 1.5rem;
+    }
+    
+    /* Stack request count and button vertically on mobile */
+    .test-form-section .flex.items-center.gap-3 {
+        @apply flex-col items-start;
+    }
+    
+    .test-form-section input[name="requestCount"] {
+        width: 100%;
+    }
+    
+    .test-form-section button[type="submit"] {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 640px) {
+    .load-test-stats .grid.grid-cols-1.md\\:grid-cols-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Enhance visual hierarchy for multiple requests */
+.first-request-badge {
+    animation: pulse 2s infinite;
+    background: linear-gradient(45deg, #f3f4f6, #e5e7eb);
+}
+
+.dark .first-request-badge {
+    background: linear-gradient(45deg, #374151, #4b5563);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Loading progress enhancement */
+.loading-progress {
+    background: linear-gradient(-45deg, #eff6ff, #dbeafe, #bfdbfe, #93c5fd);
+    background-size: 400% 400%;
+    animation: gradient 1.5s ease infinite;
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }
