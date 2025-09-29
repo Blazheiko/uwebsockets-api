@@ -1,13 +1,14 @@
 import { getWsRoutes } from '#vendor/start/router.js';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
 import validators from '#vendor/start/validators.js';
-import { Session, SessionInfo, WsData, WsResponseData, WsRoutes } from '../types/types.js';
+import { Session, SessionInfo, WsData, WsResponseData, WsRoutes, MyWebSocket } from '../types/types.js';
 import createWsContext from './createWsContext.js';
+import checkRateLimitWs, { createWsRateLimitErrorResponse } from './checkRateLimitWs.js';
 import logger from '../../logger.js';
 
 const wsRoutes: WsRoutes = getWsRoutes();
 
-export default async (message: { event: string; payload?: any }, userData: unknown, session: Session) => {
+export default async (message: { event: string; payload?: any }, ws: MyWebSocket, userData: unknown, session: Session) => {
 
     const responseData: WsResponseData = {
         payload: {},
@@ -17,6 +18,18 @@ export default async (message: { event: string; payload?: any }, userData: unkno
     try {
         const route = wsRoutes[message.event];
         if (route) {
+            // Check rate limit before processing
+            const rateLimitResult = await checkRateLimitWs(ws, route, route.groupRateLimit);
+            
+            if (!rateLimitResult.allowed) {
+                // Rate limit exceeded - return error response
+                return createWsRateLimitErrorResponse(
+                    rateLimitResult.errorMessage || 'Rate limit exceeded',
+                    rateLimitResult.retryAfter || 60,
+                    message.event
+                );
+            }
+
             let payload = message.payload ? message.payload : null;
             if (route.validator) {
                 const validator: any = validators.get(route.validator);

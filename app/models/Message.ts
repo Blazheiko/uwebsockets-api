@@ -242,11 +242,11 @@ export default {
             });
             return serializeModel(updatedMessage, schema, hidden);
         } catch (error: any) {
-            // Если запись не найдена для обновления
+            // If record not found for update
             if (error.code === 'P2025') {
                 return null;
             }
-            // Другие ошибки пробрасываем дальше
+            // Throw other errors further
             throw error;
         }
     },

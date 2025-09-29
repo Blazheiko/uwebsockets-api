@@ -3,12 +3,12 @@ import { prisma } from '#database/prisma.js';
 import { HttpContext } from '../../../vendor/types/types.js';
 import inventionAccept from '#app/servises/inventionAccept.js';
 export default {
-  // Создание нового приглашения
+  // Create new invitation
   async createInvitation({ httpData, session, logger }: HttpContext) {
     logger.info('createInvitation');
     const {userId , name } = httpData.payload;
   
-    const expiresIn = 7; // Срок действия приглашения в днях
+    const expiresIn = 7; // Invitation validity period in days
     const sessionInfo = session?.sessionInfo;
     const userIdFromSession = sessionInfo?.data?.userId;
     if (!userId || !userIdFromSession || +userId !== +userIdFromSession || !name) {
@@ -34,7 +34,7 @@ export default {
    
   },
 
-  // Получение всех приглашений пользователя
+  // Get all user invitations
   async getUserInvitations({ httpData, responseData, logger }: HttpContext) {
     logger.info('getUserInvitations');
 
@@ -63,7 +63,7 @@ export default {
     return { status: 'success', invitations };
   },
 
-  // Проверка и использование приглашения
+  // Check and use invitation
   async useInvitation({ httpData, responseData, logger, session }: HttpContext) {
     logger.info('useInvitation');
 

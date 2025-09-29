@@ -13,5 +13,7 @@ const config = Object.freeze({
     startMigration: env.START_MIGRATION,
     characters:
         'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+    reasonableCookieLimit: 10000, // Reasonable limit for cookie value
+    maxUrlLength: 2048, // Reasonable limit for url length
 });
 export default config;

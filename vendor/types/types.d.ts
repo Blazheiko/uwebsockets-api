@@ -68,6 +68,7 @@ export interface SessionInfo {
 }
 
 export interface HttpData {
+  ip: string | null | undefined,
   params: any,
   payload: any,
   query: URLSearchParams
@@ -85,7 +86,7 @@ export interface WsResponseData {
 }
 
 export interface WsData {
-  middlewareData: WsRoutes,
+  middlewareData: any,
   status: string,
   payload?: any,
 }
@@ -103,8 +104,13 @@ export interface ResponseData {
 }
 
 export type Method = 'get' | 'post' | 'del' | 'put' | 'patch' | 'ws' | 'delete'
-export type WsRoutes = Record<string, routeItem>
+export type WsRoutes = Record<string, RouteItem>
 export type Validators = Record<string, any>
+export interface RateLimit {
+  windowMs: number,
+  maxRequests: number,
+}
+
 export interface RouteItem {
   url: string,
   method: Method ,
@@ -112,11 +118,17 @@ export interface RouteItem {
   middlewares?: string[],
   validator?: string,
   description?: string,
+  rateLimit?: RateLimit,
+  groupRateLimit?: RateLimit,
 }
 export interface groupRouteItem {
-  group: routeItem[],
-  middleware?: string[],
-  prefix?: string
+  group: RouteItem[],
+  middlewares?: string[],
+  prefix?: string,
+  rateLimit?: RateLimit,
 }
+
+// Legacy alias for backward compatibility
+export type routeItem = RouteItem;
 
 export type routeList = (routeItem | groupRouteItem)[]

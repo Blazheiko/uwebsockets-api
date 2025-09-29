@@ -25,7 +25,7 @@ export default {
             }
         }
 
-        // Проверяем уникальность телефона при создании
+        // Check phone uniqueness during creation
         if (payload.phone) {
             const existingUser = await prisma.user.findFirst({
                 where: { phone: payload.phone }
@@ -66,12 +66,12 @@ export default {
             updatedAt: DateTime.now().toISO(),
         };
 
-        // Проверяем уникальность телефона при обновлении
+        // Check phone uniqueness during update
         if (payload.phone) {
             const existingUser = await prisma.user.findFirst({
                 where: {
                     phone: payload.phone,
-                    NOT: { id } // Исключаем текущего пользователя
+                    NOT: { id } // Exclude current user
                 }
             });
             if (existingUser) {

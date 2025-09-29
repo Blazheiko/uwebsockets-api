@@ -18,7 +18,7 @@ export default {
             return { status: 'unauthorized', message: 'User used the wrong session' };
         }
 
-        // Получаем список чатов с контактами
+        // Get chat list with contacts
         const contactList = await prisma.contactList.findMany({
             where: { userId },
             include: {

@@ -6,6 +6,7 @@ import { HttpRequest, HttpResponse, us_socket_context_t } from 'uWebSockets.js';
 import { MyWebSocket } from '../types/types.js';
 import { broadcastOnline } from '#vendor/start/server.js';
 import { wsSessionHandler } from '#vendor/utils/sessionHandler.js';
+import getIP from '#vendor/utils/getIP.js';
 
 const wsStorage: Set<MyWebSocket> = new Set();
 const userStorage: Map<number, Map<string, { ip: string, userAgent: string }>> = new Map();
@@ -93,7 +94,7 @@ const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: bool
         if (message) {
             if (message.event === 'service:ping') handlePong(ws);
             else{
-                const result = await wsApiHandler(message , userData, session);
+                const result = await wsApiHandler(message, ws, userData, session);
                 if (result) sendJson(ws, result );
             }
         }
@@ -254,6 +255,7 @@ const checkUserAccess = async (token: string): Promise<{ sessionId: string , use
     }
 }
 
+const checkToken = (token: string): boolean => Boolean(token && token.length === 16 && /^[a-zA-Z0-9]+$/.test(token));
 
 const handleUpgrade = async (res: HttpResponse, req: HttpRequest, context: us_socket_context_t): Promise<void> => {
     logger.info('handleUpgrade');
@@ -266,19 +268,21 @@ const handleUpgrade = async (res: HttpResponse, req: HttpRequest, context: us_so
     const secWebsocketProtocol = req.getHeader('sec-websocket-protocol');
     const secWebsocketExtensions = req.getHeader('sec-websocket-extensions');
     const userAgent = req.getHeader('user-agent');
-    let ip = req.getHeader('x-forwarded-for');
-    if (ip) ip = ip.trim();
+    const ip = getIP(req,res);
     const token = req.getParameter(0);
-    let dataAccess: { sessionId: string, userId: number } | null = null;
-
-    if (token) dataAccess = await checkUserAccess(token);
+    // Token validation
+    if (!token || !checkToken(token)) {
+        res.writeStatus('401 Unauthorized').end('Invalid token format');
+        return;
+    }
+    const dataAccess: { sessionId: string, userId: number } | null = await checkUserAccess(token);
 
     if(!aborted) {
         res.cork(() => {
 
             res.upgrade(
                 {
-                    ip: ip ? ip : ab2str(res.getRemoteAddressAsText()),
+                    ip: ip,
                     ip2: ab2str(res.getProxiedRemoteAddressAsText()),
                     token: token,
                     user: null,

@@ -5,19 +5,21 @@ import { Method, RouteItem, routeList, WsRoutes } from "./../types/types.js";
 const listRoutes: RouteItem[] = [];
 const wsRoutes: WsRoutes = {};
 
-const createRoute = (method: Method, route:any): RouteItem => {
+const createRoute = (method: Method, route:any, groupRateLimit?: any): RouteItem => {
     return {
         method,
         url: route.url,
         handler: route.handler,
         middlewares: route.middlewares ? route.middlewares : [],
         validator: route.validator ? route.validator : '',
+        rateLimit: route.rateLimit || groupRateLimit,
+        groupRateLimit: groupRateLimit,
     };
 };
 
 const METHODS = ['get', 'post', 'del', 'put', 'patch'];
 
-const routeHandler = (route: any, isWs: boolean): void => {
+const routeHandler = (route: any, isWs: boolean, groupRateLimit?: any): void => {
     if (route.group) throw new Error('Error parse routes, route include group');
     if (!route.url || (!isWs && !route.method) || !route.handler)
         throw new Error(`Error parse routes. invalid route`);
@@ -29,19 +31,19 @@ const routeHandler = (route: any, isWs: boolean): void => {
     if (!isWs && !METHODS.includes(method))
         throw new Error(`Error parse routes, route include method: ${method}`);
 
-    if (isWs) wsRoutes[route.url] = createRoute(method, route);
-    else listRoutes.push(createRoute(method, route));
+    if (isWs) wsRoutes[route.url] = createRoute(method, route, groupRateLimit);
+    else listRoutes.push(createRoute(method, route, groupRateLimit));
 };
 
 const routesHandler = (routeList: any[], isWs: boolean): void => {
     logger.info('routes Handler start');
-    const parseRouteList = parseGroups(routeList, '', [], isWs);
+    const parseRouteList = parseGroups(routeList, '', [], isWs, undefined);
     parseRouteList.forEach((route) => {
-        routeHandler(route, isWs);
+        routeHandler(route, isWs, route.groupRateLimit);
     });
 };
 
-const parseGroups = (routeList: any[], prefix: string, middlewares: string[], isWs: boolean) => {
+const parseGroups = (routeList: any[], prefix: string, middlewares: string[], isWs: boolean, groupRateLimit?: any) => {
     const parseRouteList: any[]  = [];
     routeList.forEach((route) => {
         if (route.group) {
@@ -50,11 +52,14 @@ const parseGroups = (routeList: any[], prefix: string, middlewares: string[], is
                 const middlewaresGroup = route.middlewares
                     ? route.middlewares
                     : [];
+                // Group limits are passed to subgroups
+                const currentGroupRateLimit = route.rateLimit || groupRateLimit;
                 const routeGroup = parseGroups(
                     route.group,
                     prefixGroup,
                     middlewaresGroup,
                     isWs,
+                    currentGroupRateLimit,
                 );
                 routeGroup.forEach((item) => {
                     if (item.url && item.handler) parseRouteList.push(item);
@@ -75,6 +80,8 @@ const parseGroups = (routeList: any[], prefix: string, middlewares: string[], is
                 )
                     route.middlewares = middlewares.concat(route.middlewares);
             }
+            // Add group rate limit information
+            route.groupRateLimit = groupRateLimit;
             parseRouteList.push(route);
         }
     });
@@ -82,6 +89,6 @@ const parseGroups = (routeList: any[], prefix: string, middlewares: string[], is
 };
 
 const getWsRoutes = (): WsRoutes => wsRoutes;
-const getListRoutes = (): routeList => listRoutes;
+const getListRoutes = (): RouteItem[] => listRoutes;
 
 export { getWsRoutes, getListRoutes, routesHandler };

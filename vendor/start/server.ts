@@ -28,6 +28,7 @@ import { getListRoutes } from './router.js';
 
 import validators from '#vendor/start/validators.js';
 import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
+import checkRateLimit from '#vendor/utils/checkRateLimit.js';
 import {
     Cookie,
     Header,
@@ -44,6 +45,7 @@ import configApp from '#config/app.js';
 import httpRoutes from '#app/routes/httpRoutes.js';
 import wsRoutes from '#app/routes/wsRoutes.js';
 import schemas from '#app/validate/schemas/schemas.js';
+import getIP from '#vendor/utils/getIP.js';
 
 const server: TemplatedApp = uWS.App();
 
@@ -63,8 +65,8 @@ const configureWebsockets = (server: TemplatedApp) => {
     return server.ws('/websocket/:token', {
         compression: 0,
         idleTimeout: 120, // According to protocol
-        maxBackpressure: 1024 * 1024,
-        maxPayloadLength: 100 * 1024 * 1024, // 100 MB
+        maxPayloadLength: 1 * 1024 * 1024,
+        maxBackpressure: 64 * 1024,
         open: (ws: WebSocket<any>) => onOpen(ws as MyWebSocket),
         message: ( ws: WebSocket<any>, message: ArrayBuffer, isBinary: boolean ) => onMessage(ws as MyWebSocket, message, isBinary),
         // upgrade: async (res: HttpResponse, req: HttpRequest, context: us_socket_context_t) => {
@@ -75,6 +77,8 @@ const configureWebsockets = (server: TemplatedApp) => {
         close: (ws, code, message) => onClose(ws as MyWebSocket, code, message),
     });
 };
+const checkCookie = (key: string, value: string): boolean => 
+    (Boolean(value) && value.length < appConfig.reasonableCookieLimit && (/^[a-zA-Z0-9_-]+$/.test(key) && key.length < 255)); 
 
 const parseCookies = (cookieHeader: string):Map <string, string> => {
     const list = new Map<string, string>();
@@ -85,7 +89,9 @@ const parseCookies = (cookieHeader: string):Map <string, string> => {
             try {
                 const key = cookie.slice(0, separatorIndex).trim();
                 const value = cookie.slice(separatorIndex + 1).trim();
-                if(value) list.set(key, decodeURIComponent(value));
+                if (checkCookie(key, value)) { // Reasonable limit
+                    list.set(key, decodeURIComponent(value));
+                }
             } catch (error) {
                 console.error(`Error decoding cookie value ${cookieHeader}":`, error);
             }
@@ -120,7 +126,6 @@ const parseCookies = (cookieHeader: string):Map <string, string> => {
 const setCookies = (res: HttpResponse, cookies: Record<string, Cookie>) => {
 
     for (const cookie of Object.values(cookies)) {
-        console.log('cookie', cookie);
         const cookieHeader = `${cookie.name}=${encodeURIComponent(cookie.value)}`;
         const pathPart = cookie.path ? `; Path=${cookie.path}` : '';
         const expiresPart = cookie.expires ? `; Expires=${cookie.expires.toUTCString()}` : '';
@@ -187,6 +192,8 @@ const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem
     const headers = getHeaders(req);
     const params = extractParameters(route.url, url);
     const contentType = headers.get('content-type');
+    // const ip = headers.get('x-forwarded-for') || headers.get('x-real-ip') || 'unknown';
+    const ip = getIP(req,res);
     const isJson = Boolean((route.method === 'post' || route.method === 'put') &&
         (contentType && contentType.trim().toLowerCase() === 'application/json'));
 
@@ -197,6 +204,7 @@ const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem
     }
 
     return Object.freeze({
+        ip,
         params,
         payload,
         query,
@@ -267,7 +275,8 @@ const handleError = (res: HttpResponse, error: unknown) => {
             })
         );
     } else {
-        res.writeStatus('500').end('Server error');
+        const errorMessage = (configApp.env === 'prod' || configApp.env === 'production') ? 'Internal server error' : String(error);
+        res.writeStatus('500').end(JSON.stringify({ error: errorMessage }));
     }
 
 };
@@ -318,9 +327,12 @@ const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteI
             });
             const httpData = await getHttpData(req, res, route);
             const responseData = getResponseData();
-            const context = contextHandler( httpData, responseData )
+            const context = contextHandler( httpData, responseData );
 
-            if( (route.middlewares?.length === 0 || await executeMiddlewares(route.middlewares, context )) && responseData.status >= 200 && responseData.status < 300 )
+            // Check rate limit before executing middleware
+            const rateLimitPassed = await checkRateLimit(httpData, responseData, route, route.groupRateLimit);
+            
+            if( rateLimitPassed && (route.middlewares?.length === 0 || await executeMiddlewares(route.middlewares, context )) && responseData.status >= 200 && responseData.status < 300 )
                 responseData.payload = await route.handler( context );
 
             if (aborted) return;
