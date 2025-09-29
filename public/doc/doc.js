@@ -68,6 +68,38 @@ function extractParameters(url) {
     return params;
 }
 
+function formatRateLimit(rateLimit) {
+    if (!rateLimit || (!rateLimit.windowMs && !rateLimit.maxRequests)) {
+        return null;
+    }
+    
+    const windowMs = rateLimit.windowMs || 0;
+    const maxRequests = rateLimit.maxRequests || 0;
+    
+    // Convert milliseconds to human readable format
+    let timeFormat = '';
+    if (windowMs >= 60 * 60 * 1000) {
+        const hours = Math.floor(windowMs / (60 * 60 * 1000));
+        const minutes = Math.floor((windowMs % (60 * 60 * 1000)) / (60 * 1000));
+        timeFormat = hours > 0 ? `${hours}h ${minutes > 0 ? minutes + 'm' : ''}`.trim() : `${minutes}m`;
+    } else if (windowMs >= 60 * 1000) {
+        const minutes = Math.floor(windowMs / (60 * 1000));
+        const seconds = Math.floor((windowMs % (60 * 1000)) / 1000);
+        timeFormat = `${minutes}m${seconds > 0 ? ` ${seconds}s` : ''}`;
+    } else if (windowMs >= 1000) {
+        const seconds = Math.floor(windowMs / 1000);
+        timeFormat = `${seconds}s`;
+    } else {
+        timeFormat = `${windowMs}ms`;
+    }
+    
+    return {
+        windowMs: windowMs,
+        maxRequests: maxRequests,
+        formatted: `${maxRequests} req/${timeFormat}`
+    };
+}
+
 function getResponseFormat(handler) {
     // Mock response formats based on handler patterns
     const responseFormats = {
@@ -163,6 +195,10 @@ function renderRoute(route, prefix, routeId) {
                         <div class="flex items-center gap-2 flex-wrap">
                             ${route.validator ? '<span class="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full whitespace-nowrap">Validated</span>' : ''}
                             ${route.middleware ? '<span class="px-2 py-1 text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full whitespace-nowrap">Middleware</span>' : ''}
+                            ${(() => {
+                                const routeRateLimit = formatRateLimit(route.rateLimit);
+                                return routeRateLimit ? `<span class="px-2 py-1 text-xs bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full whitespace-nowrap">${routeRateLimit.formatted}</span>` : '';
+                            })()}
                             ${!isWebSocket ? `<button onclick="event.stopPropagation(); toggleTestForm('${routeId}')" class="px-3 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded-full transition-colors duration-200 whitespace-nowrap focus:ring-2 focus:ring-green-300 focus:outline-none">Test</button>` : ''}
                         </div>
                         <svg class="expand-icon h-5 w-5 text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,6 +218,10 @@ function renderRoute(route, prefix, routeId) {
                                 <div class="space-y-1 text-sm">
                                     ${route.middleware ? `<div class="break-words"><span class="font-medium text-gray-700 dark:text-gray-300">Middleware:</span> <code class="text-orange-600 dark:text-orange-400 break-all">${route.middleware}</code></div>` : ''}
                                     ${route.middlewares ? `<div class="break-words"><span class="font-medium text-gray-700 dark:text-gray-300">Middlewares:</span> <code class="text-orange-600 dark:text-orange-400 break-all">${route.middlewares.join(', ')}</code></div>` : ''}
+                                    ${(() => {
+                                        const routeRateLimit = formatRateLimit(route.rateLimit);
+                                        return routeRateLimit ? `<div class="break-words"><span class="font-medium text-gray-700 dark:text-gray-300">Rate Limit:</span> <span class="px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded text-xs font-mono">${routeRateLimit.formatted}</span> <span class="text-gray-500 dark:text-gray-400 text-xs">(overrides group limit)</span></div>` : '';
+                                    })()}
                                 </div>
                             </div>
                             
@@ -342,6 +382,7 @@ function renderRoute(route, prefix, routeId) {
 function renderGroup(group, index) {
     const groupName = group.description || `Group ${index + 1}`;
     const routes = group.group || [];
+    const groupRateLimit = formatRateLimit(group.rateLimit);
     
     return `
         <div class="group-item bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 overflow-hidden fade-in">
@@ -358,6 +399,12 @@ function renderGroup(group, index) {
                                 <div class="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
                                     <span class="font-medium whitespace-nowrap">Middlewares:</span> 
                                     <code class="bg-white dark:bg-gray-800 px-2 py-1 rounded text-orange-700 dark:text-orange-400 break-all flex-1 min-w-0">${group.middlewares.join(', ')}</code>
+                                </div>
+                            ` : ''}
+                            ${groupRateLimit ? `
+                                <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                                    <span class="font-medium whitespace-nowrap">Rate Limit:</span> 
+                                    <span class="px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded text-xs font-mono whitespace-nowrap">${groupRateLimit.formatted}</span>
                                 </div>
                             ` : ''}
                         </div>
