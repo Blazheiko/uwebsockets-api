@@ -286,7 +286,7 @@ const staticRoutes = ['/','/chat','/login','/register','/chat','/account','/news
 
 const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
     logger.info('docRoutesHandler');
-    if (state.listenSocket && configApp.docPage) {
+    if (state.listenSocket && configApp.docPage && configApp.serveStatic) {
         try {
             // Convert schemas to readable format
             const validationSchemas: Record<string, any> = {};
@@ -312,7 +312,13 @@ const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
         }
     } else {
         logger.warn('We just refuse if already shutting down');
-        res.close();
+        res.cork(() => {
+            res.writeStatus('404').end(
+                JSON.stringify({
+                    message: 'Not found',
+                })
+            );
+        });
     }
 };
 

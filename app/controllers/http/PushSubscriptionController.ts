@@ -22,21 +22,19 @@ export default {
                             id: true,
                             messageTitle: true,
                             status: true,
-                            sentAt: true
+                            sentAt: true,
                         },
                         orderBy: { sentAt: 'desc' },
-                        take: 5
-                    }
+                        take: 5,
+                    },
                 },
-                orderBy: { createdAt: 'desc' }
+                orderBy: { createdAt: 'desc' },
             });
             return { status: 'success', subscriptions };
-
         } catch (error) {
-            logger.error('Error getting subscriptions:');
-            console.log(error);
+            logger.error('Error getting subscriptions:', error);
+            return { status: 'error', message: 'Failed to get subscriptions' };
         }
-        return { status: 'error', message: 'Failed to get subscriptions' };
     },
 
     async createSubscription(context: HttpContext) {
@@ -48,48 +46,50 @@ export default {
             return { status: 'error', message: 'Unauthorized' };
         }
 
-        const { 
-            endpoint, 
-            p256dhKey, 
-            authKey, 
-            userAgent, 
-            ipAddress, 
-            deviceType, 
-            browserName, 
-            browserVersion, 
-            osName, 
-            osVersion, 
-            notificationTypes, 
-            timezone 
+        const {
+            endpoint,
+            p256dhKey,
+            authKey,
+            userAgent,
+            ipAddress,
+            deviceType,
+            browserName,
+            browserVersion,
+            osName,
+            osVersion,
+            notificationTypes,
+            timezone,
         } = httpData.payload;
 
         try {
             // Check if subscription already exists for this endpoint
-            const existingSubscription = await prisma.pushSubscription.findUnique({
-                where: { endpoint }
-            });
+            const existingSubscription =
+                await prisma.pushSubscription.findUnique({
+                    where: { endpoint },
+                });
 
             if (existingSubscription) {
                 // Update existing subscription
-                const updatedSubscription = await prisma.pushSubscription.update({
-                    where: { endpoint },
-                    data: {
-                        p256dhKey,
-                        authKey,
-                        userAgent,
-                        ipAddress,
-                        deviceType,
-                        browserName,
-                        browserVersion,
-                        osName,
-                        osVersion,
-                        notificationTypes,
-                        timezone,
-                        isActive: true,
-                        lastUsedAt: new Date(),
-                        userId: auth.getUserId()
-                    }
-                });
+                const updatedSubscription =
+                    await prisma.pushSubscription.update({
+                        where: { endpoint },
+                        data: {
+                            p256dhKey,
+                            authKey,
+                            userAgent,
+                            ipAddress,
+                            deviceType,
+                            browserName,
+                            browserVersion,
+                            osName,
+                            osVersion,
+                            notificationTypes,
+                            timezone,
+                            isActive: true,
+                            lastUsedAt: new Date(),
+                            userId: auth.getUserId(),
+                        },
+                    });
                 return { status: 'success', subscription: updatedSubscription };
             }
 
@@ -108,15 +108,17 @@ export default {
                     notificationTypes,
                     timezone,
                     userId: auth.getUserId(),
-                    lastUsedAt: new Date()
-                }
+                    lastUsedAt: new Date(),
+                },
             });
             return { status: 'success', subscription };
         } catch (error) {
-            logger.error('Error creating subscription:');
-            console.error(error);
+            logger.error('Error creating subscription:', error);
+            return {
+                status: 'error',
+                message: 'Failed to create subscription',
+            };
         }
-        return { status: 'error', message: 'Failed to create subscription' };
     },
 
     async getSubscription(context: HttpContext) {
@@ -128,20 +130,22 @@ export default {
             return { status: 'error', message: 'Unauthorized' };
         }
 
-        const { subscriptionId } = httpData.params as { subscriptionId: string };
+        const { subscriptionId } = httpData.params as {
+            subscriptionId: string;
+        };
 
         try {
             const subscription = await prisma.pushSubscription.findFirst({
                 where: {
                     id: parseInt(subscriptionId),
-                    userId: auth.getUserId()
+                    userId: auth.getUserId(),
                 },
                 include: {
                     notificationLogs: {
                         orderBy: { sentAt: 'desc' },
-                        take: 10
-                    }
-                }
+                        take: 10,
+                    },
+                },
             });
 
             if (!subscription) {
@@ -164,26 +168,30 @@ export default {
             return { status: 'error', message: 'Unauthorized' };
         }
 
-        const { subscriptionId } = httpData.params as { subscriptionId: string };
-        const { 
-            isActive, 
-            notificationTypes, 
-            timezone, 
-            deviceType, 
-            browserName, 
-            browserVersion, 
-            osName, 
-            osVersion 
+        const { subscriptionId } = httpData.params as {
+            subscriptionId: string;
+        };
+        const {
+            isActive,
+            notificationTypes,
+            timezone,
+            deviceType,
+            browserName,
+            browserVersion,
+            osName,
+            osVersion,
         } = httpData.payload;
 
         try {
             const updateData: any = {};
             if (isActive !== undefined) updateData.isActive = isActive;
-            if (notificationTypes !== undefined) updateData.notificationTypes = notificationTypes;
+            if (notificationTypes !== undefined)
+                updateData.notificationTypes = notificationTypes;
             if (timezone !== undefined) updateData.timezone = timezone;
             if (deviceType !== undefined) updateData.deviceType = deviceType;
             if (browserName !== undefined) updateData.browserName = browserName;
-            if (browserVersion !== undefined) updateData.browserVersion = browserVersion;
+            if (browserVersion !== undefined)
+                updateData.browserVersion = browserVersion;
             if (osName !== undefined) updateData.osName = osName;
             if (osVersion !== undefined) updateData.osVersion = osVersion;
             updateData.lastUsedAt = new Date();
@@ -191,23 +199,27 @@ export default {
             const subscription = await prisma.pushSubscription.updateMany({
                 where: {
                     id: parseInt(subscriptionId),
-                    userId: auth.getUserId()
+                    userId: auth.getUserId(),
                 },
-                data: updateData
+                data: updateData,
             });
 
             if (subscription.count === 0) {
                 return { status: 'error', message: 'Subscription not found' };
             }
 
-            const updatedSubscription = await prisma.pushSubscription.findUnique({
-                where: { id: parseInt(subscriptionId) }
-            });
+            const updatedSubscription =
+                await prisma.pushSubscription.findUnique({
+                    where: { id: parseInt(subscriptionId) },
+                });
 
             return { status: 'success', subscription: updatedSubscription };
         } catch (error) {
             logger.error('Error updating subscription:', error);
-            return { status: 'error', message: 'Failed to update subscription' };
+            return {
+                status: 'error',
+                message: 'Failed to update subscription',
+            };
         }
     },
 
@@ -220,24 +232,32 @@ export default {
             return { status: 'error', message: 'Unauthorized' };
         }
 
-        const { subscriptionId } = httpData.params as { subscriptionId: string };
+        const { subscriptionId } = httpData.params as {
+            subscriptionId: string;
+        };
 
         try {
             const deleted = await prisma.pushSubscription.deleteMany({
                 where: {
                     id: parseInt(subscriptionId),
-                    userId: auth.getUserId()
-                }
+                    userId: auth.getUserId(),
+                },
             });
 
             if (deleted.count === 0) {
                 return { status: 'error', message: 'Subscription not found' };
             }
 
-            return { status: 'success', message: 'Subscription deleted successfully' };
+            return {
+                status: 'success',
+                message: 'Subscription deleted successfully',
+            };
         } catch (error) {
             logger.error('Error deleting subscription:', error);
-            return { status: 'error', message: 'Failed to delete subscription' };
+            return {
+                status: 'error',
+                message: 'Failed to delete subscription',
+            };
         }
     },
 
@@ -250,22 +270,27 @@ export default {
             return { status: 'error', message: 'Unauthorized' };
         }
 
-        const { subscriptionId } = httpData.params as { subscriptionId: string };
+        const { subscriptionId } = httpData.params as {
+            subscriptionId: string;
+        };
 
         try {
             const logs = await prisma.pushNotificationLog.findMany({
                 where: {
                     subscriptionId: parseInt(subscriptionId),
-                    userId: auth.getUserId()
+                    userId: auth.getUserId(),
                 },
                 orderBy: { sentAt: 'desc' },
-                take: 50
+                take: 50,
             });
 
             return { status: 'success', data: logs };
         } catch (error) {
             logger.error('Error getting subscription logs:', error);
-            return { status: 'error', message: 'Failed to get subscription logs' };
+            return {
+                status: 'error',
+                message: 'Failed to get subscription logs',
+            };
         }
     },
 
@@ -278,17 +303,19 @@ export default {
             return { status: 'error', message: 'Unauthorized' };
         }
 
-        const { subscriptionId } = httpData.params as { subscriptionId: string };
+        const { subscriptionId } = httpData.params as {
+            subscriptionId: string;
+        };
 
         try {
             const subscription = await prisma.pushSubscription.findFirst({
                 where: {
                     id: parseInt(subscriptionId),
-                    userId: auth.getUserId()
+                    userId: auth.getUserId(),
                 },
-                include: { 
-                    notificationLogs: true 
-                }
+                include: {
+                    notificationLogs: true,
+                },
             });
 
             if (!subscription) {
@@ -297,12 +324,20 @@ export default {
 
             const logs = subscription.notificationLogs;
             const totalNotifications = logs.length;
-            const sentNotifications = logs.filter(log => log.status === PushNotificationStatus.SENT).length;
-            const failedNotifications = logs.filter(log => log.status === PushNotificationStatus.FAILED).length;
-            const pendingNotifications = logs.filter(log => log.status === PushNotificationStatus.PENDING).length;
+            const sentNotifications = logs.filter(
+                (log) => log.status === PushNotificationStatus.SENT,
+            ).length;
+            const failedNotifications = logs.filter(
+                (log) => log.status === PushNotificationStatus.FAILED,
+            ).length;
+            const pendingNotifications = logs.filter(
+                (log) => log.status === PushNotificationStatus.PENDING,
+            ).length;
 
-            const last7DaysLogs = logs.filter(log => 
-                new Date(log.sentAt) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+            const last7DaysLogs = logs.filter(
+                (log) =>
+                    new Date(log.sentAt) >=
+                    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
             );
 
             const statistics = {
@@ -310,17 +345,23 @@ export default {
                 sentNotifications,
                 failedNotifications,
                 pendingNotifications,
-                successRate: totalNotifications > 0 ? (sentNotifications / totalNotifications) * 100 : 0,
+                successRate:
+                    totalNotifications > 0
+                        ? (sentNotifications / totalNotifications) * 100
+                        : 0,
                 last7DaysCount: last7DaysLogs.length,
                 lastUsed: subscription.lastUsedAt,
                 isActive: subscription.isActive,
-                createdAt: subscription.createdAt
+                createdAt: subscription.createdAt,
             };
 
             return { status: 'success', data: { subscription, statistics } };
         } catch (error) {
             logger.error('Error getting subscription statistics:', error);
-            return { status: 'error', message: 'Failed to get subscription statistics' };
+            return {
+                status: 'error',
+                message: 'Failed to get subscription statistics',
+            };
         }
     },
 
@@ -333,31 +374,37 @@ export default {
             return { status: 'error', message: 'Unauthorized' };
         }
 
-        const { subscriptionId } = httpData.params as { subscriptionId: string };
+        const { subscriptionId } = httpData.params as {
+            subscriptionId: string;
+        };
 
         try {
             const subscription = await prisma.pushSubscription.updateMany({
                 where: {
                     id: parseInt(subscriptionId),
-                    userId: auth.getUserId()
+                    userId: auth.getUserId(),
                 },
                 data: {
-                    isActive: false
-                }
+                    isActive: false,
+                },
             });
 
             if (subscription.count === 0) {
                 return { status: 'error', message: 'Subscription not found' };
             }
 
-            const deactivatedSubscription = await prisma.pushSubscription.findUnique({
-                where: { id: parseInt(subscriptionId) }
-            });
+            const deactivatedSubscription =
+                await prisma.pushSubscription.findUnique({
+                    where: { id: parseInt(subscriptionId) },
+                });
 
             return { status: 'success', data: deactivatedSubscription };
         } catch (error) {
             logger.error('Error deactivating subscription:', error);
-            return { status: 'error', message: 'Failed to deactivate subscription' };
+            return {
+                status: 'error',
+                message: 'Failed to deactivate subscription',
+            };
         }
-    }
+    },
 };
