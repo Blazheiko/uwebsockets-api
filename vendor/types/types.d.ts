@@ -120,6 +120,7 @@ export interface RouteItem {
   description?: string,
   rateLimit?: RateLimit,
   groupRateLimit?: RateLimit,
+  parametersKey: string[],
 }
 export interface groupRouteItem {
   group: RouteItem[],

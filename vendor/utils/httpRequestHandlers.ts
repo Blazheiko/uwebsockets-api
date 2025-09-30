@@ -84,33 +84,41 @@ const normalizePath = (path: string) => {
     return path.startsWith('/') ? path.slice(1) : path;
 };
 
-const extractParameters = (template: string, path: string) => {
-    const normalizedTemplate = normalizePath(template);
-    const normalizedPath = normalizePath(path);
-
-    const templateParts = normalizedTemplate.split('/');
-    const pathParts = normalizedPath.split('/');
+const extractParameters = (paramNames: string[], req : HttpRequest) => {
     const params: Record<string, string> = {};
-
-    if (templateParts.length !== pathParts.length) {
-        throw new Error('Path does not match the template');
+    for (let i = 0; i < paramNames.length; i++) {
+        params[paramNames[i]] = req.getParameter(i) || '';
     }
-
-    for (let i = 0; i < templateParts.length; i++) {
-        const templatePart = templateParts[i];
-        const pathPart = pathParts[i];
-
-        if (templatePart.startsWith(':')) {
-            const paramName = templatePart.slice(1);
-            params[paramName] = pathPart;
-        } else if (templatePart !== pathPart) {
-            throw new Error(
-                `Path segment "${pathPart}" does not match the template segment "${templatePart}"`,
-            );
-        }
-    }
-
     return params;
-};
+}
+
+// const extractParameters = (template: string, path: string) => {
+//     const normalizedTemplate = normalizePath(template);
+//     const normalizedPath = normalizePath(path);
+
+//     const templateParts = normalizedTemplate.split('/');
+//     const pathParts = normalizedPath.split('/');
+//     const params: Record<string, string> = {};
+
+//     if (templateParts.length !== pathParts.length) {
+//         throw new Error('Path does not match the template');
+//     }
+
+//     for (let i = 0; i < templateParts.length; i++) {
+//         const templatePart = templateParts[i];
+//         const pathPart = pathParts[i];
+
+//         if (templatePart.startsWith(':')) {
+//             const paramName = templatePart.slice(1);
+//             params[paramName] = pathPart;
+//         } else if (templatePart !== pathPart) {
+//             throw new Error(
+//                 `Path segment "${pathPart}" does not match the template segment "${templatePart}"`,
+//             );
+//         }
+//     }
+
+//     return params;
+// };
 
 export { getHeaders, getData, extractParameters, normalizePath };

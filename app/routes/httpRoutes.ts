@@ -143,7 +143,7 @@ export default [
                 description: 'Initialize the main controller',
             },
             {
-                url: '/test-header',
+                url: '/test-header/:testParam/param2/:testParam2',
                 method: 'get',
                 handler: MainController.testHeaders,
                 description: 'Test headers',

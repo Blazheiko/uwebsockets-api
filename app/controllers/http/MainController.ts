@@ -29,11 +29,13 @@ export default {
 
     async testHeaders({ httpData, logger }: HttpContext): Promise<any> {
         logger.info('testHeaders');
+        logger.info(httpData.params);
         const headers: any[] = [];
+        const params: any[] = httpData.params;
         httpData.headers.forEach((value, key) => {
             headers.push({ key, value});
         });
-        return { status: 'ok' , headers };
+        return { status: 'ok' , headers, params };
     },
 
     async getSetCookies({ httpData, logger }: HttpContext): Promise<any> {

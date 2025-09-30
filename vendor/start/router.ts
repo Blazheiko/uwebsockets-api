@@ -5,6 +5,8 @@ import { Method, RouteItem, routeList, WsRoutes } from "./../types/types.js";
 const listRoutes: RouteItem[] = [];
 const wsRoutes: WsRoutes = {};
 
+const parseRouteParams = (url: string) => url.split('/').filter(segment => segment.startsWith(':')).map(segment => segment.slice(1));
+
 const createRoute = (method: Method, route:any, groupRateLimit?: any): RouteItem => {
     return {
         method,
@@ -14,6 +16,7 @@ const createRoute = (method: Method, route:any, groupRateLimit?: any): RouteItem
         validator: route.validator ? route.validator : '',
         rateLimit: route.rateLimit || groupRateLimit,
         groupRateLimit: groupRateLimit,
+        parametersKey: parseRouteParams(route.url),
     };
 };
 
