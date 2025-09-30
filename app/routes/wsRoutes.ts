@@ -31,8 +31,8 @@ export default [
         ],
         prefix: 'api:',
         rateLimit: {
-            windowMs: 15 * 60 * 1000, // 15 minutes
-            maxRequests: 100, // Max 100 requests per 15 minutes for the whole group
+            windowMs: 1 * 60 * 1000, // 15 minutes
+            maxRequests: 600, // Max 100 requests per 15 minutes for the whole group
         },
     },
 ];
