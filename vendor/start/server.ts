@@ -4,7 +4,7 @@ import uWS, {
     TemplatedApp,
     us_listen_socket,
     us_socket_context_t,
-    WebSocket
+    WebSocket,
 } from 'uWebSockets.js';
 import appConfig from '#config/app.js';
 import corsConfig from '#config/cors.js';
@@ -37,29 +37,47 @@ import {
     MyWebSocket,
     ResponseData,
     RouteItem,
-    Session
+    Session,
 } from '../types/types.js';
 import contextHandler from '../utils/contextHandler.js';
-import { startStaticServer, staticHandler, staticIndexHandler } from './staticServer.js';
+import {
+    startStaticServer,
+    staticHandler,
+    staticIndexHandler,
+} from './staticServer.js';
 import configApp from '#config/app.js';
 import httpRoutes from '#app/routes/httpRoutes.js';
 import wsRoutes from '#app/routes/wsRoutes.js';
 import schemas from '#app/validate/schemas/schemas.js';
 import getIP from '#vendor/utils/getIP.js';
+import { getApiTypesForDocumentation } from '#vendor/utils/parseTypesFromDts.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const server: TemplatedApp = uWS.App();
 
 const broadcastMessage = (userId: number, event: string, payload: any) => {
     logger.info(`broadcastMessage: ${userId} ${event}`);
-    if(server && state.listenSocket)
-        server.publish(`user:${userId}`, JSON.stringify({ event: `broadcast:${event}`, status: 200, payload }, (_, v) =>
-            typeof v === 'bigint' ? v.toString() : v));
-
-}
+    if (server && state.listenSocket)
+        server.publish(
+            `user:${userId}`,
+            JSON.stringify(
+                { event: `broadcast:${event}`, status: 200, payload },
+                (_, v) => (typeof v === 'bigint' ? v.toString() : v),
+            ),
+        );
+};
 
 const broadcastOnline = (userId: number, status: string) => {
-    server.publish(`change_online`, JSON.stringify({ event: `broadcast:change_online`, status: 200, payload:{ userId, status } }));
-}
+    server.publish(
+        `change_online`,
+        JSON.stringify({
+            event: `broadcast:change_online`,
+            status: 200,
+            payload: { userId, status },
+        }),
+    );
+};
 
 const configureWebsockets = (server: TemplatedApp) => {
     return server.ws('/websocket/:token', {
@@ -68,7 +86,11 @@ const configureWebsockets = (server: TemplatedApp) => {
         maxPayloadLength: 1 * 1024 * 1024,
         maxBackpressure: 64 * 1024,
         open: (ws: WebSocket<any>) => onOpen(ws as MyWebSocket),
-        message: ( ws: WebSocket<any>, message: ArrayBuffer, isBinary: boolean ) => onMessage(ws as MyWebSocket, message, isBinary),
+        message: (
+            ws: WebSocket<any>,
+            message: ArrayBuffer,
+            isBinary: boolean,
+        ) => onMessage(ws as MyWebSocket, message, isBinary),
         // upgrade: async (res: HttpResponse, req: HttpRequest, context: us_socket_context_t) => {
         //    await handleUpgrade(res, req, context);
         // },
@@ -77,31 +99,38 @@ const configureWebsockets = (server: TemplatedApp) => {
         close: (ws, code, message) => onClose(ws as MyWebSocket, code, message),
     });
 };
-const checkCookie = (key: string, value: string): boolean => 
-    (Boolean(value) && value.length < appConfig.reasonableCookieLimit && (/^[a-zA-Z0-9_-]+$/.test(key) && key.length < 255)); 
+const checkCookie = (key: string, value: string): boolean =>
+    Boolean(value) &&
+    value.length < appConfig.reasonableCookieLimit &&
+    /^[a-zA-Z0-9_-]+$/.test(key) &&
+    key.length < 255;
 
-const parseCookies = (cookieHeader: string):Map <string, string> => {
+const parseCookies = (cookieHeader: string): Map<string, string> => {
     const list = new Map<string, string>();
-    if (cookieHeader){
+    if (cookieHeader) {
         const handler = (cookie: string): void => {
             const separatorIndex = cookie.indexOf('=');
             if (separatorIndex === -1) return;
             try {
                 const key = cookie.slice(0, separatorIndex).trim();
                 const value = cookie.slice(separatorIndex + 1).trim();
-                if (checkCookie(key, value)) { // Reasonable limit
+                if (checkCookie(key, value)) {
+                    // Reasonable limit
                     list.set(key, decodeURIComponent(value));
                 }
             } catch (error) {
-                console.error(`Error decoding cookie value ${cookieHeader}":`, error);
+                console.error(
+                    `Error decoding cookie value ${cookieHeader}":`,
+                    error,
+                );
             }
-        }
+        };
 
         let start = 0;
 
         for (let i = 0; i <= cookieHeader.length; i++) {
             if (i === cookieHeader.length || cookieHeader[i] === ';') {
-                handler ( cookieHeader.slice(start, i).trim() );
+                handler(cookieHeader.slice(start, i).trim());
                 start = i + 1;
             }
         }
@@ -124,16 +153,22 @@ const parseCookies = (cookieHeader: string):Map <string, string> => {
 |]
  */
 const setCookies = (res: HttpResponse, cookies: Record<string, Cookie>) => {
-
     for (const cookie of Object.values(cookies)) {
         const cookieHeader = `${cookie.name}=${encodeURIComponent(cookie.value)}`;
         const pathPart = cookie.path ? `; Path=${cookie.path}` : '';
-        const expiresPart = cookie.expires ? `; Expires=${cookie.expires.toUTCString()}` : '';
+        const expiresPart = cookie.expires
+            ? `; Expires=${cookie.expires.toUTCString()}`
+            : '';
         const httpOnlyPart = cookie.httpOnly ? '; HttpOnly' : '';
         const securePart = cookie.secure ? '; Secure' : '';
         const maxAgePart = cookie.maxAge ? `; Max-Age=${cookie.maxAge}` : '';
-        const sameSitePart = cookie.sameSite ? `; SameSite=${cookie.sameSite}` : '';
-        res.writeHeader('Set-Cookie', `${cookieHeader}${pathPart}${expiresPart}${httpOnlyPart}${securePart}${maxAgePart}${sameSitePart}`);
+        const sameSitePart = cookie.sameSite
+            ? `; SameSite=${cookie.sameSite}`
+            : '';
+        res.writeHeader(
+            'Set-Cookie',
+            `${cookieHeader}${pathPart}${expiresPart}${httpOnlyPart}${securePart}${maxAgePart}${sameSitePart}`,
+        );
     }
 };
 
@@ -151,7 +186,7 @@ const getResponseData = (): ResponseData => {
     let cookies: Record<string, Cookie> = {};
     const headers: Header[] = [];
     const setCookie = (name: string, value: string, options: any = {}) =>
-        cookies[name] = {
+        (cookies[name] = {
             name,
             value,
             path: options?.path ? options.path : cookiesConfig.default.path,
@@ -164,11 +199,12 @@ const getResponseData = (): ResponseData => {
             maxAge: options?.maxAge
                 ? options.maxAge
                 : cookiesConfig.default.maxAge,
-        };
+        });
     const deleteCookie = (name: string) => {
         delete cookies[name];
-    }
-    const setHeader = (name: string, value: string) => headers.push({ name, value });
+    };
+    const setHeader = (name: string, value: string) =>
+        headers.push({ name, value });
 
     return {
         aborted: false,
@@ -183,7 +219,11 @@ const getResponseData = (): ResponseData => {
     };
 };
 
-const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem): Promise<HttpData> => {
+const getHttpData = async (
+    req: HttpRequest,
+    res: HttpResponse,
+    route: RouteItem,
+): Promise<HttpData> => {
     const cookies: Map<string, string> = parseCookies(req.getHeader('cookie'));
     // const contentType = req.getHeader('content-type').trim();
     const url = req.getUrl();
@@ -193,11 +233,15 @@ const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem
     const params = extractParameters(route.parametersKey, req);
     const contentType = headers.get('content-type');
     // const ip = headers.get('x-forwarded-for') || headers.get('x-real-ip') || 'unknown';
-    const ip = getIP(req,res);
-    const isJson = Boolean((route.method === 'post' || route.method === 'put') &&
-        (contentType && contentType.trim().toLowerCase() === 'application/json'));
+    const ip = getIP(req, res);
+    const isJson = Boolean(
+        (route.method === 'post' || route.method === 'put') &&
+            contentType &&
+            contentType.trim().toLowerCase() === 'application/json',
+    );
 
-    let payload: any = (isJson && contentType ) ? await getData(res, contentType) : null;
+    let payload: any =
+        isJson && contentType ? await getData(res, contentType) : null;
     if (payload && route.validator) {
         const validator = validators.get(route.validator);
         if (validator) payload = await validator.validate(payload);
@@ -237,23 +281,30 @@ const getHttpData = async (req: HttpRequest, res: HttpResponse, route: RouteItem
 //     return obj;
 // }
 
-
-const sendResponse = (res: HttpResponse, httpData: HttpData, responseData: ResponseData) => {
+const sendResponse = (
+    res: HttpResponse,
+    httpData: HttpData,
+    responseData: ResponseData,
+) => {
     res.writeStatus(`${responseData.status}`);
-    if (httpData.isJson)
-        res.writeHeader('content-type', 'application/json');
-    if (responseData.headers?.length)
-        setHeaders(res, responseData.headers);
-    if (responseData.cookies)
-        setCookies(res, responseData.cookies);
+    if (httpData.isJson) res.writeHeader('content-type', 'application/json');
+    if (responseData.headers?.length) setHeaders(res, responseData.headers);
+    if (responseData.cookies) setCookies(res, responseData.cookies);
     if (corsConfig.enabled) setCorsHeader(res);
-    if (responseData.payload && responseData.status >= 200 && responseData.status < 300){
+    if (
+        responseData.payload &&
+        responseData.status >= 200 &&
+        responseData.status < 300
+    ) {
         // const transformedData = transformBigInts(responseData.payload);
         // res.end(JSON.stringify(transformedData));
-        res.end(JSON.stringify(responseData.payload, (_, v) =>
-            typeof v === 'bigint' ? v.toString() : v));
+        res.end(
+            JSON.stringify(responseData.payload, (_, v) =>
+                typeof v === 'bigint' ? v.toString() : v,
+            ),
+        );
     } else res.end(`${responseData.status}`);
-}
+};
 
 interface ValidationError extends Error {
     code?: string;
@@ -272,17 +323,32 @@ const handleError = (res: HttpResponse, error: unknown) => {
             JSON.stringify({
                 message: 'Validation failure',
                 messages: validationError.messages,
-            })
+            }),
         );
     } else {
-        const errorMessage = (configApp.env === 'prod' || configApp.env === 'production') ? 'Internal server error' : String(error);
+        const errorMessage =
+            configApp.env === 'prod' || configApp.env === 'production'
+                ? 'Internal server error'
+                : String(error);
         res.writeStatus('500').end(JSON.stringify({ error: errorMessage }));
     }
-
 };
 
-const staticRoutes = ['/','/chat','/login','/register','/chat','/account','/news','/news/create','/news/edit', '/news/:id','/manifesto','/invitations','/join-chat'];
-
+const staticRoutes = [
+    '/',
+    '/chat',
+    '/login',
+    '/register',
+    '/chat',
+    '/account',
+    '/news',
+    '/news/create',
+    '/news/edit',
+    '/news/:id',
+    '/manifesto',
+    '/invitations',
+    '/join-chat',
+];
 
 const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
     logger.info('docRoutesHandler');
@@ -294,15 +360,36 @@ const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
             for (const key of Object.keys(schemas)) {
                 validationSchemas[key] = schemas[key].doc;
             }
-            
+
+            // Get types directory path - always use source directory
+            const __filename = fileURLToPath(import.meta.url);
+            const __dirname = path.dirname(__filename);
+
+            // Always point to source types directory, not dist
+            const projectRoot = path.resolve(__dirname, '../../..');
+            const typesDirectory = path.join(
+                projectRoot,
+                'app/controllers/http/types',
+            );
+
+            // Parse types from .d.ts files
+            const { types, mapping } = getApiTypesForDocumentation(
+                typesDirectory,
+                httpRoutes,
+            );
+
             res.cork(() => {
                 res.writeStatus(`200`);
                 res.writeHeader('content-type', 'application/json');
-                res.end(JSON.stringify({
-                    httpRoutes, 
-                    wsRoutes, 
-                    validationSchemas
-                }));
+                res.end(
+                    JSON.stringify({
+                        httpRoutes,
+                        wsRoutes,
+                        validationSchemas,
+                        responseTypes: types,
+                        handlerTypeMapping: mapping,
+                    }),
+                );
             });
         } catch (error: unknown) {
             logger.error(error);
@@ -316,14 +403,17 @@ const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
             res.writeStatus('404').end(
                 JSON.stringify({
                     message: 'Not found',
-                })
+                }),
             );
         });
     }
 };
 
-
-const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteItem) => {
+const setHttpHandler = async (
+    res: HttpResponse,
+    req: HttpRequest,
+    route: RouteItem,
+) => {
     logger.info('Handler method:' + route.method + ' url:' + route.url);
     if (state.listenSocket) {
         try {
@@ -333,13 +423,24 @@ const setHttpHandler = async (res: HttpResponse, req: HttpRequest, route: RouteI
             });
             const httpData = await getHttpData(req, res, route);
             const responseData = getResponseData();
-            const context = contextHandler( httpData, responseData );
+            const context = contextHandler(httpData, responseData);
 
             // Check rate limit before executing middleware
-            const rateLimitPassed = await checkRateLimit(httpData, responseData, route, route.groupRateLimit);
-            
-            if( rateLimitPassed && (route.middlewares?.length === 0 || await executeMiddlewares(route.middlewares, context )) && responseData.status >= 200 && responseData.status < 300 )
-                responseData.payload = await route.handler( context );
+            const rateLimitPassed = await checkRateLimit(
+                httpData,
+                responseData,
+                route,
+                route.groupRateLimit,
+            );
+
+            if (
+                rateLimitPassed &&
+                (route.middlewares?.length === 0 ||
+                    (await executeMiddlewares(route.middlewares, context))) &&
+                responseData.status >= 200 &&
+                responseData.status < 300
+            )
+                responseData.payload = await route.handler(context);
 
             if (aborted) return;
             res.cork(() => {
@@ -366,7 +467,7 @@ const configureHttp = (server: TemplatedApp) => {
             server.get(route, (res, req) => {
                 staticIndexHandler(res, req);
             });
-        })
+        });
     }
     getListRoutes().forEach((route: RouteItem) => {
         if (route.method !== 'ws' && route.method !== 'delete') {
@@ -378,19 +479,19 @@ const configureHttp = (server: TemplatedApp) => {
             );
         }
     });
-    if(configApp.docPage && configApp.serveStatic) {
+    if (configApp.docPage && configApp.serveStatic) {
         server.get('/api/doc/routes', (res, req) => {
             docRoutesHandler(res, req);
         });
-    };
+    }
 
     server.any('/*', (res, req) => {
         if (appConfig.serveStatic && req.getMethod() === 'get') {
             const url = req.getUrl();
-            if (url.indexOf('.') !== -1 ) {
+            if (url.indexOf('.') !== -1) {
                 staticHandler(res, req);
             }
-        }else if (corsConfig.enabled && req.getMethod() === 'options') {
+        } else if (corsConfig.enabled && req.getMethod() === 'options') {
             //'OPTIONS' method === 'OPTIONS'
             res.cork(() => {
                 if (corsConfig.enabled) setCorsHeader(res);
@@ -427,35 +528,37 @@ const setCorsHeader = (res: HttpResponse) => {
 };
 // let server = null;
 const initServer = () => {
-
     configureWebsockets(server);
     configureHttp(server);
-    if(appConfig.unixPath){
+    if (appConfig.unixPath) {
         server.listen_unix((token) => {
             if (token) {
                 logger.info(`Listening unix socket: ${appConfig.unixPath}`);
                 state.listenSocket = token as any;
             } else {
-                logger.error(`Failed to listening unix socket: ${appConfig.unixPath}`);
+                logger.error(
+                    `Failed to listening unix socket: ${appConfig.unixPath}`,
+                );
             }
         }, appConfig.unixPath);
-    }else {
+    } else {
         server.listen(appConfig.host, appConfig.port, (token) => {
             if (token) {
-                logger.info(`Listening http://${appConfig.host}:` + appConfig.port);
+                logger.info(
+                    `Listening http://${appConfig.host}:` + appConfig.port,
+                );
                 state.listenSocket = token as any;
             } else {
                 logger.error('Failed to listen to port ' + appConfig.port);
             }
         });
     }
-
 };
 
 const stopServer = (type = 'handle') => {
     logger.info('server stop type: ' + type);
     closeAllWs();
-    if(state.listenSocket)uWS.us_listen_socket_close(state.listenSocket);
+    if (state.listenSocket) uWS.us_listen_socket_close(state.listenSocket);
     state.listenSocket = null;
 };
 

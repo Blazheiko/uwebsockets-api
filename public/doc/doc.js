@@ -4,6 +4,8 @@
 let httpRouteGroups = [];
 let wsRouteGroups = [];
 let validationSchemas = {};
+let responseTypes = {};
+let handlerTypeMapping = {};
 
 // Global state variables
 let currentRouteType = 'http'; // 'http' or 'ws'
@@ -19,14 +21,15 @@ function renderValidationSchema(schema) {
     if (!schema || typeof schema !== 'object') {
         return '<div class="text-gray-500 dark:text-gray-400 text-sm">No validation schema available</div>';
     }
-    
-    const fields = Object.entries(schema).map(([fieldName, fieldInfo]) => {
-        const typeClass = getTypeClass(fieldInfo.type);
-        const requiredBadge = fieldInfo.required 
-            ? '<span class="text-red-500 dark:text-red-400 text-xs whitespace-nowrap">required</span>'
-            : '<span class="text-gray-400 dark:text-gray-500 text-xs whitespace-nowrap">optional</span>';
-        
-        return `
+
+    const fields = Object.entries(schema)
+        .map(([fieldName, fieldInfo]) => {
+            const typeClass = getTypeClass(fieldInfo.type);
+            const requiredBadge = fieldInfo.required
+                ? '<span class="text-red-500 dark:text-red-400 text-xs whitespace-nowrap">required</span>'
+                : '<span class="text-gray-400 dark:text-gray-500 text-xs whitespace-nowrap">optional</span>';
+
+            return `
             <div class="border-l-2 border-gray-200 dark:border-gray-600 pl-3 py-2">
                 <div class="flex flex-wrap items-center gap-2 text-sm mb-1">
                     <span class="px-2 py-1 ${typeClass} rounded text-xs font-mono font-semibold break-all">${fieldName}</span>
@@ -36,20 +39,26 @@ function renderValidationSchema(schema) {
                 ${fieldInfo.description ? `<div class="text-gray-600 dark:text-gray-400 text-xs break-words mt-1">${fieldInfo.description}</div>` : ''}
             </div>
         `;
-    }).join('');
-    
-    return fields || '<div class="text-gray-500 dark:text-gray-400 text-sm">No fields defined</div>';
+        })
+        .join('');
+
+    return (
+        fields ||
+        '<div class="text-gray-500 dark:text-gray-400 text-sm">No fields defined</div>'
+    );
 }
 
 function getTypeClass(type) {
     const typeClasses = {
-        'string': 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
-        'number': 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200',
-        'boolean': 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200',
-        'enum': 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200',
-        'unknown': 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+        string: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
+        number: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200',
+        boolean:
+            'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200',
+        enum: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200',
+        unknown:
+            'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300',
     };
-    
+
     return typeClasses[type] || typeClasses['unknown'];
 }
 
@@ -57,11 +66,11 @@ function extractParameters(url) {
     const params = [];
     const matches = url.match(/:([^/]+)/g);
     if (matches) {
-        matches.forEach(match => {
+        matches.forEach((match) => {
             params.push({
                 name: match.substring(1),
                 type: 'path',
-                required: true
+                required: true,
             });
         });
     }
@@ -72,16 +81,19 @@ function formatRateLimit(rateLimit) {
     if (!rateLimit || (!rateLimit.windowMs && !rateLimit.maxRequests)) {
         return null;
     }
-    
+
     const windowMs = rateLimit.windowMs || 0;
     const maxRequests = rateLimit.maxRequests || 0;
-    
+
     // Convert milliseconds to human readable format
     let timeFormat = '';
     if (windowMs >= 60 * 60 * 1000) {
         const hours = Math.floor(windowMs / (60 * 60 * 1000));
         const minutes = Math.floor((windowMs % (60 * 60 * 1000)) / (60 * 1000));
-        timeFormat = hours > 0 ? `${hours}h ${minutes > 0 ? minutes + 'm' : ''}`.trim() : `${minutes}m`;
+        timeFormat =
+            hours > 0
+                ? `${hours}h ${minutes > 0 ? minutes + 'm' : ''}`.trim()
+                : `${minutes}m`;
     } else if (windowMs >= 60 * 1000) {
         const minutes = Math.floor(windowMs / (60 * 1000));
         const seconds = Math.floor((windowMs % (60 * 1000)) / 1000);
@@ -92,61 +104,135 @@ function formatRateLimit(rateLimit) {
     } else {
         timeFormat = `${windowMs}ms`;
     }
-    
+
     return {
         windowMs: windowMs,
         maxRequests: maxRequests,
-        formatted: `${maxRequests} req/${timeFormat}`
+        formatted: `${maxRequests} req/${timeFormat}`,
     };
 }
 
 function getResponseFormat(handler) {
     // Mock response formats based on handler patterns
     const responseFormats = {
-        'get': {
+        get: {
             success: {
                 status: 200,
-                data: "Object or Array depending on endpoint"
+                data: 'Object or Array depending on endpoint',
             },
             error: {
                 status: 404,
-                message: "Resource not found"
-            }
+                message: 'Resource not found',
+            },
         },
-        'post': {
+        post: {
             success: {
                 status: 201,
-                data: "Created resource object",
-                message: "Resource created successfully"
+                data: 'Created resource object',
+                message: 'Resource created successfully',
             },
             error: {
                 status: 400,
-                message: "Validation error"
-            }
+                message: 'Validation error',
+            },
         },
-        'put': {
+        put: {
             success: {
                 status: 200,
-                data: "Updated resource object",
-                message: "Resource updated successfully"
+                data: 'Updated resource object',
+                message: 'Resource updated successfully',
             },
             error: {
                 status: 404,
-                message: "Resource not found"
-            }
+                message: 'Resource not found',
+            },
         },
-        'delete': {
+        delete: {
             success: {
                 status: 200,
-                message: "Resource deleted successfully"
+                message: 'Resource deleted successfully',
             },
             error: {
                 status: 404,
-                message: "Resource not found"
-            }
-        }
+                message: 'Resource not found',
+            },
+        },
     };
     return responseFormats;
+}
+
+function renderResponseSchema(responseSchema, handlerName) {
+    // If responseSchema is provided from route definition, use it (legacy)
+    if (responseSchema && responseSchema.schema) {
+        return renderSchemaFields(responseSchema.schema);
+    }
+
+    // Otherwise, try to get type from responseTypes using handlerName
+    if (handlerName && handlerTypeMapping[handlerName]) {
+        const typeName = handlerTypeMapping[handlerName];
+        const typeData = responseTypes[typeName];
+
+        if (typeData && typeData.fields) {
+            return renderSchemaFields(typeData.fields);
+        }
+    }
+
+    return null;
+}
+
+function renderSchemaFields(schema) {
+    if (!schema) return null;
+
+    const fields = Object.entries(schema)
+        .map(([fieldName, fieldInfo]) => {
+            const typeClass = getTypeClass(fieldInfo.type);
+            const requiredBadge = fieldInfo.required
+                ? '<span class="text-red-500 dark:text-red-400 text-xs whitespace-nowrap">required</span>'
+                : '<span class="text-gray-400 dark:text-gray-500 text-xs whitespace-nowrap">optional</span>';
+
+            let fieldContent = `
+            <div class="border-l-2 border-gray-200 dark:border-gray-600 pl-3 py-2">
+                <div class="flex flex-wrap items-center gap-2 text-sm mb-1">
+                    <span class="px-2 py-1 ${typeClass} rounded text-xs font-mono font-semibold break-all">${fieldName}</span>
+                    <span class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs">${fieldInfo.type}</span>
+                    ${requiredBadge}
+                </div>
+                ${fieldInfo.description ? `<div class="text-gray-600 dark:text-gray-400 text-xs break-words mt-1">${fieldInfo.description}</div>` : ''}
+                ${fieldInfo.example !== undefined ? `<div class="text-gray-500 dark:text-gray-500 text-xs font-mono mt-1">Example: ${JSON.stringify(fieldInfo.example)}</div>` : ''}
+        `;
+
+            // Handle nested objects
+            if (fieldInfo.type === 'object' && fieldInfo.properties) {
+                fieldContent += '<div class="ml-4 mt-2 space-y-1">';
+                Object.entries(fieldInfo.properties).forEach(
+                    ([propName, propInfo]) => {
+                        const propTypeClass = getTypeClass(propInfo.type);
+                        fieldContent += `
+                    <div class="flex flex-wrap items-center gap-2 text-xs">
+                        <span class="px-2 py-1 ${propTypeClass} rounded font-mono font-semibold break-all">${propName}</span>
+                        <span class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">${propInfo.type}</span>
+                        ${propInfo.example !== undefined ? `<span class="text-gray-500 dark:text-gray-500 font-mono">e.g. ${JSON.stringify(propInfo.example)}</span>` : ''}
+                    </div>
+                `;
+                    },
+                );
+                fieldContent += '</div>';
+            }
+
+            fieldContent += '</div>';
+            return fieldContent;
+        })
+        .join('');
+
+    return fields;
+}
+
+function renderRequestBodySchema(requestBody) {
+    if (!requestBody || !requestBody.schema) {
+        return null;
+    }
+
+    return renderValidationSchema(requestBody.schema);
 }
 
 // Rendering functions
@@ -154,27 +240,39 @@ function renderRoute(route, prefix, routeId) {
     // For WebSocket routes, handle URL differently
     const isWebSocket = currentRouteType === 'ws';
     let fullUrl;
-    
+
     if (isWebSocket) {
         // WebSocket routes don't have leading slash and use different prefix format
         fullUrl = route.url;
     } else {
         // HTTP routes
-        const cleanUrl = route.url.startsWith('/') ? route.url : `/${route.url}`;
+        const cleanUrl = route.url.startsWith('/')
+            ? route.url
+            : `/${route.url}`;
         fullUrl = cleanUrl;
     }
-    
+
     const parameters = extractParameters(route.url);
     const responseFormats = getResponseFormat(route.handler);
-    
+
     // Handle case where handler might be a function reference or string
-    const handlerName = typeof route.handler === 'string' ? route.handler : 
-                       (route.handler && route.handler.name ? route.handler.name : 'Unknown handler');
-    
+    const handlerName =
+        typeof route.handler === 'string'
+            ? route.handler
+            : route.handler && route.handler.name
+              ? route.handler.name
+              : 'Unknown handler';
+
+    // Get response type for this handler
+    const responseTypeName = handlerTypeMapping[handlerName];
+    const hasResponseType = responseTypeName && responseTypes[responseTypeName];
+
     // For WebSocket routes, show different method badge
     const methodDisplay = isWebSocket ? 'WS' : route.method.toUpperCase();
-    const methodClass = isWebSocket ? 'method-ws' : getMethodClass(route.method);
-    
+    const methodClass = isWebSocket
+        ? 'method-ws'
+        : getMethodClass(route.method);
+
     return `
         <div class="route-item border rounded-lg bg-white dark:bg-gray-800 dark:border-gray-700 transition-shadow duration-200 fade-in" data-method="${isWebSocket ? 'ws' : route.method}">
             <!-- Collapsed Header -->
@@ -196,8 +294,12 @@ function renderRoute(route, prefix, routeId) {
                             ${route.validator ? '<span class="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full whitespace-nowrap">Validated</span>' : ''}
                             ${route.middleware ? '<span class="px-2 py-1 text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full whitespace-nowrap">Middleware</span>' : ''}
                             ${(() => {
-                                const routeRateLimit = formatRateLimit(route.rateLimit);
-                                return routeRateLimit ? `<span class="px-2 py-1 text-xs bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full whitespace-nowrap">${routeRateLimit.formatted}</span>` : '';
+                                const routeRateLimit = formatRateLimit(
+                                    route.rateLimit,
+                                );
+                                return routeRateLimit
+                                    ? `<span class="px-2 py-1 text-xs bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full whitespace-nowrap">${routeRateLimit.formatted}</span>`
+                                    : '';
                             })()}
                             ${!isWebSocket ? `<button onclick="event.stopPropagation(); toggleTestForm('${routeId}')" class="px-3 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded-full transition-colors duration-200 whitespace-nowrap focus:ring-2 focus:ring-green-300 focus:outline-none">Test</button>` : ''}
                         </div>
@@ -219,56 +321,125 @@ function renderRoute(route, prefix, routeId) {
                                     ${route.middleware ? `<div class="break-words"><span class="font-medium text-gray-700 dark:text-gray-300">Middleware:</span> <code class="text-orange-600 dark:text-orange-400 break-all">${route.middleware}</code></div>` : ''}
                                     ${route.middlewares ? `<div class="break-words"><span class="font-medium text-gray-700 dark:text-gray-300">Middlewares:</span> <code class="text-orange-600 dark:text-orange-400 break-all">${route.middlewares.join(', ')}</code></div>` : ''}
                                     ${(() => {
-                                        const routeRateLimit = formatRateLimit(route.rateLimit);
-                                        return routeRateLimit ? `<div class="break-words"><span class="font-medium text-gray-700 dark:text-gray-300">Rate Limit:</span> <span class="px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded text-xs font-mono">${routeRateLimit.formatted}</span> <span class="text-gray-500 dark:text-gray-400 text-xs">(overrides group limit)</span></div>` : '';
+                                        const routeRateLimit = formatRateLimit(
+                                            route.rateLimit,
+                                        );
+                                        return routeRateLimit
+                                            ? `<div class="break-words"><span class="font-medium text-gray-700 dark:text-gray-300">Rate Limit:</span> <span class="px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded text-xs font-mono">${routeRateLimit.formatted}</span> <span class="text-gray-500 dark:text-gray-400 text-xs">(overrides group limit)</span></div>`
+                                            : '';
                                     })()}
                                 </div>
                             </div>
                             
-                            ${route.validator && validationSchemas[route.validator] ? `
+                            ${
+                                route.validator &&
+                                validationSchemas[route.validator]
+                                    ? `
                                 <div>
                                     <h5 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Validation Schema</h5>
                                     <div class="space-y-2 overflow-x-auto">
                                         ${renderValidationSchema(validationSchemas[route.validator])}
                                     </div>
                                 </div>
-                            ` : ''}
+                            `
+                                    : ''
+                            }
                             
-                            ${parameters.length > 0 ? `
+                            ${
+                                parameters.length > 0
+                                    ? `
                                 <div>
                                     <h5 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Parameters</h5>
                                     <div class="space-y-2">
-                                        ${parameters.map(param => `
+                                        ${parameters
+                                            .map(
+                                                (param) => `
                                             <div class="flex flex-wrap items-center gap-2 text-sm">
                                                 <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-mono break-all">${param.name}</span>
                                                 <span class="text-gray-500 dark:text-gray-400">${param.type}</span>
                                                 ${param.required ? '<span class="text-red-500 dark:text-red-400 text-xs whitespace-nowrap">required</span>' : '<span class="text-gray-400 dark:text-gray-500 text-xs whitespace-nowrap">optional</span>'}
                                             </div>
-                                        `).join('')}
+                                        `,
+                                            )
+                                            .join('')}
                                     </div>
                                 </div>
-                            ` : ''}
+                            `
+                                    : ''
+                            }
                         </div>
                         
                         <div class="space-y-4">
+                            ${
+                                route.requestBody
+                                    ? `
+                                <div>
+                                    <h5 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Request Body</h5>
+                                    ${route.requestBody.description ? `<p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${route.requestBody.description}</p>` : ''}
+                                    <div class="space-y-2 overflow-x-auto">
+                                        ${renderRequestBodySchema(route.requestBody) || '<div class="text-gray-500 dark:text-gray-400 text-sm">No schema available</div>'}
+                                    </div>
+                                    ${
+                                        route.requestBody.example
+                                            ? `
+                                        <div class="mt-2">
+                                            <h6 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Example</h6>
+                                            <pre class="text-xs bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-2 rounded border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(route.requestBody.example, null, 2)}</code></pre>
+                                        </div>
+                                    `
+                                            : ''
+                                    }
+                                </div>
+                            `
+                                    : ''
+                            }
+                            
                             <div>
                                 <h5 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Response Format</h5>
-                                <div class="space-y-3">
-                                    <div>
-                                        <h6 class="text-sm font-medium text-green-700 dark:text-green-400 mb-1">Success Response</h6>
-                                        <pre class="text-xs bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-2 rounded border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(responseFormats[route.method]?.success || {status: 200, data: "Success"}, null, 2)}</code></pre>
+                                ${
+                                    hasResponseType || route.response
+                                        ? `
+                                    <div class="mb-3">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-mono">${responseTypeName || route.response?.type || 'Response'}</span>
+                                            ${route.response?.description ? `<span class="text-sm text-gray-600 dark:text-gray-400">${route.response.description}</span>` : ''}
+                                        </div>
+                                        <div class="space-y-2 overflow-x-auto">
+                                            ${renderResponseSchema(route.response, handlerName) || '<div class="text-gray-500 dark:text-gray-400 text-sm">No schema available</div>'}
+                                        </div>
+                                        ${
+                                            route.response?.example
+                                                ? `
+                                            <div class="mt-2">
+                                                <h6 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Example</h6>
+                                                <pre class="text-xs bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-2 rounded border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(route.response.example, null, 2)}</code></pre>
+                                            </div>
+                                        `
+                                                : ''
+                                        }
                                     </div>
-                                    <div>
-                                        <h6 class="text-sm font-medium text-red-700 dark:text-red-400 mb-1">Error Response</h6>
-                                        <pre class="text-xs bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-2 rounded border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(responseFormats[route.method]?.error || {status: 400, message: "Error"}, null, 2)}</code></pre>
+                                `
+                                        : `
+                                    <div class="space-y-3">
+                                        <div>
+                                            <h6 class="text-sm font-medium text-green-700 dark:text-green-400 mb-1">Success Response</h6>
+                                            <pre class="text-xs bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-2 rounded border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(responseFormats[route.method]?.success || { status: 200, data: 'Success' }, null, 2)}</code></pre>
+                                        </div>
+                                        <div>
+                                            <h6 class="text-sm font-medium text-red-700 dark:text-red-400 mb-1">Error Response</h6>
+                                            <pre class="text-xs bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-2 rounded border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(responseFormats[route.method]?.error || { status: 400, message: 'Error' }, null, 2)}</code></pre>
+                                        </div>
                                     </div>
-                                </div>
+                                `
+                                }
                             </div>
                         </div>
                     </div>
                     
                     <!-- Test Form Section -->
-                    ${!isWebSocket ? `
+                    ${
+                        !isWebSocket
+                            ? `
                         <div id="test-form-${routeId}" class="test-form-section" style="display: none;">
                             <div class="border-t dark:border-gray-600 pt-6 mt-6">
                                 <h5 class="font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
@@ -280,11 +451,15 @@ function renderRoute(route, prefix, routeId) {
                                 
                                 <form class="space-y-4" data-route-id="${routeId}" onsubmit="sendTestRequest(event, '${routeId}', '${route.method.toUpperCase()}', '${fullUrl}', '${route.validator || ''}')">
                                     <!-- URL Parameters -->
-                                    ${parameters.length > 0 ? `
+                                    ${
+                                        parameters.length > 0
+                                            ? `
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">URL Parameters</label>
                                             <div class="space-y-2">
-                                                ${parameters.map(param => `
+                                                ${parameters
+                                                    .map(
+                                                        (param) => `
                                                     <div class="flex items-center gap-2">
                                                         <label class="min-w-[80px] text-sm text-gray-600 dark:text-gray-400">${param.name}:</label>
                                                         <input 
@@ -295,10 +470,14 @@ function renderRoute(route, prefix, routeId) {
                                                             ${param.required ? 'required' : ''}
                                                         >
                                                     </div>
-                                                `).join('')}
+                                                `,
+                                                    )
+                                                    .join('')}
                                             </div>
                                         </div>
-                                    ` : ''}
+                                    `
+                                            : ''
+                                    }
                                     
                                     <!-- Request Headers -->
                                     <div>
@@ -313,7 +492,11 @@ function renderRoute(route, prefix, routeId) {
                                     </div>
                                     
                                     <!-- Request Body (for POST/PUT) -->
-                                    ${['POST', 'PUT', 'PATCH'].includes(route.method.toUpperCase()) ? `
+                                    ${
+                                        ['POST', 'PUT', 'PATCH'].includes(
+                                            route.method.toUpperCase(),
+                                        )
+                                            ? `
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Request Body (JSON format)</label>
                                             <textarea 
@@ -324,7 +507,9 @@ function renderRoute(route, prefix, routeId) {
                                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm font-mono"
                                             >${getDefaultRequestBody(route.validator || '')}</textarea>
                                         </div>
-                                    ` : ''}
+                                    `
+                                            : ''
+                                    }
                                     
                                     <!-- Request Count and Buttons -->
                                     <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
@@ -372,7 +557,9 @@ function renderRoute(route, prefix, routeId) {
                                 </div>
                             </div>
                         </div>
-                    ` : ''}
+                    `
+                            : ''
+                    }
                 </div>
             </div>
         </div>
@@ -383,7 +570,7 @@ function renderGroup(group, index) {
     const groupName = group.description || `Group ${index + 1}`;
     const routes = group.group || [];
     const groupRateLimit = formatRateLimit(group.rateLimit);
-    
+
     return `
         <div class="group-item bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 overflow-hidden fade-in">
             <div class="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-gray-700 dark:to-gray-600 px-4 sm:px-6 py-4 border-b dark:border-gray-600">
@@ -395,18 +582,26 @@ function renderGroup(group, index) {
                                 <span class="font-medium whitespace-nowrap">Prefix:</span> 
                                 <code class="bg-white dark:bg-gray-800 px-2 py-1 rounded text-primary-700 dark:text-primary-400 break-all">/${group.prefix}</code>
                             </div>
-                            ${group.middlewares ? `
+                            ${
+                                group.middlewares
+                                    ? `
                                 <div class="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
                                     <span class="font-medium whitespace-nowrap">Middlewares:</span> 
                                     <code class="bg-white dark:bg-gray-800 px-2 py-1 rounded text-orange-700 dark:text-orange-400 break-all flex-1 min-w-0">${group.middlewares.join(', ')}</code>
                                 </div>
-                            ` : ''}
-                            ${groupRateLimit ? `
+                            `
+                                    : ''
+                            }
+                            ${
+                                groupRateLimit
+                                    ? `
                                 <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                                     <span class="font-medium whitespace-nowrap">Rate Limit:</span> 
                                     <span class="px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded text-xs font-mono whitespace-nowrap">${groupRateLimit.formatted}</span>
                                 </div>
-                            ` : ''}
+                            `
+                                    : ''
+                            }
                         </div>
                     </div>
                     <div class="text-center sm:text-right flex-shrink-0 self-start sm:self-center">
@@ -418,10 +613,12 @@ function renderGroup(group, index) {
             
             <div class="p-6">
                 <div class="space-y-4">
-                    ${routes.map((route, routeIndex) => {
-                        const routeId = `route-${index}-${routeIndex}`;
-                        return renderRoute(route, group.prefix, routeId);
-                    }).join('')}
+                    ${routes
+                        .map((route, routeIndex) => {
+                            const routeId = `route-${index}-${routeIndex}`;
+                            return renderRoute(route, group.prefix, routeId);
+                        })
+                        .join('')}
                 </div>
             </div>
         </div>
@@ -430,39 +627,56 @@ function renderGroup(group, index) {
 
 function renderDocumentation() {
     // Select the appropriate route groups based on current type
-    const routeGroups = currentRouteType === 'http' ? httpRouteGroups : wsRouteGroups;
-    
-    const filteredGroups = routeGroups.map(group => {
-        if (currentFilter === 'all' && !searchTerm) return group;
-        
-        const filteredRoutes = group.group.filter(route => {
-            // For WebSocket routes, we don't filter by method since they don't have HTTP methods
-            const matchesFilter = currentRouteType === 'ws' || currentFilter === 'all' || 
-                (route.method && route.method.toLowerCase() === currentFilter);
-            
-            const matchesSearch = !searchTerm || 
-                route.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (route.description && route.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                (typeof route.handler === 'string' && route.handler.toLowerCase().includes(searchTerm.toLowerCase()));
-            
-            return matchesFilter && matchesSearch;
-        });
-        
-        return { ...group, group: filteredRoutes };
-    }).filter(group => group.group.length > 0);
+    const routeGroups =
+        currentRouteType === 'http' ? httpRouteGroups : wsRouteGroups;
+
+    const filteredGroups = routeGroups
+        .map((group) => {
+            if (currentFilter === 'all' && !searchTerm) return group;
+
+            const filteredRoutes = group.group.filter((route) => {
+                // For WebSocket routes, we don't filter by method since they don't have HTTP methods
+                const matchesFilter =
+                    currentRouteType === 'ws' ||
+                    currentFilter === 'all' ||
+                    (route.method &&
+                        route.method.toLowerCase() === currentFilter);
+
+                const matchesSearch =
+                    !searchTerm ||
+                    route.url
+                        .toLowerCase()
+                        .includes(searchTerm.toLowerCase()) ||
+                    (route.description &&
+                        route.description
+                            .toLowerCase()
+                            .includes(searchTerm.toLowerCase())) ||
+                    (typeof route.handler === 'string' &&
+                        route.handler
+                            .toLowerCase()
+                            .includes(searchTerm.toLowerCase()));
+
+                return matchesFilter && matchesSearch;
+            });
+
+            return { ...group, group: filteredRoutes };
+        })
+        .filter((group) => group.group.length > 0);
 
     const apiGroupsContainer = document.getElementById('apiGroups');
-    apiGroupsContainer.innerHTML = filteredGroups.map((group, index) => renderGroup(group, index)).join('');
-    
+    apiGroupsContainer.innerHTML = filteredGroups
+        .map((group, index) => renderGroup(group, index))
+        .join('');
+
     // updateStats(filteredGroups);
 }
 
 // function updateStats(groups) {
 //     const totalEndpoints = groups.reduce((sum, group) => sum + group.group.length, 0);
-//     const protectedRoutes = groups.reduce((sum, group) => 
+//     const protectedRoutes = groups.reduce((sum, group) =>
 //         sum + group.group.filter(route => group.middlewares && group.middlewares.length > 0).length, 0
 //     );
-//     const validatedRoutes = groups.reduce((sum, group) => 
+//     const validatedRoutes = groups.reduce((sum, group) =>
 //         sum + group.group.filter(route => route.validator).length, 0
 //     );
 
@@ -475,7 +689,7 @@ function renderDocumentation() {
 // Event handlers
 // function filterByMethod(method) {
 //     currentFilter = method;
-    
+
 //     // Update active button
 //     document.querySelectorAll('.filter-btn').forEach(btn => {
 //         btn.classList.remove('active', 'bg-primary-500', 'text-white');
@@ -483,31 +697,49 @@ function renderDocumentation() {
 //     });
 //     event.target.classList.add('active', 'bg-primary-500', 'text-white');
 //     event.target.classList.remove('bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
-    
+
 //     renderDocumentation();
 // }
 
 function filterByType(type) {
     currentRouteType = type;
-    
+
     // Update active button
     updateActiveFilterButton(type);
-    
+
     renderDocumentation();
 }
 
 function updateActiveFilterButton(activeType) {
     // Remove active classes from all filter buttons
-    document.querySelectorAll('.filter-btn').forEach(btn => {
+    document.querySelectorAll('.filter-btn').forEach((btn) => {
         btn.classList.remove('active', 'bg-primary-500', 'text-white');
-        btn.classList.add('bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300', 'border', 'border-gray-300', 'dark:border-gray-600');
+        btn.classList.add(
+            'bg-white',
+            'dark:bg-gray-800',
+            'text-gray-700',
+            'dark:text-gray-300',
+            'border',
+            'border-gray-300',
+            'dark:border-gray-600',
+        );
     });
-    
+
     // Add active classes to the selected button
-    const activeButton = document.querySelector(`button[onclick="filterByType('${activeType}')"]`);
+    const activeButton = document.querySelector(
+        `button[onclick="filterByType('${activeType}')"]`,
+    );
     if (activeButton) {
         activeButton.classList.add('active', 'bg-primary-500', 'text-white');
-        activeButton.classList.remove('bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300', 'border', 'border-gray-300', 'dark:border-gray-600');
+        activeButton.classList.remove(
+            'bg-white',
+            'dark:bg-gray-800',
+            'text-gray-700',
+            'dark:text-gray-300',
+            'border',
+            'border-gray-300',
+            'dark:border-gray-600',
+        );
     }
 }
 
@@ -521,8 +753,9 @@ function setupSearch() {
 
 function toggleRoute(routeId) {
     const detailsElement = document.getElementById(`details-${routeId}`);
-    const expandIcon = detailsElement.parentElement.querySelector('.expand-icon');
-    
+    const expandIcon =
+        detailsElement.parentElement.querySelector('.expand-icon');
+
     if (detailsElement.classList.contains('expanded')) {
         detailsElement.classList.remove('expanded');
         expandIcon.classList.remove('rotated');
@@ -535,18 +768,18 @@ function toggleRoute(routeId) {
 function expandAll() {
     const allDetails = document.querySelectorAll('.route-details');
     const allIcons = document.querySelectorAll('.expand-icon');
-    
-    allDetails.forEach(detail => detail.classList.add('expanded'));
-    allIcons.forEach(icon => icon.classList.add('rotated'));
+
+    allDetails.forEach((detail) => detail.classList.add('expanded'));
+    allIcons.forEach((icon) => icon.classList.add('rotated'));
 }
 
 function collapseAll() {
     const allDetails = document.querySelectorAll('.route-details');
     const allIcons = document.querySelectorAll('.expand-icon');
-    
-    allDetails.forEach(detail => detail.classList.remove('expanded'));
-    allIcons.forEach(icon => icon.classList.remove('rotated'));
-    
+
+    allDetails.forEach((detail) => detail.classList.remove('expanded'));
+    allIcons.forEach((icon) => icon.classList.remove('rotated'));
+
     // Also close all test forms
     closeAllTestForms();
 }
@@ -559,7 +792,9 @@ function initializeTheme() {
 }
 
 function toggleTheme() {
-    const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    const currentTheme = document.documentElement.classList.contains('dark')
+        ? 'dark'
+        : 'light';
     const newTheme = currentTheme === 'light' ? 'dark' : 'light';
     applyTheme(newTheme);
     localStorage.setItem('theme', newTheme);
@@ -586,20 +821,27 @@ function getDefaultRequestBody(validator) {
     if (validator && validationSchemas[validator]) {
         const schema = validationSchemas[validator];
         const defaultBody = {};
-        
+
         Object.entries(schema).forEach(([fieldName, fieldInfo]) => {
             if (fieldInfo.required) {
                 switch (fieldInfo.type) {
                     case 'string':
-                        defaultBody[fieldName] = fieldName.includes('email') ? 'user@example.com' : 
-                                               fieldName.includes('password') ? 'your_password' : 
-                                               fieldName.includes('name') ? 'Example Name' : 
-                                               `sample_${fieldName}`;
+                        defaultBody[fieldName] = fieldName.includes('email')
+                            ? 'user@example.com'
+                            : fieldName.includes('password')
+                              ? 'your_password'
+                              : fieldName.includes('name')
+                                ? 'Example Name'
+                                : `sample_${fieldName}`;
                         break;
                     case 'number':
-                        defaultBody[fieldName] = fieldName.includes('id') ? 1 : 
-                                               fieldName.includes('age') ? 25 : 
-                                               fieldName.includes('price') ? 99.99 : 123;
+                        defaultBody[fieldName] = fieldName.includes('id')
+                            ? 1
+                            : fieldName.includes('age')
+                              ? 25
+                              : fieldName.includes('price')
+                                ? 99.99
+                                : 123;
                         break;
                     case 'boolean':
                         defaultBody[fieldName] = true;
@@ -609,10 +851,12 @@ function getDefaultRequestBody(validator) {
                 }
             }
         });
-        
-        return Object.keys(defaultBody).length > 0 ? JSON.stringify(defaultBody, null, 2) : '{\n  "key": "value"\n}';
+
+        return Object.keys(defaultBody).length > 0
+            ? JSON.stringify(defaultBody, null, 2)
+            : '{\n  "key": "value"\n}';
     }
-    
+
     return '{\n  "key": "value"\n}';
 }
 
@@ -622,7 +866,7 @@ function validateJSON(jsonString, element, errorElementId) {
         hideJSONError(errorElementId);
         return null;
     }
-    
+
     try {
         const parsed = JSON.parse(jsonString);
         element.classList.remove('json-invalid');
@@ -643,10 +887,15 @@ function showJSONError(errorElementId, message) {
         errorElement = document.createElement('div');
         errorElement.id = errorElementId;
         errorElement.className = 'json-error-message';
-        
-        const targetElement = document.querySelector(`[data-error-target="${errorElementId}"]`);
+
+        const targetElement = document.querySelector(
+            `[data-error-target="${errorElementId}"]`,
+        );
         if (targetElement) {
-            targetElement.parentNode.insertBefore(errorElement, targetElement.nextSibling);
+            targetElement.parentNode.insertBefore(
+                errorElement,
+                targetElement.nextSibling,
+            );
         }
     }
     errorElement.textContent = `JSON Error: ${message}`;
@@ -661,23 +910,31 @@ function hideJSONError(errorElementId) {
 }
 
 function setupJSONValidation(routeId) {
-    const headersField = document.querySelector(`form[data-route-id="${routeId}"] textarea[name="headers"]`);
-    const bodyField = document.querySelector(`form[data-route-id="${routeId}"] textarea[name="body"]`);
-    
+    const headersField = document.querySelector(
+        `form[data-route-id="${routeId}"] textarea[name="headers"]`,
+    );
+    const bodyField = document.querySelector(
+        `form[data-route-id="${routeId}"] textarea[name="body"]`,
+    );
+
     if (headersField) {
         headersField.addEventListener('input', (e) => {
             validateJSON(e.target.value, e.target, `headers-error-${routeId}`);
         });
-        
+
         // Initial validation
-        validateJSON(headersField.value, headersField, `headers-error-${routeId}`);
+        validateJSON(
+            headersField.value,
+            headersField,
+            `headers-error-${routeId}`,
+        );
     }
-    
+
     if (bodyField) {
         bodyField.addEventListener('input', (e) => {
             validateJSON(e.target.value, e.target, `body-error-${routeId}`);
         });
-        
+
         // Initial validation
         validateJSON(bodyField.value, bodyField, `body-error-${routeId}`);
     }
@@ -688,22 +945,23 @@ function toggleTestForm(routeId) {
     const testForm = document.getElementById(`test-form-${routeId}`);
     const detailsElement = document.getElementById(`details-${routeId}`);
     const isCurrentlyVisible = testForm.style.display !== 'none';
-    
+
     // Close all other test forms first
     closeAllTestForms(routeId);
-    
+
     if (!isCurrentlyVisible) {
         // Show test form
         testForm.style.display = 'block';
         // Also expand the details if they're not expanded
         if (!detailsElement.classList.contains('expanded')) {
             detailsElement.classList.add('expanded');
-            const expandIcon = detailsElement.parentElement.querySelector('.expand-icon');
+            const expandIcon =
+                detailsElement.parentElement.querySelector('.expand-icon');
             if (expandIcon) {
                 expandIcon.classList.add('rotated');
             }
         }
-        
+
         // Setup JSON validation after form is visible
         setTimeout(() => {
             setupJSONValidation(routeId);
@@ -719,34 +977,40 @@ function closeAllTestForms(exceptRouteId = null) {
     // Find all test form sections
     const allTestForms = document.querySelectorAll('[id^="test-form-"]');
     const allTestResults = document.querySelectorAll('[id^="test-result-"]');
-    
-    allTestForms.forEach(form => {
+
+    allTestForms.forEach((form) => {
         const formId = form.id;
         const routeId = formId.replace('test-form-', '');
-        
+
         // Skip the current form if specified
         if (exceptRouteId && routeId === exceptRouteId) {
             return;
         }
-        
+
         // Hide the form
         form.style.display = 'none';
-        
+
         // Also hide any results
         const resultElement = document.getElementById(`test-result-${routeId}`);
         if (resultElement) {
             resultElement.style.display = 'none';
         }
-        
+
         // Clear any JSON validation errors
-        const headersError = document.getElementById(`headers-error-${routeId}`);
+        const headersError = document.getElementById(
+            `headers-error-${routeId}`,
+        );
         const bodyError = document.getElementById(`body-error-${routeId}`);
         if (headersError) headersError.style.display = 'none';
         if (bodyError) bodyError.style.display = 'none';
-        
+
         // Remove validation classes from textareas
-        const headersField = document.querySelector(`form[data-route-id="${routeId}"] textarea[name="headers"]`);
-        const bodyField = document.querySelector(`form[data-route-id="${routeId}"] textarea[name="body"]`);
+        const headersField = document.querySelector(
+            `form[data-route-id="${routeId}"] textarea[name="headers"]`,
+        );
+        const bodyField = document.querySelector(
+            `form[data-route-id="${routeId}"] textarea[name="body"]`,
+        );
         if (headersField) {
             headersField.classList.remove('json-valid', 'json-invalid');
         }
@@ -758,21 +1022,21 @@ function closeAllTestForms(exceptRouteId = null) {
 
 async function sendTestRequest(event, routeId, method, url, validator) {
     event.preventDefault();
-    
+
     const form = event.target;
     const formData = new FormData(form);
-    
+
     // Get request count
     const requestCount = parseInt(formData.get('requestCount') || '1');
     if (requestCount < 1 || requestCount > 1000) {
         displayTestResult(routeId, {
             error: true,
             message: 'Request count must be between 1 and 1000',
-            details: `Current value: ${requestCount}`
+            details: `Current value: ${requestCount}`,
         });
         return;
     }
-    
+
     // Build the URL with parameters
     let finalUrl = url;
     const params = {};
@@ -783,16 +1047,20 @@ async function sendTestRequest(event, routeId, method, url, validator) {
             params[paramName] = value;
         }
     }
-    
+
     // Validate and parse headers
     const headersField = form.querySelector('textarea[name="headers"]');
     const headersText = formData.get('headers');
     let headers = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
     };
-    
+
     if (headersText && headersText.trim()) {
-        const validatedHeaders = validateJSON(headersText, headersField, `headers-error-${routeId}`);
+        const validatedHeaders = validateJSON(
+            headersText,
+            headersField,
+            `headers-error-${routeId}`,
+        );
         if (validatedHeaders === false) {
             // JSON is invalid, don't send request
             headersField.focus();
@@ -801,14 +1069,22 @@ async function sendTestRequest(event, routeId, method, url, validator) {
             headers = { ...headers, ...validatedHeaders };
         }
     }
-    
+
     // Validate and parse request body for POST/PUT/PATCH
     let body = null;
     const bodyField = form.querySelector('textarea[name="body"]');
     const bodyText = formData.get('body');
-    
-    if (['POST', 'PUT', 'PATCH'].includes(method) && bodyText && bodyText.trim()) {
-        const validatedBody = validateJSON(bodyText, bodyField, `body-error-${routeId}`);
+
+    if (
+        ['POST', 'PUT', 'PATCH'].includes(method) &&
+        bodyText &&
+        bodyText.trim()
+    ) {
+        const validatedBody = validateJSON(
+            bodyText,
+            bodyField,
+            `body-error-${routeId}`,
+        );
         if (validatedBody === false) {
             // JSON is invalid, don't send request
             bodyField.focus();
@@ -817,47 +1093,47 @@ async function sendTestRequest(event, routeId, method, url, validator) {
             body = validatedBody;
         }
     }
-    
+
     // Show loading state
     displayTestResult(routeId, {
         loading: true,
-        requestCount: requestCount
+        requestCount: requestCount,
     });
-    
+
     // Build fetch options
     const fetchOptions = {
         method: method,
-        headers: headers
+        headers: headers,
     };
-    
+
     if (body !== null) {
         fetchOptions.body = JSON.stringify(body);
     }
-    
+
     try {
         const overallStartTime = Date.now();
         const results = [];
         const responseTimes = [];
-        
+
         // Execute all requests
         for (let i = 0; i < requestCount; i++) {
             const startTime = Date.now();
-            
+
             try {
                 const response = await fetch(finalUrl, fetchOptions);
                 const endTime = Date.now();
                 const responseTime = endTime - startTime;
                 responseTimes.push(responseTime);
-                
+
                 let responseData;
                 const contentType = response.headers.get('content-type');
-                
+
                 if (contentType && contentType.includes('application/json')) {
                     responseData = await response.json();
                 } else {
                     responseData = await response.text();
                 }
-                
+
                 results.push({
                     success: response.ok,
                     status: response.status,
@@ -865,14 +1141,13 @@ async function sendTestRequest(event, routeId, method, url, validator) {
                     headers: Object.fromEntries(response.headers.entries()),
                     data: responseData,
                     responseTime: responseTime,
-                    requestNumber: i + 1
+                    requestNumber: i + 1,
                 });
-                
             } catch (requestError) {
                 const endTime = Date.now();
                 const responseTime = endTime - startTime;
                 responseTimes.push(responseTime);
-                
+
                 results.push({
                     success: false,
                     status: 0,
@@ -881,30 +1156,32 @@ async function sendTestRequest(event, routeId, method, url, validator) {
                     data: requestError.message,
                     responseTime: responseTime,
                     requestNumber: i + 1,
-                    error: true
+                    error: true,
                 });
             }
-            
+
             // Update progress for multiple requests
             if (requestCount > 1) {
                 displayTestResult(routeId, {
                     loading: true,
                     requestCount: requestCount,
-                    progress: i + 1
+                    progress: i + 1,
                 });
             }
         }
-        
+
         const overallEndTime = Date.now();
         const totalTime = overallEndTime - overallStartTime;
-        
+
         // Calculate statistics
-        const successfulRequests = results.filter(r => r.success).length;
+        const successfulRequests = results.filter((r) => r.success).length;
         const failedRequests = results.length - successfulRequests;
-        const avgResponseTime = responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length;
+        const avgResponseTime =
+            responseTimes.reduce((sum, time) => sum + time, 0) /
+            responseTimes.length;
         const minResponseTime = Math.min(...responseTimes);
         const maxResponseTime = Math.max(...responseTimes);
-        
+
         // Display the result with statistics
         if (requestCount === 1) {
             // For single request, pass data directly
@@ -919,7 +1196,7 @@ async function sendTestRequest(event, routeId, method, url, validator) {
                 url: finalUrl,
                 method: method,
                 requestHeaders: headers,
-                requestBody: body
+                requestBody: body,
             });
         } else {
             // For multiple requests, use the complex structure
@@ -933,43 +1210,46 @@ async function sendTestRequest(event, routeId, method, url, validator) {
                     totalTime: totalTime,
                     avgResponseTime: Math.round(avgResponseTime),
                     minResponseTime: minResponseTime,
-                    maxResponseTime: maxResponseTime
+                    maxResponseTime: maxResponseTime,
                 },
                 url: finalUrl,
                 method: method,
                 requestHeaders: headers,
                 requestBody: body,
-                allResults: results
+                allResults: results,
             });
         }
-        
     } catch (error) {
         displayTestResult(routeId, {
             error: true,
             message: 'Network error or request failed',
             details: error.message,
             url: finalUrl,
-            method: method
+            method: method,
         });
     }
 }
 
 function displayTestResult(routeId, result) {
     const resultContainer = document.getElementById(`test-result-${routeId}`);
-    const responseContainer = document.getElementById(`test-response-${routeId}`);
-    
+    const responseContainer = document.getElementById(
+        `test-response-${routeId}`,
+    );
+
     if (result.loading) {
         resultContainer.style.display = 'block';
-        const progressText = result.requestCount > 1 
-            ? `Sending ${result.progress || 0}/${result.requestCount} requests...`
-            : 'Sending request...';
-        
-        const progressBar = result.requestCount > 1 && result.progress 
-            ? `<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
+        const progressText =
+            result.requestCount > 1
+                ? `Sending ${result.progress || 0}/${result.requestCount} requests...`
+                : 'Sending request...';
+
+        const progressBar =
+            result.requestCount > 1 && result.progress
+                ? `<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
                  <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: ${(result.progress / result.requestCount) * 100}%"></div>
                </div>`
-            : '';
-        
+                : '';
+
         responseContainer.innerHTML = `
             <div class="flex flex-col gap-3 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
                 <div class="flex items-center gap-3">
@@ -981,7 +1261,7 @@ function displayTestResult(routeId, result) {
         `;
         return;
     }
-    
+
     if (result.error) {
         resultContainer.style.display = 'block';
         responseContainer.innerHTML = `
@@ -999,28 +1279,42 @@ function displayTestResult(routeId, result) {
         `;
         return;
     }
-    
+
     // Success response - handle both single and multiple requests
     resultContainer.style.display = 'block';
-    
-    const isMultipleRequests = result.statistics && result.statistics.totalRequests > 1;
+
+    const isMultipleRequests =
+        result.statistics && result.statistics.totalRequests > 1;
     const displayResult = isMultipleRequests ? result.firstResult : result;
-    
+
     // Ensure displayResult has proper structure for single requests
     const safeResult = {
-        status: displayResult.status !== undefined ? displayResult.status : 'Unknown',
+        status:
+            displayResult.status !== undefined
+                ? displayResult.status
+                : 'Unknown',
         statusText: displayResult.statusText || 'Unknown',
-        data: displayResult.data !== undefined ? displayResult.data : 'No response data',
+        data:
+            displayResult.data !== undefined
+                ? displayResult.data
+                : 'No response data',
         headers: displayResult.headers || {},
-        responseTime: displayResult.responseTime || 0
+        responseTime: displayResult.responseTime || 0,
     };
-    
+
     const statusColor = result.success ? 'green' : 'red';
-    const statusBgColor = result.success ? 'bg-green-50 dark:bg-green-900' : 'bg-red-50 dark:bg-red-900';
-    const statusTextColor = result.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200';
-    const statusBorderColor = result.success ? 'border-green-200 dark:border-green-800' : 'border-red-200 dark:border-red-800';
-    
-    const statisticsSection = isMultipleRequests ? `
+    const statusBgColor = result.success
+        ? 'bg-green-50 dark:bg-green-900'
+        : 'bg-red-50 dark:bg-red-900';
+    const statusTextColor = result.success
+        ? 'text-green-800 dark:text-green-200'
+        : 'text-red-800 dark:text-red-200';
+    const statusBorderColor = result.success
+        ? 'border-green-200 dark:border-green-800'
+        : 'border-red-200 dark:border-red-800';
+
+    const statisticsSection = isMultipleRequests
+        ? `
         <!-- Load Test Statistics -->
         <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900 rounded-lg border border-blue-200 dark:border-blue-800">
             <h6 class="font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
@@ -1062,8 +1356,9 @@ function displayTestResult(routeId, result) {
                 </div>
             </div>
         </div>
-    ` : '';
-    
+    `
+        : '';
+
     responseContainer.innerHTML = `
         <div class="space-y-4">
             ${statisticsSection}
@@ -1072,9 +1367,10 @@ function displayTestResult(routeId, result) {
             <div class="flex flex-wrap items-center gap-4 p-3 ${statusBgColor} rounded-lg border ${statusBorderColor}">
                 <div class="flex items-center gap-2">
                     <svg class="h-5 w-5 text-${statusColor}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        ${result.success ? 
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>' :
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>'
+                        ${
+                            result.success
+                                ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>'
+                                : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>'
                         }
                     </svg>
                     <span class="font-semibold ${statusTextColor}">${safeResult.status} ${safeResult.statusText}</span>
@@ -1095,12 +1391,16 @@ function displayTestResult(routeId, result) {
                         <h6 class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Request Headers</h6>
                         <pre class="text-xs bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-2 rounded border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(result.requestHeaders, null, 2)}</code></pre>
                     </div>
-                    ${result.requestBody ? `
+                    ${
+                        result.requestBody
+                            ? `
                         <div>
                             <h6 class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Request Body</h6>
                             <pre class="text-xs bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-2 rounded border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(result.requestBody, null, 2)}</code></pre>
                         </div>
-                    ` : ''}
+                    `
+                            : ''
+                    }
                 </div>
             </details>
             
@@ -1118,11 +1418,15 @@ function displayTestResult(routeId, result) {
             <div>
                 <h6 class="font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                     Response Body${isMultipleRequests ? ' (First Request)' : ''}
-                    ${isMultipleRequests ? `
+                    ${
+                        isMultipleRequests
+                            ? `
                         <span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
                             Showing 1 of ${result.statistics.totalRequests}
                         </span>
-                    ` : ''}
+                    `
+                            : ''
+                    }
                 </h6>
                 <pre class="text-sm bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-3 rounded border dark:border-gray-600 overflow-x-auto max-h-96 overflow-y-auto"><code>${typeof safeResult.data === 'string' ? safeResult.data : JSON.stringify(safeResult.data, null, 2)}</code></pre>
             </div>
@@ -1144,13 +1448,21 @@ async function fetchRouteData() {
         }
         const data = await response.json();
         console.log({ data });
-        
-        // Set both HTTP and WebSocket routes, and validation schemas
+
+        // Set both HTTP and WebSocket routes, validation schemas, and response types
         httpRouteGroups = data.httpRoutes || [];
         wsRouteGroups = data.wsRoutes || [];
         validationSchemas = data.validationSchemas || {};
-        
-        return { httpRoutes: httpRouteGroups, wsRoutes: wsRouteGroups, validationSchemas };
+        responseTypes = data.responseTypes || {};
+        handlerTypeMapping = data.handlerTypeMapping || {};
+
+        return {
+            httpRoutes: httpRouteGroups,
+            wsRoutes: wsRouteGroups,
+            validationSchemas,
+            responseTypes,
+            handlerTypeMapping,
+        };
     } catch (error) {
         console.error('Error fetching route data:', error);
         console.log('Calling showError function...');
@@ -1215,16 +1527,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     initializeTheme();
     setupThemeToggle();
     setupSearch();
-    
+
     // Show loading state
     showLoading();
-    
+
     // Fetch route data from API
     await fetchRouteData();
-    
+
     // Initialize with HTTP routes by default
     updateActiveFilterButton('http');
-    
+
     // Render documentation with fetched data
     renderDocumentation();
 });

@@ -10,7 +10,6 @@ import ProjectController from '#app/controllers/http/ProjectController.js';
 import PushSubscriptionController from '#app/controllers/http/PushSubscriptionController.js';
 
 export default [
- 
     {
         group: [
             {
@@ -20,7 +19,7 @@ export default [
                 validator: 'register',
                 rateLimit: {
                     windowMs: 1 * 60 * 1000,
-                    maxRequests: 10,             
+                    maxRequests: 10,
                 },
                 description: 'Register a new user',
             },
@@ -31,7 +30,7 @@ export default [
                 validator: 'login',
                 rateLimit: {
                     windowMs: 1 * 60 * 1000,
-                    maxRequests: 10,             
+                    maxRequests: 10,
                 },
                 description: 'Login a user',
             },
@@ -47,7 +46,7 @@ export default [
         prefix: 'api/auth',
         rateLimit: {
             windowMs: 15 * 60 * 1000,
-            maxRequests: 100,             
+            maxRequests: 100,
         },
     },
     {
@@ -55,7 +54,7 @@ export default [
             {
                 url: '/get-contact-list',
                 method: 'post',
-                handler: ChatListController.getContactList, 
+                handler: ChatListController.getContactList,
                 description: 'Get contact list',
             },
             {
@@ -107,7 +106,7 @@ export default [
                 validator: 'markMessageAsRead',
                 description: 'Mark a message as read',
             },
-                // Invitation Routes
+            // Invitation Routes
             {
                 url: '/invitations',
                 method: 'post',
@@ -490,5 +489,4 @@ export default [
         middlewares: ['session_web'],
         prefix: 'api',
     },
-
 ];
