@@ -24,8 +24,8 @@
         "prisma:generate": "prisma generate",
         "prisma:migrate": "prisma migrate dev",
         "prisma:studio": "prisma studio",
-        "build:doc": "npx tailwindcss -i ./front/src/input.css -o ./public/doc/tailwind.css --watch",
-        "build:doc:prod": "npx tailwindcss -i ./front/src/input.css -o ./public/doc/tailwind.css --minify",
+        "build:doc": "npx tailwindcss -i ./front-doc/src/input.css -o ./public/doc/tailwind.css --watch",
+        "build:doc:prod": "npx tailwindcss -i ./front-doc/src/input.css -o ./public/doc/tailwind.css --minify",
         "export-types": "node scripts/export-types.js"
     },
     "keywords": [],

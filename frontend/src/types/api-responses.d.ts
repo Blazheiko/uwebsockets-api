@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED FILE - DO NOT EDIT
  * Generated from: ../../../app/controllers/http/types/index.d.ts
- * Generated at: 2025-10-01T10:10:19.315Z
+ * Generated at: 2025-10-01T14:37:09.959Z
  * 
  * To update this file, run: npm run export-types
  */

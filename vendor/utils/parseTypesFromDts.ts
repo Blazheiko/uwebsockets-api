@@ -184,7 +184,7 @@ function parseFieldType(typeString: string, required: boolean): TypeField {
         field.example = 'example';
     } else if (lowerType === 'number') {
         field.type = 'number';
-        field.example = 0;
+        field.example = Math.floor(Math.random() * 100);
     } else if (lowerType === 'boolean') {
         field.type = 'boolean';
         field.example = true;

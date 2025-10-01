@@ -1,72 +1,74 @@
 /* API Documentation Styles */
 
 /* Method badges */
-.method-get { 
-    @apply bg-green-100 text-green-800 border-green-200; 
+.method-get {
+    @apply bg-green-100 text-green-800 border-green-200;
 }
 
-.method-post { 
-    @apply bg-blue-100 text-blue-800 border-blue-200; 
+.method-post {
+    @apply bg-blue-100 text-blue-800 border-blue-200;
 }
 
-.method-put { 
-    @apply bg-yellow-100 text-yellow-800 border-yellow-200; 
+.method-put {
+    @apply bg-yellow-100 text-yellow-800 border-yellow-200;
 }
 
-.method-delete { 
-    @apply bg-red-100 text-red-800 border-red-200; 
+.method-delete {
+    @apply bg-red-100 text-red-800 border-red-200;
 }
 
-.method-ws { 
-    @apply bg-purple-100 text-purple-800 border-purple-300; 
+.method-ws {
+    @apply bg-purple-100 text-purple-800 border-purple-300;
 }
 
 /* Animations */
-.fade-in { 
-    animation: fadeIn 0.5s ease-in-out; 
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
 }
 
-@keyframes fadeIn { 
-    from { 
-        opacity: 0; 
-        transform: translateY(10px); 
-    } 
-    to { 
-        opacity: 1; 
-        transform: translateY(0); 
-    } 
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Route card interactions */
-.route-collapsed { 
-    cursor: pointer; 
-    transition: all 0.2s ease-in-out; 
+.route-collapsed {
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
 }
 
-.route-collapsed:hover { 
-    transform: translateY(-1px); 
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); 
+.route-collapsed:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Route details expand/collapse */
-.route-details { 
-    max-height: 0; 
-    overflow: hidden; 
-    transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out; 
+.route-details {
+    max-height: 0;
+    overflow: hidden;
+    transition:
+        max-height 0.3s ease-in-out,
+        padding 0.3s ease-in-out;
 }
 
-.route-details.expanded { 
-    max-height: 2000px; 
-    padding-top: 1rem; 
+.route-details.expanded {
+    max-height: 2000px;
+    padding-top: 1rem;
 }
 
 /* Expand icon animation */
-.expand-icon { 
-    transition: transform 0.2s ease-in-out; 
+.expand-icon {
+    transition: transform 0.2s ease-in-out;
 }
 
-.expand-icon.rotated { 
-    transform: rotate(180deg); 
+.expand-icon.rotated {
+    transform: rotate(180deg);
 }
 
 /* Dark theme specific styles */
@@ -78,24 +80,24 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.dark .method-get { 
-    @apply bg-green-900 text-green-200 border-green-700; 
+.dark .method-get {
+    @apply bg-green-900 text-green-200 border-green-700;
 }
 
-.dark .method-post { 
-    @apply bg-blue-900 text-blue-200 border-blue-700; 
+.dark .method-post {
+    @apply bg-blue-900 text-blue-200 border-blue-700;
 }
 
-.dark .method-put { 
-    @apply bg-yellow-900 text-yellow-200 border-yellow-700; 
+.dark .method-put {
+    @apply bg-yellow-900 text-yellow-200 border-yellow-700;
 }
 
-.dark .method-delete { 
-    @apply bg-red-900 text-red-200 border-red-700; 
+.dark .method-delete {
+    @apply bg-red-900 text-red-200 border-red-700;
 }
 
-.dark .method-ws { 
-    @apply bg-purple-600 text-white border-purple-400 font-bold; 
+.dark .method-ws {
+    @apply bg-purple-600 text-white border-purple-400 font-bold;
 }
 
 .dark .group-item {
@@ -111,27 +113,27 @@
     .route-collapsed {
         @apply p-3;
     }
-    
+
     .route-collapsed:hover {
         transform: none;
         box-shadow: none;
     }
-    
+
     .group-item {
         @apply mx-2;
     }
-    
+
     /* Ensure text doesn't overflow on very small screens */
     code {
         word-break: break-all;
         white-space: pre-wrap;
     }
-    
+
     /* Adjust spacing for mobile */
     .space-y-4 > * + * {
         margin-top: 1rem;
     }
-    
+
     /* Make buttons more touch-friendly */
     button {
         @apply min-h-[44px];
@@ -165,11 +167,11 @@ pre {
         transform: none;
         box-shadow: none;
     }
-    
+
     .route-collapsed:active {
         @apply bg-gray-100;
     }
-    
+
     .dark .route-collapsed:active {
         @apply bg-gray-700;
     }
@@ -178,12 +180,16 @@ pre {
 /* Test Form Styles */
 .test-form-section {
     animation: slideIn 0.3s ease-in-out;
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.02) 0%, rgba(34, 197, 94, 0.05) 100%);
+    background: linear-gradient(
+        135deg,
+        rgba(34, 197, 94, 0.02) 0%,
+        rgba(34, 197, 94, 0.05) 100%
+    );
     border: 1px solid rgba(34, 197, 94, 0.2);
     border-left: 4px solid #22c55e;
     border-radius: 0.75rem;
-    box-shadow: 
-        0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
         0 2px 4px -1px rgba(0, 0, 0, 0.06),
         0 0 0 1px rgba(34, 197, 94, 0.05);
     margin: 1.5rem 0;
@@ -191,11 +197,15 @@ pre {
 }
 
 .dark .test-form-section {
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(34, 197, 94, 0.08) 100%);
+    background: linear-gradient(
+        135deg,
+        rgba(34, 197, 94, 0.05) 0%,
+        rgba(34, 197, 94, 0.08) 100%
+    );
     border: 1px solid rgba(34, 197, 94, 0.3);
     border-left-color: #16a34a;
-    box-shadow: 
-        0 4px 6px -1px rgba(0, 0, 0, 0.3), 
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.3),
         0 2px 4px -1px rgba(0, 0, 0, 0.2),
         0 0 0 1px rgba(34, 197, 94, 0.1);
 }
@@ -218,7 +228,7 @@ pre {
     background: rgba(248, 250, 252, 0.8);
     border: 1px solid rgba(226, 232, 240, 0.5);
     border-radius: 0.75rem;
-    box-shadow: 
+    box-shadow:
         0 1px 3px 0 rgba(0, 0, 0, 0.1),
         0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
@@ -226,7 +236,7 @@ pre {
 .dark .test-result-section {
     background: rgba(30, 41, 59, 0.8);
     border-color: rgba(51, 65, 85, 0.5);
-    box-shadow: 
+    box-shadow:
         0 1px 3px 0 rgba(0, 0, 0, 0.3),
         0 1px 2px 0 rgba(0, 0, 0, 0.2);
 }
@@ -308,7 +318,7 @@ pre {
 .test-form-section textarea:focus {
     outline: none;
     border-color: #22c55e;
-    box-shadow: 
+    box-shadow:
         0 0 0 3px rgba(34, 197, 94, 0.1),
         0 1px 3px 0 rgba(0, 0, 0, 0.1);
     transform: translateY(-1px);
@@ -317,7 +327,7 @@ pre {
 .dark .test-form-section input:focus,
 .dark .test-form-section textarea:focus {
     border-color: #16a34a;
-    box-shadow: 
+    box-shadow:
         0 0 0 3px rgba(34, 197, 94, 0.2),
         0 1px 3px 0 rgba(0, 0, 0, 0.3);
 }
@@ -336,14 +346,14 @@ pre {
 }
 
 /* Button Enhancements */
-.test-form-section button[type="submit"] {
+.test-form-section button[type='submit'] {
     padding: 0 1.5rem;
     height: 2.5rem; /* Такая же высота как у input полей */
     border-radius: 0.5rem;
     font-weight: 600;
     font-size: 0.875rem;
     border: 1.5px solid transparent; /* Добавляем прозрачный border для консистентности */
-    box-shadow: 
+    box-shadow:
         0 2px 4px 0 rgba(34, 197, 94, 0.2),
         0 1px 2px 0 rgba(0, 0, 0, 0.05);
     transition: all 0.2s ease-in-out;
@@ -352,40 +362,38 @@ pre {
     justify-content: center;
 }
 
-.test-form-section button[type="submit"]:hover {
+.test-form-section button[type='submit']:hover {
     transform: translateY(-2px);
-    box-shadow: 
+    box-shadow:
         0 4px 8px 0 rgba(34, 197, 94, 0.25),
         0 2px 4px 0 rgba(0, 0, 0, 0.1);
 }
 
-.test-form-section button[type="submit"]:active {
+.test-form-section button[type='submit']:active {
     transform: translateY(0);
-    box-shadow: 
+    box-shadow:
         0 2px 4px 0 rgba(34, 197, 94, 0.2),
         0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 /* Clear Result Button */
-.test-form-section button[onclick*="clearTestResult"] {
+.test-form-section button[onclick*='clearTestResult'] {
     padding: 0 1.25rem;
     height: 2.5rem; /* Такая же высота как у других элементов */
     border-radius: 0.5rem;
     font-weight: 500;
     font-size: 0.8125rem;
     border: 1.5px solid transparent; /* Консистентный border */
-    box-shadow: 
-        0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     transition: all 0.2s ease-in-out;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.test-form-section button[onclick*="clearTestResult"]:hover {
+.test-form-section button[onclick*='clearTestResult']:hover {
     transform: translateY(-1px);
-    box-shadow: 
-        0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
 }
 
 /* Loading spinner animation */
@@ -467,69 +475,69 @@ pre {
         padding: 1rem;
         border-radius: 0.5rem;
     }
-    
+
     .test-form-section form {
         gap: 1.25rem;
     }
-    
+
     .test-form-section h5 {
         font-size: 1rem;
         margin-bottom: 0.75rem;
         padding-bottom: 0.5rem;
     }
-    
+
     .test-form-section .flex {
         flex-direction: column;
         align-items: stretch;
         gap: 0.75rem;
     }
-    
-    .test-form-section .flex label[class*="min-w"] {
+
+    .test-form-section .flex label[class*='min-w'] {
         min-width: 100%;
         margin-bottom: 0.25rem;
     }
-    
+
     .test-form-section button {
         width: 100%;
         justify-content: center;
         padding: 0 1rem;
     }
-    
+
     .test-form-section .flex.items-center.justify-between,
     .test-form-section .flex.flex-col.sm\\:flex-row {
         flex-direction: column;
         gap: 0.75rem;
     }
-    
-    .test-form-section input[name="requestCount"] {
+
+    .test-form-section input[name='requestCount'] {
         width: 100%;
         text-align: left;
     }
-    
+
     .test-result-section {
         margin-top: 1rem;
         padding: 1rem;
         border-radius: 0.5rem;
     }
-    
+
     .test-result-section pre {
         font-size: 0.75rem;
         padding: 0.75rem;
     }
-    
+
     .test-result-section .flex.flex-wrap {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
     }
-    
+
     /* Better mobile spacing for form fields */
     .test-form-section input {
         height: 2.75rem; /* Такая же высота как у кнопок на мобильных */
         padding: 0.5rem 0.75rem;
         font-size: 1rem; /* Better for mobile input */
     }
-    
+
     .test-form-section textarea {
         padding: 0.875rem 0.75rem;
         font-size: 1rem;
@@ -597,32 +605,40 @@ pre {
 }
 
 /* Test button specific styling */
-button[onclick*="toggleTestForm"] {
+button[onclick*='toggleTestForm'] {
     transition: all 0.2s ease-in-out;
 }
 
-button[onclick*="toggleTestForm"]:hover {
+button[onclick*='toggleTestForm']:hover {
     transform: scale(1.05);
     box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
 }
 
-button[onclick*="toggleTestForm"]:active {
+button[onclick*='toggleTestForm']:active {
     transform: scale(0.98);
 }
 
 /* Load Testing Statistics Styles */
 .load-test-stats {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(79, 70, 229, 0.05) 100%);
+    background: linear-gradient(
+        135deg,
+        rgba(59, 130, 246, 0.05) 0%,
+        rgba(79, 70, 229, 0.05) 100%
+    );
     border: 1px solid rgba(59, 130, 246, 0.15);
-    box-shadow: 
+    box-shadow:
         0 2px 4px 0 rgba(59, 130, 246, 0.1),
         0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .dark .load-test-stats {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(79, 70, 229, 0.1) 100%);
+    background: linear-gradient(
+        135deg,
+        rgba(59, 130, 246, 0.1) 0%,
+        rgba(79, 70, 229, 0.1) 100%
+    );
     border-color: rgba(59, 130, 246, 0.25);
-    box-shadow: 
+    box-shadow:
         0 2px 4px 0 rgba(59, 130, 246, 0.15),
         0 1px 2px 0 rgba(0, 0, 0, 0.2);
 }
@@ -663,13 +679,167 @@ button[onclick*="toggleTestForm"]:active {
 }
 
 /* Request count input styling */
-input[name="requestCount"] {
+input[name='requestCount'] {
     transition: all 0.2s ease-in-out;
 }
 
-input[name="requestCount"]:focus {
+input[name='requestCount']:focus {
     transform: scale(1.02);
     box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+/* Response Type Styling */
+.response-type-badge {
+    @apply px-3 py-1.5 bg-blue-100 text-blue-800 rounded-md text-xs font-mono font-bold uppercase tracking-wide;
+    border: 1.5px solid rgba(59, 130, 246, 0.3);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
+    letter-spacing: 0.05em;
+}
+
+.dark .response-type-badge {
+    @apply bg-blue-900 text-blue-100;
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
+}
+
+.response-type-section {
+    background: linear-gradient(
+        135deg,
+        rgba(59, 130, 246, 0.03) 0%,
+        rgba(99, 102, 241, 0.03) 50%,
+        rgba(139, 92, 246, 0.03) 100%
+    );
+    @apply rounded-xl border border-blue-200 p-5 mb-4;
+    box-shadow:
+        0 2px 8px rgba(59, 130, 246, 0.08),
+        0 1px 3px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.response-type-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+}
+
+.dark .response-type-section {
+    background: linear-gradient(
+        135deg,
+        rgba(59, 130, 246, 0.08) 0%,
+        rgba(99, 102, 241, 0.08) 50%,
+        rgba(139, 92, 246, 0.08) 100%
+    );
+    @apply border-blue-800;
+    box-shadow:
+        0 2px 8px rgba(59, 130, 246, 0.15),
+        0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.response-field-item {
+    @apply border-l-4 border-blue-200 pl-4 pr-3 py-3 mb-3 rounded-r-lg;
+    background: rgba(255, 255, 255, 0.5);
+    transition: all 0.2s ease-in-out;
+}
+
+.dark .response-field-item {
+    @apply border-blue-700;
+    background: rgba(51, 65, 85, 0.5);
+}
+
+.response-field-item:hover {
+    @apply bg-blue-50 border-blue-400;
+    transform: translateX(4px);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.1);
+}
+
+.dark .response-field-item:hover {
+    @apply bg-blue-900 bg-opacity-20 border-blue-500;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+}
+
+.field-name-badge {
+    @apply px-2.5 py-1 rounded-md text-xs font-mono font-bold break-all;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.field-name-badge:hover {
+    transform: scale(1.03);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.field-type-badge {
+    @apply px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs font-medium;
+    border: 1px solid rgba(156, 163, 175, 0.4);
+    font-weight: 600;
+}
+
+.dark .field-type-badge {
+    @apply bg-gray-700 text-gray-200;
+    border-color: rgba(156, 163, 175, 0.5);
+}
+
+.field-example {
+    @apply text-gray-700 text-xs font-mono mt-1.5 p-2 bg-gray-100 rounded-md;
+    border: 1px solid rgba(156, 163, 175, 0.3);
+    font-weight: 500;
+}
+
+.dark .field-example {
+    @apply text-gray-200 bg-gray-800;
+    border-color: rgba(156, 163, 175, 0.4);
+}
+
+.field-description {
+    @apply text-gray-600 text-xs break-words mt-1.5 italic pl-2;
+    border-left: 2px solid rgba(156, 163, 175, 0.3);
+}
+
+.dark .field-description {
+    @apply text-gray-300;
+    border-left-color: rgba(156, 163, 175, 0.5);
+}
+
+/* Response Type Mobile Responsiveness */
+@media (max-width: 640px) {
+    .response-type-section {
+        @apply p-3 mb-3 rounded-lg;
+    }
+
+    .response-type-badge {
+        font-size: 0.65rem;
+        @apply px-2 py-1;
+        letter-spacing: 0.03em;
+    }
+
+    .response-field-item {
+        @apply pl-3 py-2 mb-1.5;
+    }
+
+    .field-name-badge {
+        font-size: 0.7rem;
+        @apply px-2 py-0.5;
+    }
+
+    .field-type-badge {
+        font-size: 0.7rem;
+        @apply px-1.5 py-0.5;
+    }
+
+    .field-example {
+        font-size: 0.7rem;
+        @apply p-1.5 mt-1;
+    }
+
+    .field-description {
+        font-size: 0.7rem;
+        @apply mt-1 pl-1.5;
+    }
 }
 
 /* Enhanced grid responsiveness for stats */
@@ -678,21 +848,21 @@ input[name="requestCount"]:focus {
         grid-template-columns: repeat(2, 1fr);
         gap: 0.75rem;
     }
-    
+
     .stats-number {
         font-size: 1.5rem;
     }
-    
+
     /* Stack request count and button vertically on mobile */
     .test-form-section .flex.items-center.gap-3 {
         @apply flex-col items-start;
     }
-    
-    .test-form-section input[name="requestCount"] {
+
+    .test-form-section input[name='requestCount'] {
         width: 100%;
     }
-    
-    .test-form-section button[type="submit"] {
+
+    .test-form-section button[type='submit'] {
         width: 100%;
         justify-content: center;
     }
@@ -715,7 +885,8 @@ input[name="requestCount"]:focus {
 }
 
 @keyframes pulse {
-    0%, 100% {
+    0%,
+    100% {
         opacity: 1;
     }
     50% {

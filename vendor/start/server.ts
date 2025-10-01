@@ -350,6 +350,16 @@ const staticRoutes = [
     '/join-chat',
 ];
 
+// Always point to source types directory, not dist
+const projectRoot = process.cwd();
+const typesDirectory = path.join(projectRoot, 'app/controllers/http/types');
+
+// Parse types from .d.ts files
+const { types, mapping } = getApiTypesForDocumentation(
+    typesDirectory,
+    httpRoutes,
+);
+
 const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
     logger.info('docRoutesHandler');
     if (state.listenSocket && configApp.docPage && configApp.serveStatic) {
@@ -361,30 +371,30 @@ const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
                 validationSchemas[key] = schemas[key].doc;
             }
 
-            // Get types directory path - always use source directory
-            const __filename = fileURLToPath(import.meta.url);
-            const __dirname = path.dirname(__filename);
+            // Serialize routes with handler names instead of function references
+            const serializeRoutes = (routes: any[]) => {
+                return routes.map((group: any) => ({
+                    ...group,
+                    group: group.group?.map((route: any) => ({
+                        ...route,
+                        handler:
+                            typeof route.handler === 'function'
+                                ? route.handler.name || 'unknown'
+                                : route.handler,
+                    })),
+                }));
+            };
 
-            // Always point to source types directory, not dist
-            const projectRoot = path.resolve(__dirname, '../../..');
-            const typesDirectory = path.join(
-                projectRoot,
-                'app/controllers/http/types',
-            );
-
-            // Parse types from .d.ts files
-            const { types, mapping } = getApiTypesForDocumentation(
-                typesDirectory,
-                httpRoutes,
-            );
+            const serializedHttpRoutes = serializeRoutes(httpRoutes);
+            const serializedWsRoutes = serializeRoutes(wsRoutes);
 
             res.cork(() => {
                 res.writeStatus(`200`);
                 res.writeHeader('content-type', 'application/json');
                 res.end(
                     JSON.stringify({
-                        httpRoutes,
-                        wsRoutes,
+                        httpRoutes: serializedHttpRoutes,
+                        wsRoutes: serializedWsRoutes,
                         validationSchemas,
                         responseTypes: types,
                         handlerTypeMapping: mapping,

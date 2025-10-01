@@ -180,6 +180,173 @@ function renderResponseSchema(responseSchema, handlerName) {
     return null;
 }
 
+function generateExampleFromType(typeData) {
+    if (!typeData || !typeData.fields) return null;
+
+    const example = {};
+    Object.entries(typeData.fields).forEach(([fieldName, fieldInfo]) => {
+        if (fieldInfo.example !== undefined) {
+            example[fieldName] = fieldInfo.example;
+        } else {
+            // Generate example based on type
+            switch (fieldInfo.type) {
+                case 'string':
+                    example[fieldName] = fieldName.includes('email')
+                        ? 'user@example.com'
+                        : fieldName.includes('name')
+                          ? 'Example Name'
+                          : fieldName.includes('description')
+                            ? 'Example description'
+                            : `example_${fieldName}`;
+                    break;
+                case 'number':
+                    example[fieldName] = fieldName.includes('id')
+                        ? 1
+                        : fieldName.includes('age')
+                          ? 25
+                          : fieldName.includes('price')
+                            ? 99.99
+                            : 123;
+                    break;
+                case 'boolean':
+                    example[fieldName] = true;
+                    break;
+                case 'array':
+                    example[fieldName] = [];
+                    break;
+                case 'object':
+                    example[fieldName] = {};
+                    break;
+                default:
+                    example[fieldName] = `example_${fieldName}`;
+            }
+        }
+    });
+
+    return example;
+}
+
+function renderDetailedResponseFormat(handlerName, route) {
+    const responseTypeInfo = getResponseTypeInfo(handlerName);
+    const responseFormats = getResponseFormat(route.handler);
+
+    if (responseTypeInfo && responseTypeInfo.hasFields) {
+        const exampleData = generateExampleFromType(responseTypeInfo.data);
+
+        return `
+            <div class="space-y-4">
+                <!-- Detailed Response Type -->
+                <div class="response-type-section">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="response-type-badge">${responseTypeInfo.name}</span>
+                        <span class="text-sm text-gray-700 dark:text-gray-200 font-semibold">Response Type</span>
+                    </div>
+                    <div class="space-y-3 overflow-x-auto">
+                        ${renderResponseTypeFields(responseTypeInfo.data)}
+                    </div>
+                    ${
+                        exampleData && Object.keys(exampleData).length > 0
+                            ? `
+                        <div class="mt-4 pt-4 border-t border-blue-200 dark:border-blue-700">
+                            <h6 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">Example Response</h6>
+                            <pre class="text-xs bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-3 rounded-md border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(exampleData, null, 2)}</code></pre>
+                        </div>
+                    `
+                            : ''
+                    }
+                </div>
+                
+                <!-- Success Response Format -->
+                <div class="p-3 bg-green-50 dark:bg-green-900 dark:bg-opacity-10 rounded-lg border border-green-200 dark:border-green-800">
+                    <h6 class="text-sm font-semibold text-green-700 dark:text-green-400 mb-2">Success Response Format</h6>
+                    <pre class="text-xs bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-3 rounded-md border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(responseFormats[route.method]?.success || { status: 200, data: 'Success' }, null, 2)}</code></pre>
+                </div>
+                
+                <!-- Error Response Format -->
+                <div class="p-3 bg-red-50 dark:bg-red-900 dark:bg-opacity-10 rounded-lg border border-red-200 dark:border-red-800">
+                    <h6 class="text-sm font-semibold text-red-700 dark:text-red-400 mb-2">Error Response Format</h6>
+                    <pre class="text-xs bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-3 rounded-md border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(responseFormats[route.method]?.error || { status: 400, message: 'Error' }, null, 2)}</code></pre>
+                </div>
+            </div>
+        `;
+    } else if (responseTypeInfo && responseTypeInfo.name) {
+        // We have a type but no fields - show just the type name with response formats
+        return `
+            <div class="space-y-4">
+                <!-- Response Type Name -->
+                <div class="response-type-section">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="response-type-badge">${responseTypeInfo.name}</span>
+                        <span class="text-sm text-gray-700 dark:text-gray-200 font-semibold">Response Type</span>
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-300 italic">
+                        Type defined but no field details available
+                    </div>
+                </div>
+                
+                <!-- Success Response Format -->
+                <div class="p-3 bg-green-50 dark:bg-green-900 dark:bg-opacity-10 rounded-lg border border-green-200 dark:border-green-800">
+                    <h6 class="text-sm font-semibold text-green-700 dark:text-green-400 mb-2">Success Response Format</h6>
+                    <pre class="text-xs bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-3 rounded-md border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(responseFormats[route.method]?.success || { status: 200, data: 'Success' }, null, 2)}</code></pre>
+                </div>
+                
+                <!-- Error Response Format -->
+                <div class="p-3 bg-red-50 dark:bg-red-900 dark:bg-opacity-10 rounded-lg border border-red-200 dark:border-red-800">
+                    <h6 class="text-sm font-semibold text-red-700 dark:text-red-400 mb-2">Error Response Format</h6>
+                    <pre class="text-xs bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-3 rounded-md border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(responseFormats[route.method]?.error || { status: 400, message: 'Error' }, null, 2)}</code></pre>
+                </div>
+            </div>
+        `;
+    }
+
+    // Fallback to generic response format only
+    return `
+        <div class="space-y-4">
+            <div class="p-3 bg-green-50 dark:bg-green-900 dark:bg-opacity-10 rounded-lg border border-green-200 dark:border-green-800">
+                <h6 class="text-sm font-semibold text-green-700 dark:text-green-400 mb-2">Success Response</h6>
+                <pre class="text-xs bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-3 rounded-md border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(responseFormats[route.method]?.success || { status: 200, data: 'Success' }, null, 2)}</code></pre>
+            </div>
+            <div class="p-3 bg-red-50 dark:bg-red-900 dark:bg-opacity-10 rounded-lg border border-red-200 dark:border-red-800">
+                <h6 class="text-sm font-semibold text-red-700 dark:text-red-400 mb-2">Error Response</h6>
+                <pre class="text-xs bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-3 rounded-md border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(responseFormats[route.method]?.error || { status: 400, message: 'Error' }, null, 2)}</code></pre>
+            </div>
+        </div>
+    `;
+}
+
+function getResponseTypeInfo(handlerName) {
+    // Skip if handler name is invalid
+    if (
+        !handlerName ||
+        handlerName === 'Unknown handler' ||
+        handlerName === 'unknown'
+    ) {
+        return null;
+    }
+
+    if (handlerTypeMapping[handlerName]) {
+        const typeName = handlerTypeMapping[handlerName];
+        const typeData = responseTypes[typeName];
+
+        if (typeData) {
+            const result = {
+                name: typeName,
+                data: typeData,
+                hasFields:
+                    typeData.fields && Object.keys(typeData.fields).length > 0,
+            };
+            // Only log when we successfully find a type
+            console.log(
+                `✓ Response type found: ${handlerName} -> ${typeName}`,
+                typeData,
+            );
+            return result;
+        }
+    }
+
+    return null;
+}
+
 function renderSchemaFields(schema) {
     if (!schema) return null;
 
@@ -187,18 +354,18 @@ function renderSchemaFields(schema) {
         .map(([fieldName, fieldInfo]) => {
             const typeClass = getTypeClass(fieldInfo.type);
             const requiredBadge = fieldInfo.required
-                ? '<span class="text-red-500 dark:text-red-400 text-xs whitespace-nowrap">required</span>'
-                : '<span class="text-gray-400 dark:text-gray-500 text-xs whitespace-nowrap">optional</span>';
+                ? '<span class="text-red-500 dark:text-red-400 text-xs whitespace-nowrap font-medium">required</span>'
+                : '<span class="text-gray-500 dark:text-gray-400 text-xs whitespace-nowrap">optional</span>';
 
             let fieldContent = `
-            <div class="border-l-2 border-gray-200 dark:border-gray-600 pl-3 py-2">
-                <div class="flex flex-wrap items-center gap-2 text-sm mb-1">
-                    <span class="px-2 py-1 ${typeClass} rounded text-xs font-mono font-semibold break-all">${fieldName}</span>
-                    <span class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs">${fieldInfo.type}</span>
+            <div class="response-field-item">
+                <div class="flex flex-wrap items-center gap-2 text-sm mb-2">
+                    <span class="field-name-badge ${typeClass}">${fieldName}</span>
+                    <span class="field-type-badge">${fieldInfo.type}</span>
                     ${requiredBadge}
                 </div>
-                ${fieldInfo.description ? `<div class="text-gray-600 dark:text-gray-400 text-xs break-words mt-1">${fieldInfo.description}</div>` : ''}
-                ${fieldInfo.example !== undefined ? `<div class="text-gray-500 dark:text-gray-500 text-xs font-mono mt-1">Example: ${JSON.stringify(fieldInfo.example)}</div>` : ''}
+                ${fieldInfo.description ? `<div class="field-description">${fieldInfo.description}</div>` : ''}
+                ${fieldInfo.example !== undefined ? `<div class="field-example">Example: ${JSON.stringify(fieldInfo.example)}</div>` : ''}
         `;
 
             // Handle nested objects
@@ -209,9 +376,9 @@ function renderSchemaFields(schema) {
                         const propTypeClass = getTypeClass(propInfo.type);
                         fieldContent += `
                     <div class="flex flex-wrap items-center gap-2 text-xs">
-                        <span class="px-2 py-1 ${propTypeClass} rounded font-mono font-semibold break-all">${propName}</span>
-                        <span class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">${propInfo.type}</span>
-                        ${propInfo.example !== undefined ? `<span class="text-gray-500 dark:text-gray-500 font-mono">e.g. ${JSON.stringify(propInfo.example)}</span>` : ''}
+                        <span class="field-name-badge ${propTypeClass}">${propName}</span>
+                        <span class="field-type-badge">${propInfo.type}</span>
+                        ${propInfo.example !== undefined ? `<span class="field-example">e.g. ${JSON.stringify(propInfo.example)}</span>` : ''}
                     </div>
                 `;
                     },
@@ -225,6 +392,12 @@ function renderSchemaFields(schema) {
         .join('');
 
     return fields;
+}
+
+function renderResponseTypeFields(typeData) {
+    if (!typeData || !typeData.fields) return null;
+
+    return renderSchemaFields(typeData.fields);
 }
 
 function renderRequestBodySchema(requestBody) {
@@ -256,16 +429,20 @@ function renderRoute(route, prefix, routeId) {
     const responseFormats = getResponseFormat(route.handler);
 
     // Handle case where handler might be a function reference or string
-    const handlerName =
-        typeof route.handler === 'string'
-            ? route.handler
-            : route.handler && route.handler.name
-              ? route.handler.name
-              : 'Unknown handler';
+    let handlerName = 'Unknown handler';
+
+    if (typeof route.handler === 'string') {
+        handlerName = route.handler;
+    } else if (route.handler && typeof route.handler === 'function') {
+        // Get the function name - this should match the backend logic
+        handlerName = route.handler.name || 'unknown';
+    } else if (route.handler && route.handler.name) {
+        handlerName = route.handler.name;
+    }
 
     // Get response type for this handler
-    const responseTypeName = handlerTypeMapping[handlerName];
-    const hasResponseType = responseTypeName && responseTypes[responseTypeName];
+    const responseTypeInfo = getResponseTypeInfo(handlerName);
+    const hasResponseType = responseTypeInfo && responseTypeInfo.hasFields;
 
     // For WebSocket routes, show different method badge
     const methodDisplay = isWebSocket ? 'WS' : route.method.toUpperCase();
@@ -396,42 +573,7 @@ function renderRoute(route, prefix, routeId) {
                             
                             <div>
                                 <h5 class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Response Format</h5>
-                                ${
-                                    hasResponseType || route.response
-                                        ? `
-                                    <div class="mb-3">
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-mono">${responseTypeName || route.response?.type || 'Response'}</span>
-                                            ${route.response?.description ? `<span class="text-sm text-gray-600 dark:text-gray-400">${route.response.description}</span>` : ''}
-                                        </div>
-                                        <div class="space-y-2 overflow-x-auto">
-                                            ${renderResponseSchema(route.response, handlerName) || '<div class="text-gray-500 dark:text-gray-400 text-sm">No schema available</div>'}
-                                        </div>
-                                        ${
-                                            route.response?.example
-                                                ? `
-                                            <div class="mt-2">
-                                                <h6 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Example</h6>
-                                                <pre class="text-xs bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-2 rounded border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(route.response.example, null, 2)}</code></pre>
-                                            </div>
-                                        `
-                                                : ''
-                                        }
-                                    </div>
-                                `
-                                        : `
-                                    <div class="space-y-3">
-                                        <div>
-                                            <h6 class="text-sm font-medium text-green-700 dark:text-green-400 mb-1">Success Response</h6>
-                                            <pre class="text-xs bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-2 rounded border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(responseFormats[route.method]?.success || { status: 200, data: 'Success' }, null, 2)}</code></pre>
-                                        </div>
-                                        <div>
-                                            <h6 class="text-sm font-medium text-red-700 dark:text-red-400 mb-1">Error Response</h6>
-                                            <pre class="text-xs bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-2 rounded border dark:border-gray-600 overflow-x-auto"><code>${JSON.stringify(responseFormats[route.method]?.error || { status: 400, message: 'Error' }, null, 2)}</code></pre>
-                                        </div>
-                                    </div>
-                                `
-                                }
+                                ${renderDetailedResponseFormat(handlerName, route)}
                             </div>
                         </div>
                     </div>
@@ -1447,7 +1589,6 @@ async function fetchRouteData() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log({ data });
 
         // Set both HTTP and WebSocket routes, validation schemas, and response types
         httpRouteGroups = data.httpRoutes || [];
@@ -1455,6 +1596,22 @@ async function fetchRouteData() {
         validationSchemas = data.validationSchemas || {};
         responseTypes = data.responseTypes || {};
         handlerTypeMapping = data.handlerTypeMapping || {};
+
+        // Summary logging
+        console.log('📘 API Documentation Loaded:', {
+            httpRouteGroups: httpRouteGroups.length,
+            wsRouteGroups: wsRouteGroups.length,
+            responseTypes: Object.keys(responseTypes).length,
+            handlerMappings: Object.keys(handlerTypeMapping).length,
+        });
+
+        // Detailed logging for debugging
+        if (Object.keys(responseTypes).length > 0) {
+            console.log('📦 Response Types:', Object.keys(responseTypes));
+        }
+        if (Object.keys(handlerTypeMapping).length > 0) {
+            console.log('🔗 Handler Mappings:', handlerTypeMapping);
+        }
 
         return {
             httpRoutes: httpRouteGroups,

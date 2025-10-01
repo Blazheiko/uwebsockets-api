@@ -117,6 +117,7 @@ export default {
         }
         const userId = sessionInfo.data?.userId;
         if (!userId) {
+            responseData.status = 401;
             return { status: 'unauthorized', message: 'User ID not found' };
         }
         const user = await User.query().findUnique({
