@@ -22,6 +22,7 @@ import {
     getData,
     extractParameters,
     normalizePath,
+    isValidUrl,
 } from '../utils/httpRequestHandlers.js';
 import logger from '#logger';
 import { getListRoutes } from './router.js';
@@ -496,11 +497,10 @@ const configureHttp = (server: TemplatedApp) => {
     }
 
     server.any('/*', (res, req) => {
-        if (appConfig.serveStatic && req.getMethod() === 'get') {
-            const url = req.getUrl();
-            if (url.indexOf('.') !== -1) {
-                staticHandler(res, req);
-            }
+        const url = req.getUrl();
+
+        if (appConfig.serveStatic && req.getMethod() === 'get' && url.indexOf('.') !== -1) {
+            staticHandler(res, req);
         } else if (corsConfig.enabled && req.getMethod() === 'options') {
             //'OPTIONS' method === 'OPTIONS'
             res.cork(() => {

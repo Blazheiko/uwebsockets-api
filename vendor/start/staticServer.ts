@@ -6,8 +6,6 @@ import appConfig from '#config/app.js';
 import cspConfig from '#config/csp.js';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 
-
-
 const STATIC_PATH = path.join(process.cwd(), './public');
 
 const cache = new Map();
@@ -50,8 +48,20 @@ const startStaticServer = () => {
             logger.info('Success cache Directory ' + STATIC_PATH);
         });
     }
-}
-const staticRoutes = ['/','/chat','/login','/register','/chat','/account','/news','/news/create','/news/edit', '/news/:id','/manifesto'];
+};
+const staticRoutes = [
+    '/',
+    '/chat',
+    '/login',
+    '/register',
+    '/chat',
+    '/account',
+    '/news',
+    '/news/create',
+    '/news/edit',
+    '/news/:id',
+    '/manifesto',
+];
 
 const buildCspValue = (): string => {
     // Prefer full policy string if provided
@@ -61,7 +71,9 @@ const buildCspValue = (): string => {
     const directives: unknown = (cspConfig as any)?.directives;
     if (directives && typeof directives === 'object') {
         const parts: string[] = [];
-        for (const [name, val] of Object.entries(directives as Record<string, unknown>)) {
+        for (const [name, val] of Object.entries(
+            directives as Record<string, unknown>,
+        )) {
             if (Array.isArray(val)) {
                 parts.push(`${name} ${val.join(' ')}`.trim());
             } else if (typeof val === 'string') {
@@ -79,7 +91,9 @@ const cspHeaderValue: string = buildCspValue();
 const cspHeaderName: string = (cspConfig as any)?.reportOnly
     ? 'Content-Security-Policy-Report-Only'
     : 'Content-Security-Policy';
-const isCspEnabled: boolean = Boolean((cspConfig as any)?.enabled && cspHeaderValue);
+const isCspEnabled: boolean = Boolean(
+    (cspConfig as any)?.enabled && cspHeaderValue,
+);
 
 const setCspHeader = (res: HttpResponse) => {
     if (!isCspEnabled) return;
@@ -88,7 +102,7 @@ const setCspHeader = (res: HttpResponse) => {
 
 const staticIndexHandler = (res: HttpResponse, req: HttpRequest) => {
     let data = cache.get('/index.html');
-    let statusCode = data? '200': '404';
+    let statusCode = data ? '200' : '404';
     let mimeType = MIME_TYPES.html;
     res.cork(() => {
         res.writeStatus(statusCode);
@@ -96,7 +110,7 @@ const staticIndexHandler = (res: HttpResponse, req: HttpRequest) => {
         res.writeHeader('Content-Type', mimeType);
         res.end(data || '');
     });
-}
+};
 const staticHandler = (res: HttpResponse, req: HttpRequest) => {
     let data: string | null = null;
     let statusCode = '404';
@@ -105,7 +119,7 @@ const staticHandler = (res: HttpResponse, req: HttpRequest) => {
     const ext = path.extname(url).substring(1).toLowerCase();
     if (ext) {
         mimeType = MIME_TYPES[ext] || MIME_TYPES.html;
-        data =  cache.get(url);
+        data = cache.get(url);
         statusCode = '200';
         if (!data) {
             statusCode = '404';
@@ -119,9 +133,12 @@ const staticHandler = (res: HttpResponse, req: HttpRequest) => {
         res.writeHeader('Content-Type', mimeType);
         res.end(data || '');
     });
+};
 
-}
-
-
-
-export { cacheFile, cacheDirectory, startStaticServer, staticHandler, staticIndexHandler };
+export {
+    cacheFile,
+    cacheDirectory,
+    startStaticServer,
+    staticHandler,
+    staticIndexHandler,
+};

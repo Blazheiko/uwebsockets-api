@@ -4,13 +4,13 @@ import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 const getHeaders = (req: HttpRequest): Map<string, string> => {
     const headers: Map<string, string> = new Map();
     req.forEach((key, value) => {
-        headers.set(key,value.trim())
+        headers.set(key, value.trim());
     });
 
     return headers;
 };
 
-const parseFormDataStream = (body: string, boundary: string)=> {
+const parseFormDataStream = (body: string, boundary: string) => {
     let result: Record<string, string> = {};
     let start = 0;
 
@@ -30,7 +30,7 @@ const parseFormDataStream = (body: string, boundary: string)=> {
     }
 
     return result;
-}
+};
 
 const readData = (res: HttpResponse) => {
     logger.info('readData');
@@ -45,13 +45,13 @@ const readData = (res: HttpResponse) => {
             if (isLast) return resolve(buffer);
         });
     });
-}
+};
 
 const readJson = (body: string) => {
     logger.info('readJson');
-    if(!body) return {};
+    if (!body) return {};
     try {
-        return JSON.parse( body );
+        return JSON.parse(body);
     } catch (e) {
         throw new Error('error parse json');
     }
@@ -64,33 +64,37 @@ const parseContentType = (contentType: string): string => {
     const boundary = contentType.slice(boundaryIndex + 9).trim();
 
     return `--${boundary}`;
-}
+};
 
-const getData = async (res: HttpResponse , contentType: string) => {
+const getData = async (res: HttpResponse, contentType: string) => {
     let data = null;
     const buffer = await readData(res);
-    if(buffer){
+    if (buffer) {
         const body = buffer.toString();
         if (contentType === 'application/json') data = readJson(body);
-        else if(contentType && contentType.startsWith('multipart/form-data'))
-            data = parseFormDataStream(body, parseContentType(contentType))
+        else if (contentType && contentType.startsWith('multipart/form-data'))
+            data = parseFormDataStream(body, parseContentType(contentType));
     }
 
     return data;
-}
-
+};
 
 const normalizePath = (path: string) => {
     return path.startsWith('/') ? path.slice(1) : path;
 };
 
-const extractParameters = (paramNames: string[], req : HttpRequest) => {
+const isValidUrl = (url: string): boolean => {
+    // Check for multiple consecutive slashes (e.g., //, ///)
+    return !/\/\/+/.test(url);
+};
+
+const extractParameters = (paramNames: string[], req: HttpRequest) => {
     const params: Record<string, string> = {};
     for (let i = 0; i < paramNames.length; i++) {
         params[paramNames[i]] = req.getParameter(i) || '';
     }
     return params;
-}
+};
 
 // const extractParameters = (template: string, path: string) => {
 //     const normalizedTemplate = normalizePath(template);
@@ -121,4 +125,4 @@ const extractParameters = (paramNames: string[], req : HttpRequest) => {
 //     return params;
 // };
 
-export { getHeaders, getData, extractParameters, normalizePath };
+export { getHeaders, getData, extractParameters, normalizePath, isValidUrl };
