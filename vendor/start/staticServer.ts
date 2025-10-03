@@ -27,9 +27,22 @@ const MIME_TYPES: Record<string, string> = {
     ttf: 'application/x-font-ttf',
 };
 const cacheFile = async (filePath: string) => {
-    const data = await fs.readFile(filePath, 'utf8');
+    const ext = path.extname(filePath).substring(1).toLowerCase();
+    const isBinary = [
+        'ico',
+        'png',
+        'jpg',
+        'jpeg',
+        'gif',
+        'svg',
+        'woff',
+        'woff2',
+        'ttf',
+    ].includes(ext);
+    const data = await fs.readFile(filePath, isBinary ? null : 'utf8');
     const key = filePath.substring(STATIC_PATH.length);
     cache.set(key, data);
+    logger.info(`Cached file: ${key} (${isBinary ? 'binary' : 'text'})`);
 };
 
 const cacheDirectory = async (directoryPath: string) => {
@@ -112,11 +125,12 @@ const staticIndexHandler = (res: HttpResponse, req: HttpRequest) => {
     });
 };
 const staticHandler = (res: HttpResponse, req: HttpRequest) => {
-    let data: string | null = null;
+    let data: string | Buffer | null = null;
     let statusCode = '404';
     let mimeType = '';
     const url = req.getUrl();
     const ext = path.extname(url).substring(1).toLowerCase();
+    logger.info(`Static handler request: ${url}, ext: ${ext}`);
     if (ext) {
         mimeType = MIME_TYPES[ext] || MIME_TYPES.html;
         data = cache.get(url);
@@ -124,6 +138,9 @@ const staticHandler = (res: HttpResponse, req: HttpRequest) => {
         if (!data) {
             statusCode = '404';
             data = cache.get('/404.html');
+            logger.warn(`File not found in cache: ${url}`);
+        } else {
+            logger.info(`Serving file from cache: ${url}`);
         }
     }
 

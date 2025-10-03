@@ -52,8 +52,9 @@ import wsRoutes from '#app/routes/wsRoutes.js';
 import schemas from '#app/validate/schemas/schemas.js';
 import getIP from '#vendor/utils/getIP.js';
 import { getApiTypesForDocumentation } from '#vendor/utils/parseTypesFromDts.js';
+import { serializeRoutes } from '#vendor/utils/serializeRoutes.js';
 import path from 'path';
-import { fileURLToPath } from 'url';
+
 
 const server: TemplatedApp = uWS.App();
 
@@ -356,10 +357,14 @@ const projectRoot = process.cwd();
 const typesDirectory = path.join(projectRoot, 'app/controllers/http/types');
 
 // Parse types from .d.ts files
-const { types, mapping } = getApiTypesForDocumentation(
-    typesDirectory,
-    httpRoutes,
-);
+let types: any = {};
+let mapping: Record<string, string> = {};
+if (configApp.docPage) {
+    ({ types, mapping } = getApiTypesForDocumentation(
+        typesDirectory,
+        httpRoutes,
+    ));
+}
 
 const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
     logger.info('docRoutesHandler');
@@ -373,18 +378,6 @@ const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
             }
 
             // Serialize routes with handler names instead of function references
-            const serializeRoutes = (routes: any[]) => {
-                return routes.map((group: any) => ({
-                    ...group,
-                    group: group.group?.map((route: any) => ({
-                        ...route,
-                        handler:
-                            typeof route.handler === 'function'
-                                ? route.handler.name || 'unknown'
-                                : route.handler,
-                    })),
-                }));
-            };
 
             const serializedHttpRoutes = serializeRoutes(httpRoutes);
             const serializedWsRoutes = serializeRoutes(wsRoutes);
@@ -399,6 +392,7 @@ const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
                         validationSchemas,
                         responseTypes: types,
                         handlerTypeMapping: mapping,
+                        pathPrefix: appConfig.pathPrefix,
                     }),
                 );
             });
@@ -491,7 +485,7 @@ const configureHttp = (server: TemplatedApp) => {
         }
     });
     if (configApp.docPage && configApp.serveStatic) {
-        server.get('/api/doc/routes', (res, req) => {
+        server.get(`/${appConfig.pathPrefix}/doc/routes`, (res, req) => {
             docRoutesHandler(res, req);
         });
     }
@@ -499,7 +493,11 @@ const configureHttp = (server: TemplatedApp) => {
     server.any('/*', (res, req) => {
         const url = req.getUrl();
 
-        if (appConfig.serveStatic && req.getMethod() === 'get' && url.indexOf('.') !== -1) {
+        if (
+            appConfig.serveStatic &&
+            req.getMethod() === 'get' &&
+            url.indexOf('.') !== -1
+        ) {
             staticHandler(res, req);
         } else if (corsConfig.enabled && req.getMethod() === 'options') {
             //'OPTIONS' method === 'OPTIONS'

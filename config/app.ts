@@ -1,4 +1,5 @@
 import { env } from 'node:process';
+import { normalizePath } from '#vendor/utils/httpRequestHandlers.js';
 
 // Функция для преобразования строки в логическое значение
 // Поддерживаемые значения для true: 'true', '1', 'yes', 'on'
@@ -21,6 +22,7 @@ const config = Object.freeze({
     url: env.APP_URL,
     host: env.APP_HOST || '0.0.0.0',
     port: Number(env.APP_PORT),
+    pathPrefix: normalizePath(env.API_PATH_PREFIX || '/api'),
     unixPath: env.APP_UNIX_PATH,
     // Примеры использования логических значений:
     // SERVE_STATIC=true, SERVE_STATIC=1, SERVE_STATIC=yes, SERVE_STATIC=on

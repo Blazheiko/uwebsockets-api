@@ -1,5 +1,6 @@
 import logger from '#logger';
 import { normalizePath } from '#vendor/utils/httpRequestHandlers.js';
+import appConfig from '#config/app.js';
 import { Method, RouteItem, routeList, WsRoutes } from "./../types/types.js";
 
 const listRoutes: RouteItem[] = [];
@@ -7,10 +8,10 @@ const wsRoutes: WsRoutes = {};
 
 const parseRouteParams = (url: string) => url.split('/').filter(segment => segment.startsWith(':')).map(segment => segment.slice(1));
 
-const createRoute = (method: Method, route:any, groupRateLimit?: any): RouteItem => {
+const createRoute = (method: Method, route:any, groupRateLimit?: any, isWs?: boolean): RouteItem => {
     return {
         method,
-        url: route.url,
+        url: isWs ? `${appConfig.pathPrefix}${route.url}` : `${appConfig.pathPrefix}/${normalizePath(route.url)}`,
         handler: route.handler,
         middlewares: route.middlewares ? route.middlewares : [],
         validator: route.validator ? route.validator : '',
@@ -34,8 +35,10 @@ const routeHandler = (route: any, isWs: boolean, groupRateLimit?: any): void => 
     if (!isWs && !METHODS.includes(method))
         throw new Error(`Error parse routes, route include method: ${method}`);
 
-    if (isWs) wsRoutes[route.url] = createRoute(method, route, groupRateLimit);
-    else listRoutes.push(createRoute(method, route, groupRateLimit));
+    const newRoute = createRoute(method, route, groupRateLimit, isWs);
+
+    if (isWs) wsRoutes[newRoute.url] = newRoute;
+    else listRoutes.push(newRoute);
 };
 
 const routesHandler = (routeList: any[], isWs: boolean): void => {

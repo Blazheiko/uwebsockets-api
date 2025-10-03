@@ -43,7 +43,7 @@ export default [
         ],
         description: 'Auth routes',
         middlewares: ['session_web'],
-        prefix: 'api/auth',
+        prefix: 'auth',
         rateLimit: {
             windowMs: 15 * 60 * 1000,
             maxRequests: 100,
@@ -131,7 +131,7 @@ export default [
         ],
         description: 'Chat routes',
         middlewares: ['session_web'],
-        prefix: 'api/chat',
+        prefix: 'chat',
     },
     {
         group: [
@@ -182,7 +182,7 @@ export default [
         ],
         description: 'Main routes',
         middlewares: ['session_web'],
-        prefix: 'api',
+        prefix: 'test',
     },
     {
         group: [
@@ -239,7 +239,7 @@ export default [
         ],
         description: 'Notes routes',
         middlewares: ['session_web'],
-        prefix: 'api/notes',
+        prefix: 'notes',
     },
     {
         group: [
@@ -296,40 +296,40 @@ export default [
         ],
         description: 'Calendar routes',
         middlewares: ['session_web'],
-        prefix: 'api/calendar',
+        prefix: 'calendar',
     },
     {
         group: [
             // Task Routes
             {
-                url: '/tasks',
+                url: '/',
                 method: 'get',
                 handler: TaskController.getTasks,
                 description: 'Get all tasks',
             },
             {
-                url: '/tasks',
+                url: '/',
                 method: 'post',
                 handler: TaskController.createTask,
                 validator: 'createTask',
                 description: 'Create a new task',
             },
             {
-                url: '/tasks/:taskId',
+                url: '/:taskId',
                 method: 'get',
                 handler: TaskController.getTask,
                 validator: 'getTask',
                 description: 'Get a task by id',
             },
             {
-                url: '/tasks/:taskId',
+                url: '/:taskId',
                 method: 'put',
                 handler: TaskController.updateTask,
                 validator: 'updateTask',
                 description: 'Update a task by id',
             },
             {
-                url: '/tasks/:taskId',
+                url: '/:taskId',
                 method: 'delete',
                 handler: TaskController.deleteTask,
                 validator: 'deleteTask',
@@ -337,28 +337,28 @@ export default [
             },
             // Task specific routes
             {
-                url: '/tasks/:taskId/status',
+                url: '/:taskId/status',
                 method: 'put',
                 handler: TaskController.updateTaskStatus,
                 validator: 'updateTaskStatus',
                 description: 'Update a task status by id',
             },
             {
-                url: '/tasks/:taskId/progress',
+                url: '/:taskId/progress',
                 method: 'put',
                 handler: TaskController.updateTaskProgress,
                 validator: 'updateTaskProgress',
                 description: 'Update a task progress by id',
             },
             {
-                url: '/tasks/project/:projectId',
+                url: '/project/:projectId',
                 method: 'get',
                 handler: TaskController.getTasksByProject,
                 validator: 'getTasksByProject',
                 description: 'Get all tasks for a project',
             },
             {
-                url: '/tasks/:parentTaskId/subtasks',
+                url: '/:parentTaskId/subtasks',
                 method: 'get',
                 handler: TaskController.getSubTasks,
                 validator: 'getSubTasks',
@@ -367,40 +367,40 @@ export default [
         ],
         description: 'Task routes',
         middlewares: ['session_web'],
-        prefix: 'api',
+        prefix: 'tasks',
     },
     {
         group: [
             // Project Routes
             {
-                url: '/projects',
+                url: '/',
                 method: 'get',
                 handler: ProjectController.getProjects,
                 description: 'Get all projects',
             },
             {
-                url: '/projects/create',
+                url: '/create',
                 method: 'post',
                 handler: ProjectController.createProject,
                 validator: 'createProject',
                 description: 'Create a new project',
             },
             {
-                url: '/projects/:projectId',
+                url: '/:projectId',
                 method: 'get',
                 handler: ProjectController.getProject,
                 validator: 'getProject',
                 description: 'Get a project by id',
             },
             {
-                url: '/projects/:projectId',
+                url: '/:projectId',
                 method: 'put',
                 handler: ProjectController.updateProject,
                 validator: 'updateProject',
                 description: 'Update a project by id',
             },
             {
-                url: '/projects/:projectId',
+                url: '/:projectId',
                 method: 'delete',
                 handler: ProjectController.deleteProject,
                 validator: 'deleteProject',
@@ -408,21 +408,21 @@ export default [
             },
             // Project specific routes
             {
-                url: '/projects/:projectId/tasks',
+                url: '/:projectId/tasks',
                 method: 'get',
                 handler: ProjectController.getProjectTasks,
                 validator: 'getProjectTasks',
                 description: 'Get all tasks for a project',
             },
             {
-                url: '/projects/:projectId/statistics',
+                url: '/:projectId/statistics',
                 method: 'get',
                 handler: ProjectController.getProjectStatistics,
                 validator: 'getProjectStatistics',
                 description: 'Get statistics for a project',
             },
             {
-                url: '/projects/:projectId/archive',
+                url: '/:projectId/archive',
                 method: 'put',
                 handler: ProjectController.archiveProject,
                 validator: 'archiveProject',
@@ -431,55 +431,55 @@ export default [
         ],
         description: 'Project routes',
         middlewares: ['session_web'],
-        prefix: 'api',
+        prefix: 'projects',
     },
     {
         group: [
             // Push Subscription Routes
             {
-                url: '/push-subscriptions',
+                url: '/',
                 method: 'get',
                 handler: PushSubscriptionController.getSubscriptions,
             },
             {
-                url: '/push-subscriptions',
+                url: '/',
                 method: 'post',
                 handler: PushSubscriptionController.createSubscription,
                 validator: 'createPushSubscription',
             },
             {
-                url: '/push-subscriptions/:subscriptionId',
+                url: '/:subscriptionId',
                 method: 'get',
                 handler: PushSubscriptionController.getSubscription,
                 validator: 'getPushSubscription',
             },
             {
-                url: '/push-subscriptions/:subscriptionId',
+                url: '/:subscriptionId',
                 method: 'put',
                 handler: PushSubscriptionController.updateSubscription,
                 validator: 'updatePushSubscription',
             },
             {
-                url: '/push-subscriptions/:subscriptionId',
+                url: '/:subscriptionId',
                 method: 'delete',
                 handler: PushSubscriptionController.deleteSubscription,
                 validator: 'deletePushSubscription',
             },
             // Push Subscription specific routes
             {
-                url: '/push-subscriptions/:subscriptionId/logs',
+                url: '/:subscriptionId/logs',
                 method: 'get',
                 handler: PushSubscriptionController.getSubscriptionLogs,
                 validator: 'getPushSubscriptionLogs',
             },
             {
-                url: '/push-subscriptions/:subscriptionId/statistics',
+                url: '/:subscriptionId/statistics',
                 method: 'get',
                 handler: PushSubscriptionController.getSubscriptionStatistics,
                 validator: 'getPushSubscriptionStatistics',
             },
             {
-                url: '/push-subscriptions/:subscriptionId/deactivate',
+                url: '/:subscriptionId/deactivate',
                 method: 'put',
                 handler: PushSubscriptionController.deactivateSubscription,
                 validator: 'deactivatePushSubscription',
@@ -487,6 +487,6 @@ export default [
         ],
         description: 'Push Subscription routes',
         middlewares: ['session_web'],
-        prefix: 'api',
+        prefix: 'push-subscriptions',
     },
 ];
