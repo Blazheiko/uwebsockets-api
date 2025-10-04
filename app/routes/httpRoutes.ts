@@ -238,7 +238,7 @@ export default [
             },
         ],
         description: 'Notes routes',
-        middlewares: ['session_web'],
+        middlewares: ['session_web', 'auth_guard'],
         prefix: 'notes',
     },
     {

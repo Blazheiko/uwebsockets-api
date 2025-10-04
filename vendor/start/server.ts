@@ -28,7 +28,7 @@ import logger from '#logger';
 import { getListRoutes } from './router.js';
 
 import validators from '#vendor/start/validators.js';
-import executeMiddlewares from '#vendor/utils/executeMiddlewares.js';
+import executeMiddlewares from '#vendor/utils/middlewares/executeMiddlewares.js';
 import checkRateLimit from '#vendor/utils/checkRateLimit.js';
 import {
     Cookie,
@@ -54,7 +54,6 @@ import getIP from '#vendor/utils/getIP.js';
 import { getApiTypesForDocumentation } from '#vendor/utils/parseTypesFromDts.js';
 import { serializeRoutes } from '#vendor/utils/serializeRoutes.js';
 import path from 'path';
-
 
 const server: TemplatedApp = uWS.App();
 

@@ -1,7 +1,5 @@
-import { HttpContext } from '../types/types.js';
-import sessionConfig from '#config/session.js';
-import logger from '../../logger.js';
-import { sessionHandler } from './sessionHandler.js';
+import { HttpContext } from '../../types/types.js';
+import { sessionHandler } from '#vendor/utils/sessionHandler.js';
 
 const sessionAPI = async (context: HttpContext, next: Function) => {
 
