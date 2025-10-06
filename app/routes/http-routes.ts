@@ -17,10 +17,6 @@ export default [
                 method: 'post',
                 handler: AuthController.register,
                 validator: 'register',
-                rateLimit: {
-                    windowMs: 1 * 60 * 1000,
-                    maxRequests: 10,
-                },
                 description: 'Register a new user',
             },
             {
@@ -28,10 +24,6 @@ export default [
                 method: 'post',
                 handler: AuthController.login,
                 validator: 'login',
-                rateLimit: {
-                    windowMs: 1 * 60 * 1000,
-                    maxRequests: 10,
-                },
                 description: 'Login a user',
             },
             {
@@ -39,14 +31,22 @@ export default [
                 method: 'post',
                 handler: AuthController.logout,
                 description: 'Logout a user',
+                middlewares: ['auth_guard'],
+            },
+            {
+                url: '/logout-all',
+                method: 'post',
+                handler: AuthController.logoutAll,
+                description: 'Logout all devices',
+                middlewares: ['auth_guard'],
             },
         ],
         description: 'Auth routes',
         middlewares: ['session_web'],
         prefix: 'auth',
         rateLimit: {
-            windowMs: 15 * 60 * 1000,
-            maxRequests: 100,
+            windowMs: 1 * 60 * 1000,
+            maxRequests: 10,
         },
     },
     {

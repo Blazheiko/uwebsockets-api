@@ -64,5 +64,11 @@ export default {
         logger.info('logout handler');
         const res = await auth.logout();
         return { status: (res ? 'success':'error')}
+    },
+    async logoutAll(context: HttpContext){
+        const { auth, logger } = context;
+        logger.info('logoutAll handler');
+        const res = await auth.logoutAll();
+        return { status: (res ? 'success':'error'), deletedCount: res }
     }
 }

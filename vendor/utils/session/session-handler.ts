@@ -16,68 +16,32 @@ import {
     updateSessionData,
     changeSessionData,
     destroySession,
+    destroyAllSessions,
 } from '#vendor/utils/session/redis-session-storage.js';
 import logger from '#logger';
 import {
     createSignedToken,
     verifySignedToken,
 } from '#vendor/utils/session/token-handler.js';
+import { normalizeUserId } from '#vendor/utils/normalize-user-id.js';
 
 logger.info(`Session storage: ${sessionConfig.storage}`);
 
 const generateSessionId = (): string => crypto.randomUUID();
 
-/**
- * Normalizes userId to string format for protection against type coercion attacks
- * Protects against: BigInt/String confusion, scientific notation, empty strings, injections
- * @param userId - userId in any format (bigint, number, string)
- * @returns normalized userId as string or '0' for unauthorized users
- */
-const normalizeUserId = (
-    userId: string | bigint | number | undefined | null,
-): string => {
-    if (userId === undefined || userId === null) return '0';
 
-    if (typeof userId === 'bigint' || typeof userId === 'number') {
-        return userId.toString();
-    }
-
-    if (typeof userId === 'string') {
-        // Remove whitespace
-        const trimmed = userId.trim();
-
-        // Empty string = unauthorized user
-        if (trimmed === '') return '0';
-
-        // Validation: digits only, protection against scientific notation and injections
-        if (!/^\d+$/.test(trimmed)) {
-            logger.error(`Invalid userId format: ${userId}`, {
-                type: typeof userId,
-                value: userId,
-            });
-            throw new Error(
-                `Invalid userId format: contains non-digit characters`,
-            );
-        }
-
-        return trimmed;
-    }
-
-    logger.error(`Invalid userId type: ${typeof userId}`, { userId });
-    throw new Error(`Invalid userId type: ${typeof userId}`);
-};
 
 /**
  * Sanitizes Redis keys for protection against injections
  * Allowed characters only: letters, digits, hyphen, underscore, colon
  */
-const sanitizeRedisKey = (key: string): string => {
-    if (!/^[a-zA-Z0-9:_-]+$/.test(key)) {
-        logger.error(`Invalid Redis key format: ${key}`);
-        throw new Error(`Invalid Redis key format`);
-    }
-    return key;
-};
+// const sanitizeRedisKey = (key: string): string => {
+//     if (!/^[a-zA-Z0-9:_*-]+$/.test(key)) {
+//         logger.error(`Invalid Redis key format: ${key}`);
+//         throw new Error(`Invalid Redis key format`);
+//     }
+//     return key;
+// };
 
 const createSessionInfo = async (
     data: SessionData = {},
@@ -266,39 +230,20 @@ export const sessionHandler = async (
         }
     };
 
-    context.auth.logoutAll = async () => {
+    context.auth.logoutAll = async (): Promise<number> => {
         try {
-            const userId = sessionInfo?.data?.userId;
-            if (!userId || userId === '0') return false;
-
-            const normalizedLogoutUserId = normalizeUserId(userId);
-            const pattern = sanitizeRedisKey(
-                `session:${normalizedLogoutUserId}:*`,
-            );
-
-            // Use SCAN instead of KEYS for DoS protection
-            // SCAN doesn't block Redis and is safe for production
-            let cursor = '0';
             let deletedCount = 0;
+            const userId = sessionInfo?.data?.userId;
+            if (!userId || userId === '0') return 0;
 
-            do {
-                const [nextCursor, foundKeys] = await redis.scan(
-                    cursor,
-                    'MATCH',
-                    pattern,
-                    'COUNT',
-                    100,
-                );
-                cursor = nextCursor;
-                if (foundKeys.length > 0) {
-                    await redis.del(...foundKeys);
-                    deletedCount += foundKeys.length;
-                }
-            } while (cursor !== '0');
+            const sessionId = sessionInfo?.id;
+            if (sessionId) {
+                
+                deletedCount = await destroyAllSessions(userId);
 
-            logger.info(
-                `Deleted ${deletedCount} sessions for user ${normalizedLogoutUserId}`,
-            );
+                logger.info(`User ${userId} logged out all sessions ${deletedCount}`);
+            }
+
 
             const newSessionInfo = await createSessionInfo({});
 
@@ -309,10 +254,10 @@ export const sessionHandler = async (
                 responseData,
             );
 
-            return true;
+            return deletedCount;
         } catch (error) {
             logger.error('Logout all error:', error);
-            return false;
+            return 0;
         }
     };
 };
