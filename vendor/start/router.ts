@@ -1,17 +1,28 @@
 import logger from '#logger';
-import { normalizePath } from '#vendor/utils/httpRequestHandlers.js';
+import { normalizePath } from '#vendor/utils/network/http-request-handlers.js';
 import appConfig from '#config/app.js';
-import { Method, RouteItem, routeList, WsRoutes } from "./../types/types.js";
+import { Method, RouteItem, routeList, WsRoutes } from './../types/types.js';
 
 const listRoutes: RouteItem[] = [];
 const wsRoutes: WsRoutes = {};
 
-const parseRouteParams = (url: string) => url.split('/').filter(segment => segment.startsWith(':')).map(segment => segment.slice(1));
+const parseRouteParams = (url: string) =>
+    url
+        .split('/')
+        .filter((segment) => segment.startsWith(':'))
+        .map((segment) => segment.slice(1));
 
-const createRoute = (method: Method, route:any, groupRateLimit?: any, isWs?: boolean): RouteItem => {
+const createRoute = (
+    method: Method,
+    route: any,
+    groupRateLimit?: any,
+    isWs?: boolean,
+): RouteItem => {
     return {
         method,
-        url: isWs ? `${appConfig.pathPrefix}${route.url}` : `${appConfig.pathPrefix}/${normalizePath(route.url)}`,
+        url: isWs
+            ? `${appConfig.pathPrefix}${route.url}`
+            : `${appConfig.pathPrefix}/${normalizePath(route.url)}`,
         handler: route.handler,
         middlewares: route.middlewares ? route.middlewares : [],
         validator: route.validator ? route.validator : '',
@@ -23,7 +34,11 @@ const createRoute = (method: Method, route:any, groupRateLimit?: any, isWs?: boo
 
 const METHODS = ['get', 'post', 'del', 'put', 'patch'];
 
-const routeHandler = (route: any, isWs: boolean, groupRateLimit?: any): void => {
+const routeHandler = (
+    route: any,
+    isWs: boolean,
+    groupRateLimit?: any,
+): void => {
     if (route.group) throw new Error('Error parse routes, route include group');
     if (!route.url || (!isWs && !route.method) || !route.handler)
         throw new Error(`Error parse routes. invalid route`);
@@ -49,8 +64,14 @@ const routesHandler = (routeList: any[], isWs: boolean): void => {
     });
 };
 
-const parseGroups = (routeList: any[], prefix: string, middlewares: string[], isWs: boolean, groupRateLimit?: any) => {
-    const parseRouteList: any[]  = [];
+const parseGroups = (
+    routeList: any[],
+    prefix: string,
+    middlewares: string[],
+    isWs: boolean,
+    groupRateLimit?: any,
+) => {
+    const parseRouteList: any[] = [];
     routeList.forEach((route) => {
         if (route.group) {
             if (Array.isArray(route.group) && route.group.length) {

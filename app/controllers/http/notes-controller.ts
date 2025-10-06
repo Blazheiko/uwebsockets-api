@@ -1,6 +1,6 @@
 import { HttpContext } from '../../../vendor/types/types.js';
-import Notes from '../../models/Notes.js';
-import NotesPhoto from '../../models/NotesPhoto.js';
+import Notes from '../../models/notes.js';
+import NotesPhoto from '../../models/notes-photo.js';
 
 export default {
     async getNotes(context: HttpContext) {

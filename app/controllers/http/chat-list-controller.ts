@@ -1,8 +1,12 @@
 import { HttpContext } from './../../../vendor/types/types.js';
 import { prisma } from '#database/prisma.js';
-import { getOnlineUser } from '#vendor/utils/wsHandler.js';
+import { getOnlineUser } from '#vendor/utils/routing/ws-router.js';
 export default {
-    async getContactList({ session, httpData , logger}: HttpContext): Promise<any> {
+    async getContactList({
+        session,
+        httpData,
+        logger,
+    }: HttpContext): Promise<any> {
         logger.info('getChatList');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo)
@@ -13,9 +17,12 @@ export default {
         if (!userId || !sessionUserId)
             return { status: 'unauthorized', message: 'User ID not found' };
 
-        if ( +userId !== +sessionUserId ) {
+        if (+userId !== +sessionUserId) {
             logger.error('User used the wrong session');
-            return { status: 'unauthorized', message: 'User used the wrong session' };
+            return {
+                status: 'unauthorized',
+                message: 'User used the wrong session',
+            };
         }
 
         // Get chat list with contacts
@@ -23,13 +30,15 @@ export default {
             where: { userId },
             include: {
                 contact: {
-                    select: { id: true, name: true }
+                    select: { id: true, name: true },
                 },
-                lastMessage: true
+                lastMessage: true,
             },
-            orderBy: { updatedAt: 'desc' }
+            orderBy: { updatedAt: 'desc' },
         });
-        const onlineUsers = getOnlineUser(contactList.map(contact => Number(contact.contactId)));
+        const onlineUsers = getOnlineUser(
+            contactList.map((contact) => Number(contact.contactId)),
+        );
 
         return { status: 'ok', contactList, onlineUsers };
     },
@@ -52,7 +61,7 @@ export default {
 
         // Check if participant exists
         const participant = await prisma.user.findUnique({
-            where: { id: participantId }
+            where: { id: participantId },
         });
 
         if (!participant) {
@@ -64,23 +73,17 @@ export default {
             where: {
                 OR: [
                     {
-                        AND: [
-                            { userId },
-                            { contactId: participantId }
-                        ]
+                        AND: [{ userId }, { contactId: participantId }],
                     },
                     {
-                        AND: [
-                            { userId: participantId },
-                            { contactId: userId }
-                        ]
-                    }
-                ]
+                        AND: [{ userId: participantId }, { contactId: userId }],
+                    },
+                ],
             },
             include: {
                 user: true,
-                contact: true
-            }
+                contact: true,
+            },
         });
 
         if (existingChat) {
@@ -91,12 +94,12 @@ export default {
             data: {
                 userId,
                 contactId: participantId,
-                status: 'accepted'
+                status: 'accepted',
             },
             include: {
                 user: true,
-                contact: true
-            }
+                contact: true,
+            },
         });
 
         return { status: 'ok', chat };
@@ -121,19 +124,19 @@ export default {
         const chat = await prisma.contactList.findFirst({
             where: {
                 id: chatId,
-                OR: [
-                    { userId },
-                    { contactId: userId }
-                ]
-            }
+                OR: [{ userId }, { contactId: userId }],
+            },
         });
 
         if (!chat) {
-            return { status: 'error', message: 'Chat not found or access denied' };
+            return {
+                status: 'error',
+                message: 'Chat not found or access denied',
+            };
         }
 
         await prisma.contactList.delete({
-            where: { id: chatId }
+            where: { id: chatId },
         });
 
         return { status: 'ok', message: 'Chat deleted successfully' };

@@ -1,6 +1,6 @@
 import { prisma } from '#database/prisma.js';
 import { DateTime } from 'luxon';
-import { serializeModel } from '#vendor/utils/model.js';
+import { serializeModel } from '#vendor/utils/serialization/serialize-model.js';
 import { MessageType } from '@prisma/client';
 
 const schema = {
@@ -15,7 +15,7 @@ export default {
     async create(payload: any) {
         if (!payload || typeof payload !== 'object')
             return new Error('Payload must be object');
-        
+
         const keys = Object.keys(payload);
         for (let field of required) {
             if (!keys.includes(field)) {
@@ -43,12 +43,12 @@ export default {
                     type: payload.type,
                     content: payload.content,
                     src: payload.src,
-                    isRead: false
+                    isRead: false,
                 },
                 include: {
                     sender: true,
-                    receiver: true
-                }
+                    receiver: true,
+                },
             });
 
             // Update unread count in contact list
@@ -56,14 +56,14 @@ export default {
                 where: {
                     userId_contactId: {
                         userId: payload.receiverId,
-                        contactId: payload.senderId
-                    }
+                        contactId: payload.senderId,
+                    },
                 },
                 data: {
                     unreadCount: {
-                        increment: 1
-                    }
-                }
+                        increment: 1,
+                    },
+                },
             });
 
             return message;
@@ -77,14 +77,14 @@ export default {
             where: { id },
             include: {
                 sender: true,
-                receiver: true
-            }
+                receiver: true,
+            },
         });
-        
+
         if (!message) {
             throw new Error(`Message with id ${id} not found`);
         }
-        
+
         return serializeModel(message, schema, hidden);
     },
 
@@ -99,15 +99,15 @@ export default {
             data: updateData,
             include: {
                 sender: true,
-                receiver: true
-            }
+                receiver: true,
+            },
         });
         return serializeModel(message, schema, hidden);
     },
 
     async delete(id: number) {
         const result = await prisma.message.delete({
-            where: { id }
+            where: { id },
         });
         return result;
     },
@@ -117,16 +117,16 @@ export default {
             where: {
                 OR: [
                     { senderId: userId1, receiverId: userId2 },
-                    { senderId: userId2, receiverId: userId1 }
-                ]
+                    { senderId: userId2, receiverId: userId1 },
+                ],
             },
             include: {
                 sender: true,
-                receiver: true
+                receiver: true,
             },
             orderBy: {
-                createdAt: 'asc'
-            }
+                createdAt: 'asc',
+            },
         });
         return this.serializeArray(messages);
     },
@@ -136,7 +136,7 @@ export default {
         const result = await prisma.$transaction(async (prisma) => {
             // Get message to find sender
             const message = await prisma.message.findUnique({
-                where: { id: messageId }
+                where: { id: messageId },
             });
 
             if (!message) {
@@ -153,8 +153,8 @@ export default {
                 data: { isRead: true },
                 include: {
                     sender: true,
-                    receiver: true
-                }
+                    receiver: true,
+                },
             });
 
             // Update unread count in contact list
@@ -162,14 +162,14 @@ export default {
                 where: {
                     userId_contactId: {
                         userId: userId,
-                        contactId: message.senderId
-                    }
+                        contactId: message.senderId,
+                    },
                 },
                 data: {
                     unreadCount: {
-                        decrement: 1
-                    }
-                }
+                        decrement: 1,
+                    },
+                },
             });
 
             return updatedMessage;
@@ -182,8 +182,8 @@ export default {
         const count = await prisma.message.count({
             where: {
                 receiverId: userId,
-                isRead: false
-            }
+                isRead: false,
+            },
         });
         return count;
     },
@@ -197,20 +197,27 @@ export default {
     },
 
     serializeArray(messages: any) {
-        return messages.map((message: any) => serializeModel(message, schema, hidden));
+        return messages.map((message: any) =>
+            serializeModel(message, schema, hidden),
+        );
     },
 
-    async findByIdAndUserId(messageId: number, userId: number, userType: 'sender' | 'receiver') {
-        const whereCondition = userType === 'sender' 
-            ? { id: messageId, senderId: userId }
-            : { id: messageId, receiverId: userId };
+    async findByIdAndUserId(
+        messageId: number,
+        userId: number,
+        userType: 'sender' | 'receiver',
+    ) {
+        const whereCondition =
+            userType === 'sender'
+                ? { id: messageId, senderId: userId }
+                : { id: messageId, receiverId: userId };
 
         const message = await prisma.message.findFirst({
             where: whereCondition,
             include: {
                 sender: true,
-                receiver: true
-            }
+                receiver: true,
+            },
         });
 
         if (!message) {
@@ -222,7 +229,7 @@ export default {
 
     async deleteById(messageId: number) {
         const result = await prisma.message.delete({
-            where: { id: messageId }
+            where: { id: messageId },
         });
         return result;
     },
@@ -233,12 +240,12 @@ export default {
                 where: { id: messageId, senderId: userId },
                 data: {
                     content,
-                    updatedAt: new Date()
+                    updatedAt: new Date(),
                 },
                 include: {
                     sender: true,
-                    receiver: true
-                }
+                    receiver: true,
+                },
             });
             return serializeModel(updatedMessage, schema, hidden);
         } catch (error: any) {
@@ -250,4 +257,4 @@ export default {
             throw error;
         }
     },
-}; 
+};

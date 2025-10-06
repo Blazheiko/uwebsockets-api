@@ -1,6 +1,6 @@
 import { prisma } from '#database/prisma.js';
 import { DateTime } from 'luxon';
-import { serializeModel } from '#vendor/utils/model.js';
+import { serializeModel } from '#vendor/utils/serialization/serialize-model.js';
 import logger from '#logger';
 
 const schema = {
@@ -15,7 +15,7 @@ export default {
     async create(payload: any) {
         if (!payload || typeof payload !== 'object')
             return new Error('Payload must be object');
-        
+
         const keys = Object.keys(payload);
         for (let field of required) {
             if (!keys.includes(field)) {
@@ -28,9 +28,9 @@ export default {
             where: {
                 userId_contactId: {
                     userId: payload.userId,
-                    contactId: payload.contactId
-                }
-            }
+                    contactId: payload.contactId,
+                },
+            },
         });
 
         if (existingContact) {
@@ -48,10 +48,10 @@ export default {
                 },
                 include: {
                     user: false,
-                    contact: true
-                }
+                    contact: true,
+                },
             });
-        }catch (e) {
+        } catch (e) {
             logger.error(e);
             throw new Error('Error creating contact');
         }
@@ -64,14 +64,14 @@ export default {
             where: { id },
             include: {
                 user: true,
-                contact: true
-            }
+                contact: true,
+            },
         });
-        
+
         if (!contact) {
             throw new Error(`Contact list entry with id ${id} not found`);
         }
-        
+
         return serializeModel(contact, schema, hidden);
     },
 
@@ -86,15 +86,15 @@ export default {
             data: updateData,
             include: {
                 user: true,
-                contact: true
-            }
+                contact: true,
+            },
         });
         return serializeModel(contact, schema, hidden);
     },
 
     async delete(id: number) {
         const result = await prisma.contactList.delete({
-            where: { id }
+            where: { id },
         });
         return result;
     },
@@ -103,8 +103,8 @@ export default {
         const contacts = await prisma.contactList.findMany({
             where: { userId },
             include: {
-                contact: true
-            }
+                contact: true,
+            },
         });
         return this.serializeArray(contacts);
     },
@@ -118,6 +118,8 @@ export default {
     },
 
     serializeArray(contacts: any) {
-        return contacts.map((contact: any) => serializeModel(contact, schema, hidden));
+        return contacts.map((contact: any) =>
+            serializeModel(contact, schema, hidden),
+        );
     },
-}; 
+};

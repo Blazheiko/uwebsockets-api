@@ -1,5 +1,5 @@
 import { prisma } from '#database/prisma.js';
-import ContactList from '../models/ContactList.js';
+import ContactList from '../models/contact-list.js';
 import logger from '../../logger.js';
 
 export default async (token: string, userId: number) => {

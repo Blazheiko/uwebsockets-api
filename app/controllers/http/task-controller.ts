@@ -1,6 +1,6 @@
-import Project from '#app/models/Project.js';
+import Project from '#app/models/project.js';
 import { HttpContext } from '../../../vendor/types/types.js';
-import Task from '../../models/Task.js';
+import Task from '../../models/task.js';
 
 export default {
     async getTasks(context: HttpContext) {

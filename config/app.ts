@@ -1,5 +1,5 @@
 import { env } from 'node:process';
-import { normalizePath } from '#vendor/utils/httpRequestHandlers.js';
+import { normalizePath } from '#vendor/utils/network/http-request-handlers.js';
 
 // Функция для преобразования строки в логическое значение
 // Поддерживаемые значения для true: 'true', '1', 'yes', 'on'

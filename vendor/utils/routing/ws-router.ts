@@ -1,27 +1,30 @@
 import logger from '#logger';
-import wsApiHandler from '#vendor/utils/wsApiHandler.js';
+import wsApiHandler from './ws-api-dispatcher.js';
 import { generateUUID } from 'metautil';
 import redis from '#database/redis.js';
 import { HttpRequest, HttpResponse, us_socket_context_t } from 'uWebSockets.js';
-import { MyWebSocket } from '../types/types.js';
+import { MyWebSocket } from '../../types/types.js';
 import { broadcastOnline } from '#vendor/start/server.js';
-import { wsSessionHandler } from '#vendor/utils/sessionHandler.js';
-import getIP from '#vendor/utils/getIP.js';
+import { wsSessionHandler } from '../session/session-handler.js';
+import getIP from '../network/get-ip.js';
 
 const wsStorage: Set<MyWebSocket> = new Set();
-const userStorage: Map<number, Map<string, { ip: string, userAgent: string }>> = new Map();
+const userStorage: Map<
+    number,
+    Map<string, { ip: string; userAgent: string }>
+> = new Map();
 
 const getUserConnections = (userId: number) => {
     return userStorage.get(userId);
-}
+};
 
 const getOnlineUser = (usersOnline: number[]) => {
     const onlineUsers: number[] = [];
     for (const userId of usersOnline) {
-        if(userStorage.has(userId)) onlineUsers.push(userId);
+        if (userStorage.has(userId)) onlineUsers.push(userId);
     }
     return onlineUsers;
-}
+};
 
 const closeAllWs = async () => {
     for (const ws of wsStorage) {
@@ -60,10 +63,14 @@ const unAuthorizedMessage = () => ({
     status: 4001,
     payload: {
         message: `Session expired. Please login again.`,
-    }
+    },
 });
 
-const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: boolean) => {
+const onMessage = async (
+    ws: MyWebSocket,
+    wsMessage: ArrayBuffer,
+    isBinary: boolean,
+) => {
     const userData = ws.getUserData();
     const message = JSON.parse(ab2str(wsMessage));
 
@@ -74,40 +81,51 @@ const onMessage = async (ws: MyWebSocket, wsMessage: ArrayBuffer, isBinary: bool
         // if (token) tokenData = await redis.getex(`auth:ws:${token}`, 'EX', 120);
         // let message = null;
         let session = null;
-        if(userData.sessionId && userData.userId) session = await wsSessionHandler(userData.sessionId, userData.userId);
+        if (userData.sessionId && userData.userId)
+            session = await wsSessionHandler(
+                userData.sessionId,
+                userData.userId,
+            );
 
-        if(!session) {
+        if (!session) {
             ws.cork(() => {
                 try {
-                    ws.send(JSON.stringify(unAuthorizedMessage(), (_, v) =>
-                        typeof v === 'bigint' ? v.toString() : v))
+                    ws.send(
+                        JSON.stringify(unAuthorizedMessage(), (_, v) =>
+                            typeof v === 'bigint' ? v.toString() : v,
+                        ),
+                    );
                     ws.end(4001);
                 } catch (e) {
                     logger.error('Error ws send unAuthorizedMessage');
                     logger.error(e);
                 }
-            })
+            });
 
             return;
         }
 
         if (message) {
             if (message.event === 'service:ping') handlePong(ws);
-            else{
-                const result = await wsApiHandler(message, ws, userData, session);
-                if (result) sendJson(ws, result );
+            else {
+                const result = await wsApiHandler(
+                    message,
+                    ws,
+                    userData,
+                    session,
+                );
+                if (result) sendJson(ws, result);
             }
         }
-
     } catch (err: any) {
         logger.error('Error parse onMessage');
         logger.error(err);
         if (err.code === 'E_VALIDATION_ERROR') {
             sendJson(ws, {
-                    status: '422',
-                    message: 'Validation failure',
-                    messages: err.messages,
-                });
+                status: '422',
+                message: 'Validation failure',
+                messages: err.messages,
+            });
         }
     }
 };
@@ -124,12 +142,12 @@ const onClose = async (ws: MyWebSocket, code: number, message: any) => {
         const userConnection = userStorage.get(userData.userId);
         if (userConnection) {
             userConnection.delete(userData.uuid);
-            if(userConnection.size === 0) {
+            if (userConnection.size === 0) {
                 userStorage.delete(userData.userId);
                 broadcastOnline(userData.userId, 'offline');
             }
         }
-    }catch (e) {
+    } catch (e) {
         logger.error('Error onClose');
         logger.error(e);
     }
@@ -160,15 +178,21 @@ const sendJson = (ws: MyWebSocket, data: any) => {
     }
     try {
         ws.cork(() => {
-            ws.send(JSON.stringify(data, (_, v) =>
-                typeof v === 'bigint' ? v.toString() : v));
+            ws.send(
+                JSON.stringify(data, (_, v) =>
+                    typeof v === 'bigint' ? v.toString() : v,
+                ),
+            );
         });
     } catch (e) {
         logger.error('Error in sendJson:', e);
         try {
             ws.close();
         } catch (closeError) {
-            logger.error('Error closing WebSocket after send failure:', closeError);
+            logger.error(
+                'Error closing WebSocket after send failure:',
+                closeError,
+            );
         }
     }
 };
@@ -187,8 +211,11 @@ const onOpen = async (ws: MyWebSocket) => {
             logger.info(errorMessage);
             ws.cork(() => {
                 try {
-                    ws.send(JSON.stringify(errorMessage, (_, v) =>
-                        typeof v === 'bigint' ? v.toString() : v));
+                    ws.send(
+                        JSON.stringify(errorMessage, (_, v) =>
+                            typeof v === 'bigint' ? v.toString() : v,
+                        ),
+                    );
                     ws.end(4001);
                 } catch (e) {
                     logger.error('Error sending unauthorized message:', e);
@@ -203,22 +230,33 @@ const onOpen = async (ws: MyWebSocket) => {
             status: 200,
             payload: {
                 socket_id: userData.uuid,
-                activity_timeout: 30
-            }
+                activity_timeout: 30,
+            },
         };
         ws.subscribe(`user:${userData.userId}`);
         ws.subscribe(`change_online`);
-        sendJson(ws, broadcastMessage );
+        sendJson(ws, broadcastMessage);
         wsStorage.add(ws);
 
         const userConnection = userStorage.get(userData.userId);
-        if (userConnection) userConnection.set(userData.uuid, { ip: userData.ip, userAgent: userData.userAgent });
+        if (userConnection)
+            userConnection.set(userData.uuid, {
+                ip: userData.ip,
+                userAgent: userData.userAgent,
+            });
         else {
-            userStorage.set(userData.userId, new Map([[userData.uuid, { ip: userData.ip, userAgent: userData.userAgent }]]));
+            userStorage.set(
+                userData.userId,
+                new Map([
+                    [
+                        userData.uuid,
+                        { ip: userData.ip, userAgent: userData.userAgent },
+                    ],
+                ]),
+            );
             broadcastOnline(userData.userId, 'online');
         }
         logger.info('onOpen ws end');
-
     } catch (e) {
         logger.error('Error in onOpen:', e);
         try {
@@ -229,35 +267,50 @@ const onOpen = async (ws: MyWebSocket) => {
     }
 };
 
-const ab2str = (buffer: ArrayBuffer, encoding: BufferEncoding | undefined = 'utf8') => Buffer.from(buffer).toString(encoding);
+const ab2str = (
+    buffer: ArrayBuffer,
+    encoding: BufferEncoding | undefined = 'utf8',
+) => Buffer.from(buffer).toString(encoding);
 
-const checkUserAccess = async (token: string): Promise<{ sessionId: string , userId: number  } | null> => {
+const checkUserAccess = async (
+    token: string,
+): Promise<{ sessionId: string; userId: number } | null> => {
     if (!token) return null;
     try {
         const tokenData = await redis.get(`auth:ws:${token}`);
         if (!tokenData) return null;
 
         const userData = JSON.parse(tokenData);
-        const { sessionId, userId } = userData
+        const { sessionId, userId } = userData;
         if (!sessionId || !userId) return null;
 
         const sessionData = await redis.get(`session:${userId}:${sessionId}`);
         if (!sessionData) return null;
 
         const sessionInfo = JSON.parse(sessionData);
-        if(sessionInfo && sessionId && userId && sessionInfo.data?.userId == userId)
-            return { sessionId, userId }
+        if (
+            sessionInfo &&
+            sessionId &&
+            userId &&
+            sessionInfo.data?.userId == userId
+        )
+            return { sessionId, userId };
 
         return null;
     } catch (error) {
         logger.error('Error checking user access:', error);
         return null;
     }
-}
+};
 
-const checkToken = (token: string): boolean => Boolean(token && token.length === 16 && /^[a-zA-Z0-9]+$/.test(token));
+const checkToken = (token: string): boolean =>
+    Boolean(token && token.length === 16 && /^[a-zA-Z0-9]+$/.test(token));
 
-const handleUpgrade = async (res: HttpResponse, req: HttpRequest, context: us_socket_context_t): Promise<void> => {
+const handleUpgrade = async (
+    res: HttpResponse,
+    req: HttpRequest,
+    context: us_socket_context_t,
+): Promise<void> => {
     logger.info('handleUpgrade');
     let aborted = false;
     res.onAborted(() => {
@@ -268,18 +321,18 @@ const handleUpgrade = async (res: HttpResponse, req: HttpRequest, context: us_so
     const secWebsocketProtocol = req.getHeader('sec-websocket-protocol');
     const secWebsocketExtensions = req.getHeader('sec-websocket-extensions');
     const userAgent = req.getHeader('user-agent');
-    const ip = getIP(req,res);
+    const ip = getIP(req, res);
     const token = req.getParameter(0);
     // Token validation
     if (!token || !checkToken(token)) {
         res.writeStatus('401 Unauthorized').end('Invalid token format');
         return;
     }
-    const dataAccess: { sessionId: string, userId: number } | null = await checkUserAccess(token);
+    const dataAccess: { sessionId: string; userId: number } | null =
+        await checkUserAccess(token);
 
-    if(!aborted) {
+    if (!aborted) {
         res.cork(() => {
-
             res.upgrade(
                 {
                     ip: ip,
@@ -297,8 +350,16 @@ const handleUpgrade = async (res: HttpResponse, req: HttpRequest, context: us_so
                 secWebsocketExtensions,
                 context,
             );
-        })
+        });
     }
 };
 
-export { onMessage, onOpen, onClose, handleUpgrade, closeAllWs, getUserConnections, getOnlineUser };
+export {
+    onMessage,
+    onOpen,
+    onClose,
+    handleUpgrade,
+    closeAllWs,
+    getUserConnections,
+    getOnlineUser,
+};

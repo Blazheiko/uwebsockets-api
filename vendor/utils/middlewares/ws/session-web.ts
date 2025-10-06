@@ -1,16 +1,15 @@
-import { HttpContext } from '../../types/types.js';
+import { HttpContext } from '../../../types/types.js';
 import sessionConfig from '#config/session.js';
 // import logger from '../../logger.js';
-import { sessionHandler } from '#vendor/utils/sessionHandler.js';
+import { sessionHandler } from '#vendor/utils/session/session-handler.js';
 
 const sessionWeb = async (context: HttpContext, next: Function) => {
-
     const { httpData } = context;
     const cookies = httpData.cookies;
     const sessionId = cookies.get(sessionConfig.cookieName);
-    await sessionHandler( context, sessionId, undefined )
+    await sessionHandler(context, sessionId, undefined);
 
-    await next()
+    await next();
 };
 
 export default sessionWeb;

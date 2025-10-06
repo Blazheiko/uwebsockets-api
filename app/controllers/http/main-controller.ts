@@ -1,15 +1,15 @@
 // import { generateToken } from 'metautil';
 // import redis from '#database/redis.js';
 
-import User from '#app/models/User.js';
-import httpRoutes from '#app/routes/httpRoutes.js';
-import wsRoutes from '#app/routes/wsRoutes.js';
+import User from '#app/models/user.js';
+import httpRoutes from '#app/routes/http-routes.js';
+import wsRoutes from '#app/routes/ws-routes.js';
 import { HttpContext } from './../../../vendor/types/types.js';
 import { generateKey } from 'metautil';
 import redis from '#database/redis.js';
 import configApp from '#config/app.js';
 import configSession from '#config/session.js';
-import generateWsToken from '../../servises/generateWsToken.js';
+import generateWsToken from '../../servises/generate-ws-token.js';
 import { prisma } from '#database/prisma.js';
 import type {
     PingResponse,

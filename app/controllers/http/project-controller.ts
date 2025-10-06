@@ -1,5 +1,5 @@
 import { HttpContext } from '../../../vendor/types/types.js';
-import Project from '../../models/Project.js';
+import Project from '../../models/project.js';
 
 export default {
     async getProjects(context: HttpContext) {

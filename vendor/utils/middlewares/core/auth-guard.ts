@@ -1,11 +1,13 @@
-import { HttpContext } from '../../types/types.js';
+import { HttpContext } from '../../../types/types.js';
 
 const authGuard = async (context: HttpContext, next: Function) => {
-
-    const {  auth } = context;
+    const { auth } = context;
     if (!auth?.check()) {
         context.responseData.status = 401;
-        context.responseData.payload = { status: 'unauthorized', message: 'Unauthorized' };
+        context.responseData.payload = {
+            status: 'unauthorized',
+            message: 'Unauthorized',
+        };
         return;
     }
 
@@ -15,7 +17,7 @@ const authGuard = async (context: HttpContext, next: Function) => {
     //     return;
     // }
 
-    await next()
+    await next();
 };
 
 export default authGuard;

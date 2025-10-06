@@ -1,7 +1,10 @@
 import middlewaresKernel from '#app/middlewares/kernel.js';
-import { HttpContext, WsContext } from '../../types/types.js';
+import { HttpContext, WsContext } from '../../../types/types.js';
 // import logger from '#logger';
-const executeMiddlewares = async (middlewares: string[] | undefined, context: HttpContext | WsContext) => {
+const executeMiddlewares = async (
+    middlewares: string[] | undefined,
+    context: HttpContext | WsContext,
+) => {
     if (!middlewares || !middlewares.length) return true;
     let index = 0;
     let counter = 0;
@@ -11,12 +14,12 @@ const executeMiddlewares = async (middlewares: string[] | undefined, context: Ht
             const middlewareName = middlewares[index++];
             const middleware = middlewaresKernel[middlewareName];
             if (!middleware) throw new Error(`No middleware ${middlewareName}`);
-            await middleware( context, next );
+            await middleware(context, next);
         }
     };
     await next();
 
-    return middlewares.length === counter-1;
+    return middlewares.length === counter - 1;
 };
 
 export default executeMiddlewares;

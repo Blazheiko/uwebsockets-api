@@ -16,20 +16,20 @@ import {
     onClose,
     handleUpgrade,
     closeAllWs,
-} from '#vendor/utils/wsHandler.js';
+} from '#vendor/utils/routing/ws-router.js';
 import {
     getHeaders,
     getData,
     extractParameters,
     normalizePath,
     isValidUrl,
-} from '../utils/httpRequestHandlers.js';
+} from '../utils/network/http-request-handlers.js';
 import logger from '#logger';
 import { getListRoutes } from './router.js';
 
 import validators from '#vendor/start/validators.js';
-import executeMiddlewares from '#vendor/utils/middlewares/executeMiddlewares.js';
-import checkRateLimit from '#vendor/utils/checkRateLimit.js';
+import executeMiddlewares from '#vendor/utils/middlewares/core/execute-middlewares.js';
+import checkRateLimit from '#vendor/utils/rate-limit/http-rate-limit.js';
 import {
     Cookie,
     Header,
@@ -40,19 +40,19 @@ import {
     RouteItem,
     Session,
 } from '../types/types.js';
-import contextHandler from '../utils/contextHandler.js';
+import contextHandler from '../utils/context/http-context.js';
 import {
     startStaticServer,
     staticHandler,
     staticIndexHandler,
 } from './staticServer.js';
 import configApp from '#config/app.js';
-import httpRoutes from '#app/routes/httpRoutes.js';
-import wsRoutes from '#app/routes/wsRoutes.js';
+import httpRoutes from '#app/routes/http-routes.js';
+import wsRoutes from '#app/routes/ws-routes.js';
 import schemas from '#app/validate/schemas/schemas.js';
-import getIP from '#vendor/utils/getIP.js';
-import { getApiTypesForDocumentation } from '#vendor/utils/parseTypesFromDts.js';
-import { serializeRoutes } from '#vendor/utils/serializeRoutes.js';
+import getIP from '#vendor/utils/network/get-ip.js';
+import { getApiTypesForDocumentation } from '#vendor/utils/tooling/parse-types-from-dts.js';
+import { serializeRoutes } from '#vendor/utils/routing/serialize-routes.js';
 import path from 'path';
 
 const server: TemplatedApp = uWS.App();

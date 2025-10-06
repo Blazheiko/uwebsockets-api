@@ -1,13 +1,13 @@
-import MainController from '#app/controllers/http/MainController.js';
-import AuthController from '#app/controllers/http/AuthController.js';
-import ChatListController from '#app/controllers/http/ChatListController.js';
-import MessageController from '#app/controllers/http/MessageController.js';
-import InvitationController from '#app/controllers/http/InvitationController.js';
-import NotesController from '#app/controllers/http/NotesController.js';
-import CalendarController from '#app/controllers/http/CalendarController.js';
-import TaskController from '#app/controllers/http/TaskController.js';
-import ProjectController from '#app/controllers/http/ProjectController.js';
-import PushSubscriptionController from '#app/controllers/http/PushSubscriptionController.js';
+import MainController from '#app/controllers/http/main-controller.js';
+import AuthController from '#app/controllers/http/auth-controller.js';
+import ChatListController from '#app/controllers/http/chat-list-controller.js';
+import MessageController from '#app/controllers/http/message-controller.js';
+import InvitationController from '#app/controllers/http/invitation-controller.js';
+import NotesController from '#app/controllers/http/notes-controller.js';
+import CalendarController from '#app/controllers/http/calendar-controller.js';
+import TaskController from '#app/controllers/http/task-controller.js';
+import ProjectController from '#app/controllers/http/project-controller.js';
+import PushSubscriptionController from '#app/controllers/http/push-subscription-controller.js';
 
 export default [
     {

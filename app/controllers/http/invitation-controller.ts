@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import { prisma } from '#database/prisma.js';
 import { HttpContext } from '../../../vendor/types/types.js';
-import inventionAccept from '#app/servises/inventionAccept.js';
+import inventionAccept from '#app/servises/invention-accept.js';
 export default {
   // Create new invitation
   async createInvitation({ httpData, session, logger }: HttpContext) {

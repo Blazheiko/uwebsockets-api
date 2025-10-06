@@ -1,4 +1,4 @@
-import WSApiController from '#app/controllers/ws/WSApiController.js';
+import WSApiController from '#app/controllers/ws/ws-api-controller.js';
 
 export default [
     {

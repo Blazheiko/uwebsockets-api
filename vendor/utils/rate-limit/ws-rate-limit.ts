@@ -1,12 +1,12 @@
-import { RateLimit, RouteItem, MyWebSocket } from '../types/types.js';
+import { RateLimit, RouteItem, MyWebSocket } from '../../types/types.js';
 import logger from '#logger';
-import { 
-    updateRateLimitCounter, 
-    getRateLimitKey, 
-    getClientIdentifier, 
+import {
+    updateRateLimitCounter,
+    getRateLimitKey,
+    getClientIdentifier,
     logRateLimitInfo,
-    type RateLimitInfo 
-} from './rateLimitCounter.js';
+    type RateLimitInfo,
+} from './rate-limit-counter.js';
 
 function getWsClientIdentifier(ws: MyWebSocket): string {
     const userData = ws.getUserData();
@@ -14,16 +14,19 @@ function getWsClientIdentifier(ws: MyWebSocket): string {
     return getClientIdentifier(userData.ip || 'unknown');
 }
 
-function determineWsRateLimit(route: RouteItem, groupRateLimit?: RateLimit): RateLimit | null {
+function determineWsRateLimit(
+    route: RouteItem,
+    groupRateLimit?: RateLimit,
+): RateLimit | null {
     // Route limits override group limits
     if (route.rateLimit) {
         return route.rateLimit;
     }
-    
+
     if (groupRateLimit) {
         return groupRateLimit;
     }
-    
+
     return null;
 }
 
@@ -37,48 +40,52 @@ interface WsRateLimitResult {
 export default async function checkRateLimitWs(
     ws: MyWebSocket,
     route: RouteItem,
-    groupRateLimit?: RateLimit
+    groupRateLimit?: RateLimit,
 ): Promise<WsRateLimitResult> {
     try {
         const rateLimit = determineWsRateLimit(route, groupRateLimit);
-        
+
         // If limits are not configured, allow request
         if (!rateLimit) {
             return { allowed: true };
         }
-        
+
         const clientId = getWsClientIdentifier(ws);
         const routeKey = getRateLimitKey(clientId, route.url);
-        
+
         logger.debug(`Checking WS rate limit for ${routeKey}`, {
             windowMs: rateLimit.windowMs,
-            maxRequests: rateLimit.maxRequests
+            maxRequests: rateLimit.maxRequests,
         });
-        
-        const rateLimitInfo = await updateRateLimitCounter(routeKey, rateLimit.windowMs);
+
+        const rateLimitInfo = await updateRateLimitCounter(
+            routeKey,
+            rateLimit.windowMs,
+        );
         rateLimitInfo.maxRequests = rateLimit.maxRequests;
-        
+
         // Check limit exceeded
         if (rateLimitInfo.requests > rateLimit.maxRequests) {
             logRateLimitInfo(routeKey, rateLimitInfo, false);
-            
-            const retryAfter = Math.ceil((rateLimitInfo.resetTime - Date.now()) / 1000);
-            
-            return { 
+
+            const retryAfter = Math.ceil(
+                (rateLimitInfo.resetTime - Date.now()) / 1000,
+            );
+
+            return {
                 allowed: false,
                 rateLimitInfo,
                 retryAfter,
-                errorMessage: `Rate limit exceeded for ${route.url}. Try again in ${retryAfter} seconds.`
+                errorMessage: `Rate limit exceeded for ${route.url}. Try again in ${retryAfter} seconds.`,
             };
         }
-        
+
         logRateLimitInfo(routeKey, rateLimitInfo, true);
-        
-        return { 
+
+        return {
             allowed: true,
-            rateLimitInfo
+            rateLimitInfo,
         };
-        
     } catch (error) {
         logger.error('WebSocket rate limit check failed', error);
         // In case of error, allow request to not block WebSocket API
@@ -96,7 +103,7 @@ export default async function checkRateLimitWs(
 export function createWsRateLimitErrorResponse(
     errorMessage: string,
     retryAfter: number,
-    event: string
+    event: string,
 ) {
     return {
         event: event,
@@ -105,7 +112,7 @@ export function createWsRateLimitErrorResponse(
             error: 'Rate limit exceeded',
             message: errorMessage,
             retryAfter: retryAfter,
-            timestamp: new Date().toISOString()
-        }
+            timestamp: new Date().toISOString(),
+        },
     };
 }

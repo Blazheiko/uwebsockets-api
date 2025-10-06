@@ -1,6 +1,6 @@
 import { prisma } from '#database/prisma.js';
 import { DateTime } from 'luxon';
-import { serializeModel } from '#vendor/utils/model.js';
+import { serializeModel } from '#vendor/utils/serialization/serialize-model.js';
 import logger from '#logger';
 
 const schema = {
@@ -28,7 +28,7 @@ export default {
         // Check phone uniqueness during creation
         if (payload.phone) {
             const existingUser = await prisma.user.findFirst({
-                where: { phone: payload.phone }
+                where: { phone: payload.phone },
             });
             if (existingUser) {
                 throw new Error('Phone number already exists');
@@ -41,7 +41,7 @@ export default {
                 password: payload.password,
                 email: payload.email,
                 phone: payload.phone || null,
-            }
+            },
         });
         // return user;
         return serializeModel(user, schema, hidden);
@@ -50,13 +50,13 @@ export default {
     async findById(id: number) {
         logger.info(`find user by id: ${id}`);
         const user = await prisma.user.findUnique({
-            where: { id }
+            where: { id },
         });
-        
+
         if (!user) {
             throw new Error(`User with id ${id} not found`);
         }
-        
+
         return serializeModel(user, schema, hidden);
     },
 
@@ -71,8 +71,8 @@ export default {
             const existingUser = await prisma.user.findFirst({
                 where: {
                     phone: payload.phone,
-                    NOT: { id } // Exclude current user
-                }
+                    NOT: { id }, // Exclude current user
+                },
             });
             if (existingUser) {
                 throw new Error('Phone number already exists');
@@ -85,7 +85,7 @@ export default {
 
         const user = await prisma.user.update({
             where: { id },
-            data: updateData
+            data: updateData,
         });
         return serializeModel(user, schema, hidden);
     },
@@ -93,7 +93,7 @@ export default {
     async delete(id: number) {
         logger.info(`delete user with id: ${id}`);
         const result = await prisma.user.delete({
-            where: { id }
+            where: { id },
         });
         return result;
     },

@@ -1,12 +1,12 @@
-import User from '#app/models/User.js';
+import User from '#app/models/user.js';
 import { HttpContext } from '../../../vendor/types/types.js';
 import { generateKey, hashPassword, validatePassword } from 'metautil';
 import redis from '#database/redis.js';
 // import configSession from '#config/session.js';
 import configApp from '#config/app.js';
 import { prisma } from '#database/prisma.js';
-import inventionAccept from '../../servises/inventionAccept.js';
-import generateWsToken from '../../servises/generateWsToken.js';
+import inventionAccept from '../../servises/invention-accept.js';
+import generateWsToken from '../../servises/generate-ws-token.js';
 
 export default {
     async register(context: HttpContext) {

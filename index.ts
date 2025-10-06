@@ -9,8 +9,8 @@ import redis from '#database/redis.js';
 import schemas from '#app/validate/schemas/schemas.js';
 import validators from '#vendor/start/validators.js';
 import { getListRoutes, routesHandler } from '#vendor/start/router.js';
-import httpRoutes from '#app/routes/httpRoutes.js';
-import wsRoutes from '#app/routes/wsRoutes.js';
+import httpRoutes from '#app/routes/http-routes.js';
+import wsRoutes from '#app/routes/ws-routes.js';
 
 // logger.info(configApp);
 

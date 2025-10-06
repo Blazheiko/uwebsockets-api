@@ -1,5 +1,5 @@
 import logger from '#logger';
-import User from '#app/models/User.js';
+import User from '#app/models/user.js';
 import { WsContext, WsData, WsResponseData } from '../../../vendor/types/types.js';
 import { broadcastMessage } from '#vendor/start/server.js';
 export default {

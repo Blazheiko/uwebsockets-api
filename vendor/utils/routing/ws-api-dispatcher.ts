@@ -1,5 +1,5 @@
 import { getWsRoutes } from '#vendor/start/router.js';
-import executeMiddlewares from '#vendor/utils/middlewares/executeMiddlewares.js';
+import executeMiddlewares from '#vendor/utils/middlewares/core/execute-middlewares.js';
 import validators from '#vendor/start/validators.js';
 import {
     Session,
@@ -8,12 +8,12 @@ import {
     WsResponseData,
     WsRoutes,
     MyWebSocket,
-} from '../types/types.js';
-import createWsContext from './createWsContext.js';
+} from '../../types/types.js';
+import createWsContext from '../context/ws-context.js';
 import checkRateLimitWs, {
     createWsRateLimitErrorResponse,
-} from './checkRateLimitWs.js';
-import logger from '../../logger.js';
+} from '../rate-limit/ws-rate-limit.js';
+import logger from '#logger';
 
 const wsRoutes: WsRoutes = getWsRoutes();
 

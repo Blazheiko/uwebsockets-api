@@ -2,8 +2,8 @@ import {
     Session,
     WsContext,
     WsData,
-    WsResponseData
-} from '../types/types.js';
+    WsResponseData,
+} from '../../types/types.js';
 
 import logger from '#logger';
 import { randomUUID } from 'crypto';
@@ -24,9 +24,12 @@ import { randomUUID } from 'crypto';
 //     logoutAll: () => false,
 // });
 
-
 // const auth: any = getDefaultAuth();
-export default async ( wsData: WsData, responseData: WsResponseData, session: Session ): Promise<WsContext> => {
+export default async (
+    wsData: WsData,
+    responseData: WsResponseData,
+    session: Session,
+): Promise<WsContext> => {
     const requestId = randomUUID();
     const requestLogger = logger.child({ requestId });
     // const userData = wsData.middlewareData.userData;
@@ -39,9 +42,8 @@ export default async ( wsData: WsData, responseData: WsResponseData, session: Se
         requestId,
         logger: requestLogger,
         wsData,
-        responseData ,
+        responseData,
         session,
-        auth: null
-    }
-
-}
+        auth: null,
+    };
+};
