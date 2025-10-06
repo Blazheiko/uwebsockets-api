@@ -1,6 +1,7 @@
 import redis from '#database/redis.js';
 import { DateTime } from 'luxon';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
+
 import {
     HttpContext,
     Session,
@@ -9,23 +10,78 @@ import {
     WsContext,
 } from '../../types/types.js';
 import sessionConfig from '#config/session.js';
-import getRedisSessionStorage from './get-redis-session-storage.js';
-import logger from '#logger';
-
-logger.info(`Session storage: ${sessionConfig.storage}`);
-const {
+import {
     saveSession,
     getSession,
     updateSessionData,
     changeSessionData,
     destroySession,
-} = getRedisSessionStorage();
+} from '#vendor/utils/session/redis-session-storage.js';
+import logger from '#logger';
+import {
+    createSignedToken,
+    verifySignedToken,
+} from '#vendor/utils/session/token-handler.js';
+
+logger.info(`Session storage: ${sessionConfig.storage}`);
+
 const generateSessionId = (): string => crypto.randomUUID();
+
+/**
+ * Normalizes userId to string format for protection against type coercion attacks
+ * Protects against: BigInt/String confusion, scientific notation, empty strings, injections
+ * @param userId - userId in any format (bigint, number, string)
+ * @returns normalized userId as string or '0' for unauthorized users
+ */
+const normalizeUserId = (
+    userId: string | bigint | number | undefined | null,
+): string => {
+    if (userId === undefined || userId === null) return '0';
+
+    if (typeof userId === 'bigint' || typeof userId === 'number') {
+        return userId.toString();
+    }
+
+    if (typeof userId === 'string') {
+        // Remove whitespace
+        const trimmed = userId.trim();
+
+        // Empty string = unauthorized user
+        if (trimmed === '') return '0';
+
+        // Validation: digits only, protection against scientific notation and injections
+        if (!/^\d+$/.test(trimmed)) {
+            logger.error(`Invalid userId format: ${userId}`, {
+                type: typeof userId,
+                value: userId,
+            });
+            throw new Error(
+                `Invalid userId format: contains non-digit characters`,
+            );
+        }
+
+        return trimmed;
+    }
+
+    logger.error(`Invalid userId type: ${typeof userId}`, { userId });
+    throw new Error(`Invalid userId type: ${typeof userId}`);
+};
+
+/**
+ * Sanitizes Redis keys for protection against injections
+ * Allowed characters only: letters, digits, hyphen, underscore, colon
+ */
+const sanitizeRedisKey = (key: string): string => {
+    if (!/^[a-zA-Z0-9:_-]+$/.test(key)) {
+        logger.error(`Invalid Redis key format: ${key}`);
+        throw new Error(`Invalid Redis key format`);
+    }
+    return key;
+};
 
 const createSessionInfo = async (
     data: SessionData = {},
 ): Promise<SessionInfo> => {
-    // const sessionId = generateSessionId();
     const session: SessionInfo = {
         id: generateSessionId(),
         data,
@@ -41,44 +97,18 @@ const createSessionInfo = async (
 const createCookieValue = (
     sessionId: string,
     userId: string | undefined,
-): string => (userId ? `${userId}.${sessionId}` : sessionId);
+): string => (userId ? `${userId}.${sessionId}` : `0.${sessionId}`);
 
-export const sessionHandler = async (
+const updateContextWithNewSession = (
     context: HttpContext,
-    accessToken: string | undefined,
+    newSessionInfo: SessionInfo,
     userId: string | undefined,
+    responseData: any,
 ) => {
-    const { responseData } = context;
-    // let userId = undefined;
-    let sessionId = undefined;
-    let cookieUserId = undefined;
-    if (!userId && accessToken) {
-        const decodedString = Buffer.from(accessToken, 'base64').toString(
-            'utf-8',
-        );
-        const index = decodedString.indexOf('.');
-        if (index === -1) sessionId = decodedString;
-        else {
-            cookieUserId = decodedString.substring(0, index);
-            sessionId = decodedString.substring(index + 1);
-        }
-    }
+    const cookieValue = createCookieValue(newSessionInfo.id, userId);
+    const signedToken = createSignedToken(cookieValue);
 
-    let sessionInfo = null;
-
-    if (sessionId) sessionInfo = await getSession(sessionId, cookieUserId);
-
-    if (!sessionInfo) sessionInfo = await createSessionInfo({ userId });
-
-    const cookieValue = createCookieValue(
-        sessionInfo.id,
-        userId || cookieUserId,
-    );
-
-    const value = Buffer.from(cookieValue).toString('base64');
-
-    // responseData.deleteCookie(sessionConfig.cookieName)
-    responseData.setCookie(sessionConfig.cookieName, value, {
+    responseData.setCookie(sessionConfig.cookieName, signedToken, {
         path: sessionConfig.cookie.path,
         httpOnly: sessionConfig.cookie.httpOnly,
         secure: sessionConfig.cookie.secure,
@@ -86,64 +116,265 @@ export const sessionHandler = async (
         sameSite: sessionConfig.cookie.sameSite,
     });
 
+    context.session.sessionInfo = newSessionInfo;
+
+    return newSessionInfo;
+};
+
+export const sessionHandler = async (
+    context: HttpContext,
+    accessToken: string | undefined,
+    userId: string | bigint | number | undefined,
+) => {
+    const { responseData } = context;
+
+    // Normalize userId at the beginning for security
+    const normalizedUserId = userId ? normalizeUserId(userId) : undefined;
+
+    let sessionId = undefined;
+    let cookieUserId = undefined;
+
+    if (!normalizedUserId && accessToken) {
+        const verifiedData = verifySignedToken(accessToken);
+
+        if (verifiedData) {
+            ({ cookieUserId, sessionId } = verifiedData);
+
+            // Validate cookieUserId from token
+            try {
+                cookieUserId = normalizeUserId(cookieUserId);
+            } catch (error) {
+                logger.error('Invalid cookieUserId from token', {
+                    cookieUserId,
+                    ip: context.httpData.ip,
+                    userAgent: context.httpData.headers.get('user-agent'),
+                });
+                cookieUserId = undefined;
+                sessionId = undefined;
+            }
+        } else {
+            logger.warn('Invalid access token', {
+                ip: context.httpData.ip,
+                userAgent: context.httpData.headers.get('user-agent'),
+            });
+        }
+    }
+
+    let sessionInfo: SessionInfo | null = null;
+
+    if (sessionId) {
+        sessionInfo = await getSession(sessionId, cookieUserId || '0');
+    }
+
+    if (!sessionInfo) {
+        sessionInfo = await createSessionInfo({
+            userId: normalizedUserId || undefined,
+        });
+    }
+
+    const finalUserId = normalizedUserId || cookieUserId;
+    const cookieValue = createCookieValue(sessionInfo.id, finalUserId);
+
+    const signedToken = createSignedToken(cookieValue);
+
+    // responseData.deleteCookie(sessionConfig.cookieName)
+    responseData.setCookie(sessionConfig.cookieName, signedToken, {
+        path: sessionConfig.cookie.path,
+        httpOnly: sessionConfig.cookie.httpOnly,
+        secure: sessionConfig.cookie.secure,
+        maxAge: sessionConfig.age,
+        sameSite: sessionConfig.cookie.sameSite,
+    });
+
+    const contextUserId = finalUserId || '0';
+
     context.session.sessionInfo = sessionInfo;
     context.session.updateSessionData = async (newData: SessionData) =>
-        await updateSessionData(sessionInfo!.id, newData);
+        await updateSessionData(sessionInfo!.id, newData, contextUserId);
     context.session.changeSessionData = async (newData: SessionData) =>
-        await changeSessionData(sessionInfo!.id, newData);
+        await changeSessionData(sessionInfo!.id, newData, contextUserId);
     context.session.destroySession = async () =>
-        await destroySession(sessionInfo!.id);
+        await destroySession(sessionInfo!.id, contextUserId);
 
     context.auth.getUserId = () => sessionInfo?.data?.userId;
     context.auth.check = () => Boolean(sessionInfo?.data?.userId);
     context.auth.login = async (user: any) => {
-        const userId = sessionInfo?.data?.userId;
-        const sessionId = sessionInfo?.id;
-        if (sessionId)
-            await destroySession(
-                sessionId,
-                userId ? String(userId) : undefined,
-            );
-        await sessionHandler(context, '', String(user.id));
-        return true;
-    };
-    context.auth.logout = async () => {
-        const userId = sessionInfo?.data?.userId;
-        if (userId) {
-            const sessionId = sessionInfo?.id;
-            if (sessionId) await destroySession(sessionId, String(userId));
-        }
+        try {
+            const oldSessionId = sessionInfo?.id;
+            const oldUserId = sessionInfo?.data?.userId;
 
-        await sessionHandler(context, '', undefined);
-        return true;
+            // Destroy old session with normalized userId
+            if (oldSessionId) {
+                const normalizedOldUserId = normalizeUserId(oldUserId);
+                await destroySession(oldSessionId, normalizedOldUserId);
+            }
+
+            // Normalize new userId for security
+            const normalizedNewUserId = normalizeUserId(user.id);
+            const newSessionInfo = await createSessionInfo({
+                userId: normalizedNewUserId,
+            });
+
+            sessionInfo = updateContextWithNewSession(
+                context,
+                newSessionInfo,
+                normalizedNewUserId,
+                responseData,
+            );
+
+            logger.info(`User logged in`, {
+                userId: normalizedNewUserId,
+                sessionId: newSessionInfo.id,
+            });
+
+            return true;
+        } catch (error) {
+            logger.error('Login error:', error);
+            throw error;
+        }
     };
+
+    context.auth.logout = async () => {
+        try {
+            const userId = sessionInfo?.data?.userId;
+            if (userId) {
+                const sessionId = sessionInfo?.id;
+                if (sessionId) {
+                    const normalizedUserId = normalizeUserId(userId);
+                    await destroySession(sessionId, normalizedUserId);
+
+                    logger.info(`User logged out`, {
+                        userId: normalizedUserId,
+                        sessionId,
+                    });
+                }
+            }
+
+            const newSessionInfo = await createSessionInfo({});
+
+            sessionInfo = updateContextWithNewSession(
+                context,
+                newSessionInfo,
+                undefined,
+                responseData,
+            );
+
+            return true;
+        } catch (error) {
+            logger.error('Logout error:', error);
+            throw error;
+        }
+    };
+
     context.auth.logoutAll = async () => {
-        const userId = sessionInfo?.data?.userId;
-        if (!userId) return true;
-        const sessionId = sessionInfo?.id;
-        if (!sessionId) return false;
-        await redis.del(`session:${userId}:*`);
-        await sessionHandler(context, '', undefined);
-        return true;
+        try {
+            const userId = sessionInfo?.data?.userId;
+            if (!userId || userId === '0') return false;
+
+            const normalizedLogoutUserId = normalizeUserId(userId);
+            const pattern = sanitizeRedisKey(
+                `session:${normalizedLogoutUserId}:*`,
+            );
+
+            // Use SCAN instead of KEYS for DoS protection
+            // SCAN doesn't block Redis and is safe for production
+            let cursor = '0';
+            let deletedCount = 0;
+
+            do {
+                const [nextCursor, foundKeys] = await redis.scan(
+                    cursor,
+                    'MATCH',
+                    pattern,
+                    'COUNT',
+                    100,
+                );
+                cursor = nextCursor;
+                if (foundKeys.length > 0) {
+                    await redis.del(...foundKeys);
+                    deletedCount += foundKeys.length;
+                }
+            } while (cursor !== '0');
+
+            logger.info(
+                `Deleted ${deletedCount} sessions for user ${normalizedLogoutUserId}`,
+            );
+
+            const newSessionInfo = await createSessionInfo({});
+
+            sessionInfo = updateContextWithNewSession(
+                context,
+                newSessionInfo,
+                undefined,
+                responseData,
+            );
+
+            return true;
+        } catch (error) {
+            logger.error('Logout all error:', error);
+            return false;
+        }
     };
 };
 
 export const wsSessionHandler = async (
     sessionId: string,
-    userId: string,
+    userId: string | bigint | number,
 ): Promise<Session | null> => {
-    let sessionInfo = await getSession(sessionId, userId);
-    if (!sessionInfo || !sessionInfo.data || sessionInfo.data.userId != userId)
-        return null;
+    try {
+        // Normalize userId for protection against type coercion attacks
+        const normalizedUserId = normalizeUserId(userId);
 
-    return {
-        sessionInfo: sessionInfo,
-        updateSessionData: async (newData: SessionData) =>
-            await updateSessionData(sessionInfo!.id, newData),
-        changeSessionData: async (newData: SessionData) =>
-            await changeSessionData(sessionInfo!.id, newData),
-        destroySession: async () => await destroySession(sessionInfo!.id),
-    };
+        let sessionInfo = await getSession(sessionId, normalizedUserId);
+
+        if (!sessionInfo) {
+            logger.warn(`Session not found`, {
+                sessionId,
+                userId: normalizedUserId,
+            });
+            return null;
+        }
+
+        // Normalize userId from session and strictly compare
+        const sessionUserId = normalizeUserId(sessionInfo.data?.userId);
+
+        // CRITICAL: use strict comparison !== for protection against type coercion
+        if (sessionUserId !== normalizedUserId) {
+            logger.error(
+                `Session userId mismatch - potential security breach`,
+                {
+                    sessionId,
+                    expectedUserId: normalizedUserId,
+                    expectedType: typeof normalizedUserId,
+                    actualUserId: sessionUserId,
+                    actualType: typeof sessionUserId,
+                    rawSessionUserId: sessionInfo.data?.userId,
+                },
+            );
+            return null;
+        }
+
+        return {
+            sessionInfo: sessionInfo,
+            updateSessionData: async (newData: SessionData) =>
+                await updateSessionData(
+                    sessionInfo!.id,
+                    newData,
+                    normalizedUserId,
+                ),
+            changeSessionData: async (newData: SessionData) =>
+                await changeSessionData(
+                    sessionInfo!.id,
+                    newData,
+                    normalizedUserId,
+                ),
+            destroySession: async () =>
+                await destroySession(sessionInfo!.id, normalizedUserId),
+        };
+    } catch (error) {
+        logger.error('wsSessionHandler error:', error);
+        return null;
+    }
 };
 
 // export default { sessionHandler, wsSessionHandler };
