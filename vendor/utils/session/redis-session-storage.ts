@@ -44,8 +44,9 @@ import redisConfig from '#config/redis.js';
 /**
  * Sanitizes Redis keys for protection against injections
  */
+const MAX_KEY_LENGTH = 86;
 export const sanitizeRedisKey = (key: string): string => {
-    if (!/^[a-zA-Z0-9:_*-]+$/.test(key)) {
+    if (!key || key.length > MAX_KEY_LENGTH || !/^[a-zA-Z0-9:_*-]+$/.test(key)) {
         logger.error(`Invalid Redis key format: ${key}`);
         throw new Error(`Invalid Redis key format`);
     }

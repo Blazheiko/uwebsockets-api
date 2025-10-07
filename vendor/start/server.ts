@@ -395,10 +395,10 @@ const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
                     }),
                 );
             });
-        } catch (error: unknown) {
-            logger.error(error);
+        } catch (err: unknown) {
+            logger.error({ err },'docRoutesHandler error');
             res.cork(() => {
-                handleError(res, error);
+                handleError(res, err);
             });
         }
     } else {

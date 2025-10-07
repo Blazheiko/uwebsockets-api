@@ -71,7 +71,7 @@ const verifySignedToken = (
         const [cookieUserId, sessionId, signature] = parts;
 
         if (!verifySignature(`${cookieUserId}.${sessionId}`, signature)) {
-            logger.warn(
+            logger.warn({cookieUserId, sessionId, signature},
                 `cookieUserId: ${cookieUserId} Invalid token signature`,
             );
             return null;

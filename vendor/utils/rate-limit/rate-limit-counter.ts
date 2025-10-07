@@ -81,16 +81,16 @@ export function logRateLimitInfo(
     passed: boolean
 ): void {
     if (passed) {
-        logger.debug(`Rate limit check passed for ${key}`, {
+        logger.debug({
             requests: rateLimitInfo.requests,
             maxRequests: rateLimitInfo.maxRequests
-        });
+        }, `Rate limit check passed for ${key}`);
     } else {
-        logger.warn(`Rate limit exceeded for ${key}`, {
+        logger.warn({
             requests: rateLimitInfo.requests,
             maxRequests: rateLimitInfo.maxRequests,
             resetTime: rateLimitInfo.resetTime
-        });
+        }, `Rate limit exceeded for ${key}`);
     }
 }
 

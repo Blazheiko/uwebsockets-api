@@ -148,10 +148,10 @@ cookie: {
 The system logs suspicious activity:
 
 ```typescript
-logger.warn('Invalid or expired access token', {
+logger.warn({
     ip: context.httpData.ip,
     userAgent: context.httpData.headers.get('user-agent'),
-});
+}, 'Invalid or expired access token');
 ```
 
 Configure alerts for such events.
