@@ -288,14 +288,14 @@ const sendResponse = (
     responseData: ResponseData,
 ) => {
     res.writeStatus(`${responseData.status}`);
-    if (httpData.isJson) res.writeHeader('content-type', 'application/json');
+    // if (httpData.isJson) res.writeHeader('content-type', 'application/json');
+    res.writeHeader('content-type', 'application/json');
     if (responseData.headers?.length) setHeaders(res, responseData.headers);
     if (responseData.cookies) setCookies(res, responseData.cookies);
     if (corsConfig.enabled) setCorsHeader(res);
+    // && responseData.status >= 200 && responseData.status < 300
     if (
-        responseData.payload &&
-        responseData.status >= 200 &&
-        responseData.status < 300
+        responseData.payload 
     ) {
         // const transformedData = transformBigInts(responseData.payload);
         // res.end(JSON.stringify(transformedData));
@@ -317,21 +317,26 @@ interface State {
 }
 
 const handleError = (res: HttpResponse, error: unknown) => {
-    logger.error({ err: error }, 'error handler');
+    logger.error({ err: error }, 'Handle Error');
+    
     if ((error as ValidationError).code === 'E_VALIDATION_ERROR') {
         const validationError = error as ValidationError;
-        res.writeStatus('422').end(
-            JSON.stringify({
-                message: 'Validation failure',
-                messages: validationError.messages,
-            }),
-        );
+        // res.writeHeader('content-type', 'application/json');
+        res.writeStatus('422')
+        res.end(
+                JSON.stringify({
+                    message: 'Validation failure',
+                    messages: validationError.messages,
+                }),
+            ); 
+        
     } else {
         const errorMessage =
             configApp.env === 'prod' || configApp.env === 'production'
                 ? 'Internal server error'
                 : String(error);
-        res.writeStatus('500').end(JSON.stringify({ error: errorMessage }));
+        res.writeStatus('500')
+        res.end(JSON.stringify(errorMessage));
     }
 };
 
@@ -450,10 +455,10 @@ const setHttpHandler = async (
             res.cork(() => {
                 sendResponse(res, httpData, responseData);
             });
-        } catch (error: unknown) {
-            logger.error({ err: error });
+        } catch (err: unknown) {
+            logger.error({ err }, 'Set Http Handler Error');
             res.cork(() => {
-                handleError(res, error);
+                handleError(res, err); 
             });
         }
     } else {
