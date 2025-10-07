@@ -102,8 +102,8 @@ export default async function checkRateLimit(
         logRateLimitInfo(routeKey, rateLimitInfo, true);
 
         return true;
-    } catch (error) {
-        logger.error('Rate limit check failed', error);
+    } catch (err) {
+        logger.error({ err }, 'Rate limit check failed');
         // In case of error, skip check to not block API
         return true;
     }

@@ -97,8 +97,10 @@ const onMessage = async (
                     );
                     ws.end(4001);
                 } catch (e) {
-                    logger.error('Error ws send unAuthorizedMessage');
-                    logger.error(e);
+                    logger.error(
+                        { err: e },
+                        'Error ws send unAuthorizedMessage',
+                    );
                 }
             });
 
@@ -118,8 +120,7 @@ const onMessage = async (
             }
         }
     } catch (err: any) {
-        logger.error('Error parse onMessage');
-        logger.error(err);
+        logger.error({ err }, 'Error parse onMessage');
         if (err.code === 'E_VALIDATION_ERROR') {
             sendJson(ws, {
                 status: '422',
@@ -148,8 +149,7 @@ const onClose = async (ws: MyWebSocket, code: number, message: any) => {
             }
         }
     } catch (e) {
-        logger.error('Error onClose');
-        logger.error(e);
+        logger.error({ err: e }, 'Error onClose');
     }
 };
 
@@ -185,13 +185,13 @@ const sendJson = (ws: MyWebSocket, data: any) => {
             );
         });
     } catch (e) {
-        logger.error('Error in sendJson:', e);
+        logger.error({ err: e }, 'Error in sendJson:');
         try {
             ws.close();
         } catch (closeError) {
             logger.error(
+                { err: closeError },
                 'Error closing WebSocket after send failure:',
-                closeError,
             );
         }
     }
@@ -218,7 +218,10 @@ const onOpen = async (ws: MyWebSocket) => {
                     );
                     ws.end(4001);
                 } catch (e) {
-                    logger.error('Error sending unauthorized message:', e);
+                    logger.error(
+                        { err: e },
+                        'Error sending unauthorized message:',
+                    );
                 }
             });
 
@@ -258,11 +261,11 @@ const onOpen = async (ws: MyWebSocket) => {
         }
         logger.info('onOpen ws end');
     } catch (e) {
-        logger.error('Error in onOpen:', e);
+        logger.error({ err: e }, 'Error in onOpen:');
         try {
             ws.end(4001);
         } catch (closeError) {
-            logger.error('Error closing connection:', closeError);
+            logger.error({ err: closeError }, 'Error closing connection:');
         }
     }
 };
@@ -298,7 +301,7 @@ const checkUserAccess = async (
 
         return null;
     } catch (error) {
-        logger.error('Error checking user access:', error);
+        logger.error({ err: error }, 'Error checking user access:');
         return null;
     }
 };

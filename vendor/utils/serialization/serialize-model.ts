@@ -14,7 +14,7 @@ const serializeModel = (model: any, schema: any, hidden: string[]) => {
         });
         return newModel;
     } catch (e) {
-        logger.error(e);
+        logger.error({ err: e });
         throw new Error('Error serializeModel');
     }
 };

@@ -4,7 +4,11 @@ import getChatMessages from '#app/servises/chat/get-chat-messages.js';
 import Message from '#app/models/message.js';
 
 export default {
-    async getMessages({ session, httpData, logger }: HttpContext): Promise<any> {
+    async getMessages({
+        session,
+        httpData,
+        logger,
+    }: HttpContext): Promise<any> {
         logger.info('getMessages');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
@@ -28,7 +32,11 @@ export default {
         return { status: 'ok', ...data };
     },
 
-    async sendMessage({ session, httpData, logger }: HttpContext): Promise<any> {
+    async sendMessage({
+        session,
+        httpData,
+        logger,
+    }: HttpContext): Promise<any> {
         logger.info('sendMessage');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
@@ -43,7 +51,10 @@ export default {
         logger.info(httpData.payload);
         logger.info({ userId });
         if (!contactId || !content || +userId !== +sessionUserId) {
-            return { status: 'error', message: 'Contact ID and content are required' };
+            return {
+                status: 'error',
+                message: 'Contact ID and content are required',
+            };
         }
 
         const message = await sendMessage(content, userId, contactId);
@@ -51,7 +62,11 @@ export default {
         return { status: 'ok', message };
     },
 
-    async deleteMessage({ session, httpData, logger }: HttpContext): Promise<any> {
+    async deleteMessage({
+        session,
+        httpData,
+        logger,
+    }: HttpContext): Promise<any> {
         logger.info('deleteMessage');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
@@ -67,9 +82,16 @@ export default {
             return { status: 'error', message: 'Message ID is required' };
         }
 
-        const message = await Message.findByIdAndUserId(messageId, userId, 'sender');
+        const message = await Message.findByIdAndUserId(
+            messageId,
+            userId,
+            'sender',
+        );
         if (!message) {
-            return { status: 'error', message: 'Message not found or access denied' };
+            return {
+                status: 'error',
+                message: 'Message not found or access denied',
+            };
         }
 
         await Message.deleteById(messageId);
@@ -77,7 +99,11 @@ export default {
         return { status: 'ok', message: 'Message deleted successfully' };
     },
 
-    async editMessage({ session, httpData, logger}: HttpContext): Promise<any> {
+    async editMessage({
+        session,
+        httpData,
+        logger,
+    }: HttpContext): Promise<any> {
         logger.info('editMessage');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
@@ -89,9 +115,11 @@ export default {
             return { status: 'unauthorized', message: 'User ID not found' };
         }
 
-        
         if (!messageId || !content) {
-            return { status: 'error', message: 'Message ID and content are required' };
+            return {
+                status: 'error',
+                message: 'Message ID and content are required',
+            };
         }
 
         // const message = await Message.findByIdAndUserId(messageId, userId, 'sender');
@@ -99,9 +127,16 @@ export default {
         //     return { status: 'error', message: 'Message not found or access denied' };
         // }
 
-        const updatedMessage = await Message.updateContent(userId, messageId, content);
+        const updatedMessage = await Message.updateContent(
+            userId,
+            messageId,
+            content,
+        );
 
-        return { status: updatedMessage ?'ok':'error', message: updatedMessage };
+        return {
+            status: updatedMessage ? 'ok' : 'error',
+            message: updatedMessage,
+        };
     },
 
     async markAsRead({ session, httpData, logger }: HttpContext): Promise<any> {
@@ -120,17 +155,27 @@ export default {
             return { status: 'error', message: 'Message ID is required' };
         }
 
-        const message = await Message.findByIdAndUserId(messageId, userId, 'receiver');
+        const message = await Message.findByIdAndUserId(
+            messageId,
+            userId,
+            'receiver',
+        );
         if (!message) {
-            return { status: 'error', message: 'Message not found or access denied' };
+            return {
+                status: 'error',
+                message: 'Message not found or access denied',
+            };
         }
 
         try {
             const result = await Message.markAsRead(messageId, userId);
             return { status: 'ok', message: result };
         } catch (error) {
-            logger.error('Error marking message as read:', error);
-            return { status: 'error', message: 'Failed to mark message as read' };
+            logger.error({ err: error }, 'Error marking message as read:');
+            return {
+                status: 'error',
+                message: 'Failed to mark message as read',
+            };
         }
     },
-}; 
+};

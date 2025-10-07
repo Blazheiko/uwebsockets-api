@@ -86,9 +86,9 @@ const stopSIGTERM = () => {
     process.exit(1);
 };
 const stopUncaughtException = (err: any, origin: any) => {
-    logger.error('event uncaughtException');
-    logger.error(err);
-    logger.error(origin);
+    logger.error({ err }, 'event uncaughtException');
+    // logger.error(err);
+    // logger.error(origin);
     // console.error(err);
     // console.error(origin);
     stopHandler('uncaughtException');

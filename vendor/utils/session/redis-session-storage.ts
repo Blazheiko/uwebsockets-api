@@ -46,7 +46,11 @@ import redisConfig from '#config/redis.js';
  */
 const MAX_KEY_LENGTH = 86;
 export const sanitizeRedisKey = (key: string): string => {
-    if (!key || key.length > MAX_KEY_LENGTH || !/^[a-zA-Z0-9:_*-]+$/.test(key)) {
+    if (
+        !key ||
+        key.length > MAX_KEY_LENGTH ||
+        !/^[a-zA-Z0-9:_*-]+$/.test(key)
+    ) {
         logger.error(`Invalid Redis key format: ${key}`);
         throw new Error(`Invalid Redis key format`);
     }
@@ -88,7 +92,7 @@ export const getSession = async (
     try {
         return JSON.parse(sessionJson);
     } catch (e) {
-        logger.error('Failed to parse session JSON:', e);
+        logger.error({ err: e }, 'Failed to parse session JSON:');
     }
     return null;
 };

@@ -32,7 +32,7 @@ export default {
             });
             return { status: 'success', subscriptions };
         } catch (error) {
-            logger.error('Error getting subscriptions:', error);
+            logger.error({ err: error }, 'Error getting subscriptions:');
             return { status: 'error', message: 'Failed to get subscriptions' };
         }
     },
@@ -113,7 +113,7 @@ export default {
             });
             return { status: 'success', subscription };
         } catch (error) {
-            logger.error('Error creating subscription:', error);
+            logger.error({ err: error }, 'Error creating subscription:');
             return {
                 status: 'error',
                 message: 'Failed to create subscription',
@@ -154,7 +154,7 @@ export default {
 
             return { status: 'success', data: subscription };
         } catch (error) {
-            logger.error('Error getting subscription:', error);
+            logger.error({ err: error }, 'Error getting subscription:');
             return { status: 'error', message: 'Failed to get subscription' };
         }
     },
@@ -215,7 +215,7 @@ export default {
 
             return { status: 'success', subscription: updatedSubscription };
         } catch (error) {
-            logger.error('Error updating subscription:', error);
+            logger.error({ err: error }, 'Error updating subscription:');
             return {
                 status: 'error',
                 message: 'Failed to update subscription',
@@ -253,7 +253,7 @@ export default {
                 message: 'Subscription deleted successfully',
             };
         } catch (error) {
-            logger.error('Error deleting subscription:', error);
+            logger.error({ err: error }, 'Error deleting subscription:');
             return {
                 status: 'error',
                 message: 'Failed to delete subscription',
@@ -286,7 +286,7 @@ export default {
 
             return { status: 'success', data: logs };
         } catch (error) {
-            logger.error('Error getting subscription logs:', error);
+            logger.error({ err: error }, 'Error getting subscription logs:');
             return {
                 status: 'error',
                 message: 'Failed to get subscription logs',
@@ -357,7 +357,10 @@ export default {
 
             return { status: 'success', data: { subscription, statistics } };
         } catch (error) {
-            logger.error('Error getting subscription statistics:', error);
+            logger.error(
+                { err: error },
+                'Error getting subscription statistics:',
+            );
             return {
                 status: 'error',
                 message: 'Failed to get subscription statistics',
@@ -400,7 +403,7 @@ export default {
 
             return { status: 'success', data: deactivatedSubscription };
         } catch (error) {
-            logger.error('Error deactivating subscription:', error);
+            logger.error({ err: error }, 'Error deactivating subscription:');
             return {
                 status: 'error',
                 message: 'Failed to deactivate subscription',

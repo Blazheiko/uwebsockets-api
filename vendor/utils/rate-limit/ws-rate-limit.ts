@@ -87,7 +87,7 @@ export default async function checkRateLimitWs(
             rateLimitInfo,
         };
     } catch (error) {
-        logger.error('WebSocket rate limit check failed', error);
+        logger.error({ err: error }, 'WebSocket rate limit check failed');
         // In case of error, allow request to not block WebSocket API
         return { allowed: true };
     }

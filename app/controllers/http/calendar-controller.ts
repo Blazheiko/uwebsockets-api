@@ -5,7 +5,7 @@ export default {
     async getEvents(context: HttpContext) {
         const { auth, logger } = context;
         logger.info('getEvents handler');
-        
+
         if (!auth.isAuthenticated()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -13,11 +13,11 @@ export default {
         try {
             const events = await prisma.calendar.findMany({
                 where: { userId: auth.user.id },
-                orderBy: { startTime: 'asc' }
+                orderBy: { startTime: 'asc' },
             });
             return { status: 'success', data: events };
         } catch (error) {
-            logger.error('Error getting events:', error);
+            logger.error({ err: error }, 'Error getting events:');
             return { status: 'error', message: 'Failed to get events' };
         }
     },
@@ -25,7 +25,7 @@ export default {
     async createEvent(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('createEvent handler');
-        
+
         if (!auth.isAuthenticated()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -39,12 +39,12 @@ export default {
                     description,
                     startTime: new Date(startTime),
                     endTime: new Date(endTime),
-                    userId: auth.user.id
-                }
+                    userId: auth.user.id,
+                },
             });
             return { status: 'success', data: event };
         } catch (error) {
-            logger.error('Error creating event:', error);
+            logger.error({ err: error }, 'Error creating event:');
             return { status: 'error', message: 'Failed to create event' };
         }
     },
@@ -52,19 +52,19 @@ export default {
     async getEvent(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('getEvent handler');
-        
+
         if (!auth.isAuthenticated()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
-        const { eventId } = httpData.params as { eventId: string }  ;
+        const { eventId } = httpData.params as { eventId: string };
 
         try {
             const event = await prisma.calendar.findFirst({
-                where: { 
+                where: {
                     id: parseInt(eventId),
-                    userId: auth.user.id 
-                }
+                    userId: auth.user.id,
+                },
             });
 
             if (!event) {
@@ -73,7 +73,7 @@ export default {
 
             return { status: 'success', data: event };
         } catch (error) {
-            logger.error('Error getting event:', error);
+            logger.error({ err: error }, 'Error getting event:');
             return { status: 'error', message: 'Failed to get event' };
         }
     },
@@ -81,7 +81,7 @@ export default {
     async updateEvent(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('updateEvent handler');
-        
+
         if (!auth.isAuthenticated()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -91,16 +91,16 @@ export default {
 
         try {
             const event = await prisma.calendar.updateMany({
-                where: { 
+                where: {
                     id: parseInt(eventId),
-                    userId: auth.user.id 
+                    userId: auth.user.id,
                 },
-                data: { 
-                    title, 
+                data: {
+                    title,
                     description,
                     startTime: startTime ? new Date(startTime) : undefined,
-                    endTime: endTime ? new Date(endTime) : undefined
-                }
+                    endTime: endTime ? new Date(endTime) : undefined,
+                },
             });
 
             if (event.count === 0) {
@@ -108,12 +108,12 @@ export default {
             }
 
             const updatedEvent = await prisma.calendar.findUnique({
-                where: { id: parseInt(eventId) }
+                where: { id: parseInt(eventId) },
             });
 
             return { status: 'success', data: updatedEvent };
         } catch (error) {
-            logger.error('Error updating event:', error);
+            logger.error({ err: error }, 'Error updating event:');
             return { status: 'error', message: 'Failed to update event' };
         }
     },
@@ -121,7 +121,7 @@ export default {
     async deleteEvent(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('deleteEvent handler');
-        
+
         if (!auth.isAuthenticated()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -130,10 +130,10 @@ export default {
 
         try {
             const deleted = await prisma.calendar.deleteMany({
-                where: { 
+                where: {
                     id: parseInt(eventId),
-                    userId: auth.user.id 
-                }
+                    userId: auth.user.id,
+                },
             });
 
             if (deleted.count === 0) {
@@ -142,7 +142,7 @@ export default {
 
             return { status: 'success', message: 'Event deleted successfully' };
         } catch (error) {
-            logger.error('Error deleting event:', error);
+            logger.error({ err: error }, 'Error deleting event:');
             return { status: 'error', message: 'Failed to delete event' };
         }
     },
@@ -150,7 +150,7 @@ export default {
     async getEventsByDate(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('getEventsByDate handler');
-        
+
         if (!auth.isAuthenticated()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -160,40 +160,40 @@ export default {
         try {
             const startOfDay = new Date(date);
             startOfDay.setHours(0, 0, 0, 0);
-            
+
             const endOfDay = new Date(date);
             endOfDay.setHours(23, 59, 59, 999);
 
             const events = await prisma.calendar.findMany({
-                where: { 
+                where: {
                     userId: auth.user.id,
                     OR: [
                         {
                             startTime: {
                                 gte: startOfDay,
-                                lte: endOfDay
-                            }
+                                lte: endOfDay,
+                            },
                         },
                         {
                             endTime: {
                                 gte: startOfDay,
-                                lte: endOfDay
-                            }
+                                lte: endOfDay,
+                            },
                         },
                         {
                             AND: [
                                 { startTime: { lte: startOfDay } },
-                                { endTime: { gte: endOfDay } }
-                            ]
-                        }
-                    ]
+                                { endTime: { gte: endOfDay } },
+                            ],
+                        },
+                    ],
                 },
-                orderBy: { startTime: 'asc' }
+                orderBy: { startTime: 'asc' },
             });
 
             return { status: 'success', data: events };
         } catch (error) {
-            logger.error('Error getting events by date:', error);
+            logger.error({ err: error }, 'Error getting events by date:');
             return { status: 'error', message: 'Failed to get events by date' };
         }
     },
@@ -201,7 +201,7 @@ export default {
     async getEventsByRange(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('getEventsByRange handler');
-        
+
         if (!auth.isAuthenticated()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -210,36 +210,39 @@ export default {
 
         try {
             const events = await prisma.calendar.findMany({
-                where: { 
+                where: {
                     userId: auth.user.id,
                     OR: [
                         {
                             startTime: {
                                 gte: new Date(startDate),
-                                lte: new Date(endDate)
-                            }
+                                lte: new Date(endDate),
+                            },
                         },
                         {
                             endTime: {
                                 gte: new Date(startDate),
-                                lte: new Date(endDate)
-                            }
+                                lte: new Date(endDate),
+                            },
                         },
                         {
                             AND: [
                                 { startTime: { lte: new Date(startDate) } },
-                                { endTime: { gte: new Date(endDate) } }
-                            ]
-                        }
-                    ]
+                                { endTime: { gte: new Date(endDate) } },
+                            ],
+                        },
+                    ],
                 },
-                orderBy: { startTime: 'asc' }
+                orderBy: { startTime: 'asc' },
             });
 
             return { status: 'success', data: events };
         } catch (error) {
-            logger.error('Error getting events by range:', error);
-            return { status: 'error', message: 'Failed to get events by range' };
+            logger.error({ err: error }, 'Error getting events by range:');
+            return {
+                status: 'error',
+                message: 'Failed to get events by range',
+            };
         }
-    }
-}; 
+    },
+};

@@ -317,7 +317,7 @@ interface State {
 }
 
 const handleError = (res: HttpResponse, error: unknown) => {
-    logger.error('error handler');
+    logger.error({ err: error }, 'error handler');
     if ((error as ValidationError).code === 'E_VALIDATION_ERROR') {
         const validationError = error as ValidationError;
         res.writeStatus('422').end(
@@ -396,7 +396,7 @@ const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
                 );
             });
         } catch (err: unknown) {
-            logger.error({ err },'docRoutesHandler error');
+            logger.error({ err }, 'docRoutesHandler error');
             res.cork(() => {
                 handleError(res, err);
             });
@@ -451,7 +451,7 @@ const setHttpHandler = async (
                 sendResponse(res, httpData, responseData);
             });
         } catch (error: unknown) {
-            logger.error(error);
+            logger.error({ err: error });
             res.cork(() => {
                 handleError(res, error);
             });

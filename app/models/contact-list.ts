@@ -52,7 +52,7 @@ export default {
                 },
             });
         } catch (e) {
-            logger.error(e);
+            logger.error({ err: e });
             throw new Error('Error creating contact');
         }
 

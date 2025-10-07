@@ -71,7 +71,8 @@ const verifySignedToken = (
         const [cookieUserId, sessionId, signature] = parts;
 
         if (!verifySignature(`${cookieUserId}.${sessionId}`, signature)) {
-            logger.warn({cookieUserId, sessionId, signature},
+            logger.warn(
+                { cookieUserId, sessionId, signature },
                 `cookieUserId: ${cookieUserId} Invalid token signature`,
             );
             return null;
@@ -79,7 +80,7 @@ const verifySignedToken = (
 
         return { cookieUserId, sessionId };
     } catch (error) {
-        logger.error('Token verification error:', error);
+        logger.error({ err: error }, 'Token verification error:');
         return null;
     }
 };

@@ -6,7 +6,7 @@ export default {
     async getNotes(context: HttpContext) {
         const { auth, logger } = context;
         logger.info('getNotes handler');
-        
+
         if (!auth?.check()) {
             return { status: '', message: 'Unauthorized' };
         }
@@ -16,15 +16,21 @@ export default {
             const notes = await Notes.findByUserId(userId);
             return { status: 'ok', data: notes };
         } catch (error) {
-            logger.error('Error getting notes:', error);
-            return { status: 'error', message: error instanceof Error ? error.message : 'Failed to get notes' };
+            logger.error({ err: error }, 'Error getting notes:');
+            return {
+                status: 'error',
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to get notes',
+            };
         }
     },
 
     async createNote(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('createNote handler');
-        
+
         if (!auth?.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -36,19 +42,25 @@ export default {
             const note = await Notes.create({
                 title,
                 description,
-                userId
+                userId,
             });
             return { status: 'ok', data: note };
         } catch (error) {
-            logger.error('Error creating note:', error);
-            return { status: 'error', message: error instanceof Error ? error.message : 'Failed to create note' };
+            logger.error({ err: error }, 'Error creating note:');
+            return {
+                status: 'error',
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to create note',
+            };
         }
     },
 
     async getNote(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('getNote handler');
-        
+
         if (!auth?.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -60,15 +72,21 @@ export default {
             const note = await Notes.findById(parseInt(noteId), userId);
             return { status: 'ok', data: note };
         } catch (error) {
-            logger.error('Error getting note:', error);
-            return { status: 'error', message: error instanceof Error ? error.message : 'Failed to get note' };
+            logger.error({ err: error }, 'Error getting note:');
+            return {
+                status: 'error',
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to get note',
+            };
         }
     },
 
     async updateNote(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('updateNote handler');
-        
+
         if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -80,19 +98,25 @@ export default {
             const userId = auth.getUserId();
             const note = await Notes.update(parseInt(noteId), userId, {
                 title,
-                description
+                description,
             });
             return { status: 'ok', data: note };
         } catch (error) {
-            logger.error('Error updating note:', error);
-            return { status: 'error', message: error instanceof Error ? error.message : 'Failed to update note' };
+            logger.error({ err: error }, 'Error updating note:');
+            return {
+                status: 'error',
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to update note',
+            };
         }
     },
 
     async deleteNote(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('deleteNote handler');
-        
+
         if (!auth?.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -104,15 +128,21 @@ export default {
             await Notes.delete(parseInt(noteId), userId);
             return { status: 'ok', message: 'Note deleted successfully' };
         } catch (error) {
-            logger.error('Error deleting note:', error);
-            return { status: 'error', message: error instanceof Error ? error.message : 'Failed to delete note' };
+            logger.error({ err: error }, 'Error deleting note:');
+            return {
+                status: 'error',
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to delete note',
+            };
         }
     },
 
     async addPhoto(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('addPhoto handler');
-        
+
         if (!auth?.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
@@ -123,11 +153,17 @@ export default {
         try {
             // Verify note belongs to user
             const userId = auth.getUserId();
-            const hasAccess = await Notes.verifyOwnership(parseInt(noteId), userId);
+            const hasAccess = await Notes.verifyOwnership(
+                parseInt(noteId),
+                userId,
+            );
             if (!hasAccess) {
-                return { status: 'error', message: 'Note not found or access denied' };
+                return {
+                    status: 'error',
+                    message: 'Note not found or access denied',
+                };
             }
-            
+
             const photo = await NotesPhoto.create({
                 noteId: parseInt(noteId),
                 src,
@@ -135,34 +171,55 @@ export default {
                 size,
             });
         } catch (error) {
-            logger.error('Error adding photo:', error);
-            return { status: 'error', message: error instanceof Error ? error.message : 'Failed to add photo' };
+            logger.error({ err: error }, 'Error adding photo:');
+            return {
+                status: 'error',
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to add photo',
+            };
         }
     },
 
     async deletePhoto(context: HttpContext) {
         const { httpData, auth, logger } = context;
         logger.info('deletePhoto handler');
-        
+
         if (!auth?.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
-        const { noteId, photoId } = httpData.params as { noteId: string; photoId: string };
+        const { noteId, photoId } = httpData.params as {
+            noteId: string;
+            photoId: string;
+        };
 
         try {
             // Verify note belongs to user
             const userId = auth.getUserId();
-            const hasAccess = await Notes.verifyOwnership(parseInt(noteId), userId);
+            const hasAccess = await Notes.verifyOwnership(
+                parseInt(noteId),
+                userId,
+            );
             if (!hasAccess) {
-                return { status: 'error', message: 'Note not found or access denied' };
+                return {
+                    status: 'error',
+                    message: 'Note not found or access denied',
+                };
             }
 
             await NotesPhoto.delete(parseInt(photoId), parseInt(noteId));
             return { status: 'ok', message: 'Photo deleted successfully' };
         } catch (error) {
-            logger.error('Error deleting photo:', error);
-            return { status: 'error', message: error instanceof Error ? error.message : 'Failed to delete photo' };
+            logger.error({ err: error }, 'Error deleting photo:');
+            return {
+                status: 'error',
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to delete photo',
+            };
         }
-    }
-}; 
+    },
+};

@@ -16,7 +16,7 @@ export default {
             const projects = await Project.findByUserId(userId);
             return { status: 'success', projects };
         } catch (error) {
-            logger.error('Error getting projects:', error);
+            logger.error({ err: error }, 'Error getting projects:');
             return { status: 'error', message: 'Failed to get projects' };
         }
     },
@@ -30,7 +30,8 @@ export default {
             return { status: 'error', message: 'Unauthorized' };
         }
 
-        const { title, description, color, startDate, endDate, dueDate } = httpData.payload;
+        const { title, description, color, startDate, endDate, dueDate } =
+            httpData.payload;
 
         try {
             const project = await Project.create({
@@ -40,12 +41,18 @@ export default {
                 userId: auth.getUserId(),
                 startDate,
                 endDate,
-                dueDate
+                dueDate,
             });
             return { status: 'success', project };
         } catch (error) {
-            logger.error('Error creating project:', error);
-            return { status: 'error', message: error instanceof Error ? error.message : 'Failed to create project' };
+            logger.error({ err: error }, 'Error creating project:');
+            return {
+                status: 'error',
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to create project',
+            };
         }
     },
 
@@ -61,11 +68,20 @@ export default {
         const { projectId } = httpData.params as { projectId: string };
 
         try {
-            const project = await Project.findById(parseInt(projectId), auth.getUserId());
+            const project = await Project.findById(
+                parseInt(projectId),
+                auth.getUserId(),
+            );
             return { status: 'success', data: project };
         } catch (error) {
-            logger.error('Error getting project:', error);
-            return { status: 'error', message: error instanceof Error ? error.message : 'Failed to get project' };
+            logger.error({ err: error }, 'Error getting project:');
+            return {
+                status: 'error',
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to get project',
+            };
         }
     },
 
@@ -79,24 +95,43 @@ export default {
         }
 
         const { projectId } = httpData.params as { projectId: string };
-        const { title, description, color, startDate, endDate, dueDate, isActive, progress } = httpData.payload;
+        const {
+            title,
+            description,
+            color,
+            startDate,
+            endDate,
+            dueDate,
+            isActive,
+            progress,
+        } = httpData.payload;
 
         try {
-            const project = await Project.update(parseInt(projectId), auth.getUserId(), {
-                title,
-                description,
-                color,
-                startDate,
-                endDate,
-                dueDate,
-                isActive,
-                progress
-            });
+            const project = await Project.update(
+                parseInt(projectId),
+                auth.getUserId(),
+                {
+                    title,
+                    description,
+                    color,
+                    startDate,
+                    endDate,
+                    dueDate,
+                    isActive,
+                    progress,
+                },
+            );
 
             return { status: 'success', project };
         } catch (error) {
-            logger.error('Error updating project:', error);
-            return { status: 'error', message: error instanceof Error ? error.message : 'Failed to update project' };
+            logger.error({ err: error }, 'Error updating project:');
+            return {
+                status: 'error',
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to update project',
+            };
         }
     },
 
@@ -113,10 +148,19 @@ export default {
 
         try {
             await Project.delete(parseInt(projectId), auth.getUserId());
-            return { status: 'success', message: 'Project deleted successfully' };
+            return {
+                status: 'success',
+                message: 'Project deleted successfully',
+            };
         } catch (error) {
-            logger.error('Error deleting project:', error);
-            return { status: 'error', message: error instanceof Error ? error.message : 'Failed to delete project' };
+            logger.error({ err: error }, 'Error deleting project:');
+            return {
+                status: 'error',
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to delete project',
+            };
         }
     },
 
@@ -132,11 +176,20 @@ export default {
         const { projectId } = httpData.params as { projectId: string };
 
         try {
-            const tasks = await Project.getProjectTasks(parseInt(projectId), auth.getUserId());
+            const tasks = await Project.getProjectTasks(
+                parseInt(projectId),
+                auth.getUserId(),
+            );
             return { status: 'success', data: tasks };
         } catch (error) {
-            logger.error('Error getting project tasks:', error);
-            return { status: 'error', message: error instanceof Error ? error.message : 'Failed to get project tasks' };
+            logger.error({ err: error }, 'Error getting project tasks:');
+            return {
+                status: 'error',
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to get project tasks',
+            };
         }
     },
 
@@ -152,11 +205,20 @@ export default {
         const { projectId } = httpData.params as { projectId: string };
 
         try {
-            const data = await Project.getProjectStatistics(parseInt(projectId), auth.getUserId());
+            const data = await Project.getProjectStatistics(
+                parseInt(projectId),
+                auth.getUserId(),
+            );
             return { status: 'success', data };
         } catch (error) {
-            logger.error('Error getting project statistics:', error);
-            return { status: 'error', message: error instanceof Error ? error.message : 'Failed to get project statistics' };
+            logger.error({ err: error }, 'Error getting project statistics:');
+            return {
+                status: 'error',
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to get project statistics',
+            };
         }
     },
 
@@ -172,11 +234,20 @@ export default {
         const { projectId } = httpData.params as { projectId: string };
 
         try {
-            const archivedProject = await Project.archive(parseInt(projectId), auth.getUserId());
+            const archivedProject = await Project.archive(
+                parseInt(projectId),
+                auth.getUserId(),
+            );
             return { status: 'success', data: archivedProject };
         } catch (error) {
-            logger.error('Error archiving project:', error);
-            return { status: 'error', message: error instanceof Error ? error.message : 'Failed to archive project' };
+            logger.error({ err: error }, 'Error archiving project:');
+            return {
+                status: 'error',
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : 'Failed to archive project',
+            };
         }
-    }
+    },
 };
