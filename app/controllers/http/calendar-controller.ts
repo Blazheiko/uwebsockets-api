@@ -6,7 +6,7 @@ export default {
         const { auth, logger } = context;
         logger.info('getEvents handler');
 
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -26,7 +26,7 @@ export default {
         const { httpData, auth, logger } = context;
         logger.info('createEvent handler');
 
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -53,7 +53,7 @@ export default {
         const { httpData, auth, logger } = context;
         logger.info('getEvent handler');
 
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -82,7 +82,7 @@ export default {
         const { httpData, auth, logger } = context;
         logger.info('updateEvent handler');
 
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -122,7 +122,7 @@ export default {
         const { httpData, auth, logger } = context;
         logger.info('deleteEvent handler');
 
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -151,7 +151,7 @@ export default {
         const { httpData, auth, logger } = context;
         logger.info('getEventsByDate handler');
 
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
@@ -202,7 +202,7 @@ export default {
         const { httpData, auth, logger } = context;
         logger.info('getEventsByRange handler');
 
-        if (!auth.isAuthenticated()) {
+        if (!auth.check()) {
             return { status: 'error', message: 'Unauthorized' };
         }
 
