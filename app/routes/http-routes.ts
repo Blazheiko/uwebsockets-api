@@ -17,6 +17,7 @@ export default [
                 method: 'post',
                 handler: AuthController.register,
                 validator: 'register',
+                typeResponse: 'AuthController.RegisterResponse',
                 description: 'Register a new user',
             },
             {
@@ -24,12 +25,14 @@ export default [
                 method: 'post',
                 handler: AuthController.login,
                 validator: 'login',
+                typeResponse: 'AuthController.LoginResponse',
                 description: 'Login a user',
             },
             {
                 url: '/logout',
                 method: 'post',
                 handler: AuthController.logout,
+                typeResponse: 'AuthController.LogoutResponse',
                 description: 'Logout a user',
                 middlewares: ['auth_guard'],
             },
@@ -37,6 +40,7 @@ export default [
                 url: '/logout-all',
                 method: 'post',
                 handler: AuthController.logoutAll,
+                typeResponse: 'AuthController.LogoutAllResponse',
                 description: 'Logout all devices',
                 middlewares: ['auth_guard'],
             },
@@ -55,6 +59,7 @@ export default [
                 url: '/get-contact-list',
                 method: 'post',
                 handler: ChatListController.getContactList,
+                typeResponse: 'ChatListController.GetContactListResponse',
                 description: 'Get contact list',
             },
             {
@@ -62,6 +67,7 @@ export default [
                 method: 'post',
                 handler: ChatListController.createChat,
                 validator: 'createChat',
+                typeResponse: 'ChatListController.CreateChatResponse',
                 description: 'Create a new chat',
             },
             {
@@ -69,6 +75,7 @@ export default [
                 method: 'delete',
                 handler: ChatListController.deleteChat,
                 validator: 'deleteChat',
+                typeResponse: 'ChatListController.DeleteChatResponse',
                 description: 'Delete a chat',
             },
             {
@@ -76,6 +83,7 @@ export default [
                 method: 'post',
                 handler: MessageController.getMessages,
                 validator: 'getMessages',
+                typeResponse: 'ChatListController.GetMessagesResponse',
                 description: 'Get messages',
             },
             {
@@ -83,6 +91,7 @@ export default [
                 method: 'post',
                 handler: MessageController.sendMessage,
                 validator: 'sendMessage',
+                typeResponse: 'ChatListController.SendMessageResponse',
                 description: 'Send a message',
             },
             {
@@ -90,6 +99,7 @@ export default [
                 method: 'delete',
                 handler: MessageController.deleteMessage,
                 validator: 'deleteMessage',
+                typeResponse: 'ChatListController.DeleteMessageResponse',
                 description: 'Delete a message',
             },
             {
@@ -97,6 +107,7 @@ export default [
                 method: 'put',
                 handler: MessageController.editMessage,
                 validator: 'editMessage',
+                typeResponse: 'ChatListController.EditMessageResponse',
                 description: 'Edit a message',
             },
             {
@@ -104,6 +115,7 @@ export default [
                 method: 'put',
                 handler: MessageController.markAsRead,
                 validator: 'markMessageAsRead',
+                typeResponse: 'ChatListController.MarkMessageAsReadResponse',
                 description: 'Mark a message as read',
             },
             // Invitation Routes
@@ -112,6 +124,7 @@ export default [
                 method: 'post',
                 handler: InvitationController.createInvitation,
                 validator: 'createInvitation',
+                typeResponse: 'InvitationController.CreateInvitationResponse',
                 description: 'Create an invitation',
             },
             {
@@ -119,6 +132,7 @@ export default [
                 method: 'get',
                 handler: InvitationController.getUserInvitations,
                 validator: 'getUserInvitations',
+                typeResponse: 'InvitationController.GetUserInvitationsResponse',
                 description: 'Get user invitations',
             },
             {
@@ -126,6 +140,7 @@ export default [
                 method: 'post',
                 handler: InvitationController.useInvitation,
                 validator: 'useInvitation',
+                typeResponse: 'InvitationController.UseInvitationResponse',
                 description: 'Use an invitation',
             },
         ],
@@ -139,24 +154,28 @@ export default [
                 url: '/init',
                 method: 'get',
                 handler: MainController.init,
+                typeResponse: 'MainController.InitResponse',
                 description: 'Initialize the main controller',
             },
             {
                 url: '/test-header/:testParam/param2/:testParam2',
                 method: 'get',
-                handler: MainController.testHeaders,
+                handler: MainController.testHeaders,        
+                typeResponse: 'MainController.TestHeadersResponse',
                 description: 'Test headers',
             },
             {
                 url: '/test-cookie',
                 method: 'get',
                 handler: MainController.getSetCookies,
+                typeResponse: 'MainController.GetSetCookiesResponse',
                 description: 'Test cookies',
             },
             {
                 url: '/test-session',
                 method: 'get',
                 handler: MainController.testSession,
+                typeResponse: 'MainController.TestSessionResponse',
                 description: 'Test session',
             },
             {
@@ -164,12 +183,14 @@ export default [
                 method: 'post',
                 handler: MainController.saveUser,
                 validator: 'register',
+                typeResponse: 'MainController.SaveUserResponse',
                 description: 'Save a user',
             },
             {
                 url: '/set-header-and-cookie',
                 method: 'get',
                 handler: MainController.setHeaderAndCookie,
+                typeResponse: 'MainController.SetHeaderAndCookieResponse',
                 description: 'Set header and cookie',
             },
             {
@@ -177,6 +198,7 @@ export default [
                 method: 'get',
                 handler: MainController.testMiddleware,
                 middlewares: ['test1'],
+                typeResponse: 'MainController.TestMiddlewareResponse',
                 description: 'Test middleware',
             },
         ],
@@ -191,6 +213,7 @@ export default [
                 url: '/notes',
                 method: 'get',
                 handler: NotesController.getNotes,
+                typeResponse: 'NotesController.GetNotesResponse',
                 description: 'Get all notes',
             },
             {
@@ -198,6 +221,7 @@ export default [
                 method: 'post',
                 handler: NotesController.createNote,
                 validator: 'createNote',
+                typeResponse: 'NotesController.CreateNoteResponse',
                 description: 'Create a new note',
             },
             {
@@ -205,6 +229,7 @@ export default [
                 method: 'get',
                 handler: NotesController.getNote,
                 validator: 'getNote',
+                typeResponse: 'NotesController.GetNoteResponse',
                 description: 'Get a note by id',
             },
             {
@@ -212,6 +237,7 @@ export default [
                 method: 'put',
                 handler: NotesController.updateNote,
                 validator: 'updateNote',
+                typeResponse: 'NotesController.UpdateNoteResponse',
                 description: 'Update a note by id',
             },
             {
@@ -219,6 +245,7 @@ export default [
                 method: 'delete',
                 handler: NotesController.deleteNote,
                 validator: 'deleteNote',
+                typeResponse: 'NotesController.DeleteNoteResponse',
                 description: 'Delete a note by id',
             },
             // Notes Photo Routes
@@ -227,6 +254,7 @@ export default [
                 method: 'post',
                 handler: NotesController.addPhoto,
                 validator: 'addNotePhoto',
+                typeResponse: 'NotesController.AddNotePhotoResponse',
                 description: 'Add a photo to a note',
             },
             {
@@ -234,6 +262,7 @@ export default [
                 method: 'delete',
                 handler: NotesController.deletePhoto,
                 validator: 'deleteNotePhoto',
+                typeResponse: 'NotesController.DeleteNotePhotoResponse',
                 description: 'Delete a photo from a note',
             },
         ],
@@ -248,6 +277,7 @@ export default [
                 url: '/events',
                 method: 'get',
                 handler: CalendarController.getEvents,
+                typeResponse: 'CalendarController.GetEventsResponse',
                 description: 'Get all events',
             },
             {
@@ -255,6 +285,7 @@ export default [
                 method: 'post',
                 handler: CalendarController.createEvent,
                 validator: 'createEvent',
+                typeResponse: 'CalendarController.CreateEventResponse',
                 description: 'Create a new event',
             },
             {
@@ -262,6 +293,7 @@ export default [
                 method: 'get',
                 handler: CalendarController.getEvent,
                 validator: 'getEvent',
+                typeResponse: 'CalendarController.GetEventResponse',
                 description: 'Get an event by id',
             },
             {
@@ -269,6 +301,7 @@ export default [
                 method: 'put',
                 handler: CalendarController.updateEvent,
                 validator: 'updateEvent',
+                typeResponse: 'CalendarController.UpdateEventResponse',
                 description: 'Update an event by id',
             },
             {
@@ -276,6 +309,7 @@ export default [
                 method: 'delete',
                 handler: CalendarController.deleteEvent,
                 validator: 'deleteEvent',
+                typeResponse: 'CalendarController.DeleteEventResponse',
                 description: 'Delete an event by id',
             },
             // Calendar specific routes
@@ -284,6 +318,7 @@ export default [
                 method: 'get',
                 handler: CalendarController.getEventsByDate,
                 validator: 'getEventsByDate',
+                typeResponse: 'CalendarController.GetEventsByDateResponse',
                 description: 'Get all events for a date',
             },
             {
@@ -291,6 +326,7 @@ export default [
                 method: 'post',
                 handler: CalendarController.getEventsByRange,
                 validator: 'getEventsByRange',
+                typeResponse: 'CalendarController.GetEventsByRangeResponse',
                 description: 'Get all events for a range of dates',
             },
         ],
@@ -305,6 +341,7 @@ export default [
                 url: '/',
                 method: 'get',
                 handler: TaskController.getTasks,
+                typeResponse: 'TaskController.GetTasksResponse',
                 description: 'Get all tasks',
             },
             {
@@ -312,6 +349,7 @@ export default [
                 method: 'post',
                 handler: TaskController.createTask,
                 validator: 'createTask',
+                typeResponse: 'TaskController.CreateTaskResponse',
                 description: 'Create a new task',
             },
             {
@@ -319,6 +357,7 @@ export default [
                 method: 'get',
                 handler: TaskController.getTask,
                 validator: 'getTask',
+                typeResponse: 'TaskController.GetTaskResponse',
                 description: 'Get a task by id',
             },
             {
@@ -326,6 +365,7 @@ export default [
                 method: 'put',
                 handler: TaskController.updateTask,
                 validator: 'updateTask',
+                typeResponse: 'TaskController.UpdateTaskResponse',
                 description: 'Update a task by id',
             },
             {
@@ -340,13 +380,15 @@ export default [
                 url: '/:taskId/status',
                 method: 'put',
                 handler: TaskController.updateTaskStatus,
+                typeResponse: 'TaskController.UpdateTaskStatusResponse',
                 validator: 'updateTaskStatus',
-                description: 'Update a task status by id',
+                description: 'Update a task status by id',  
             },
             {
                 url: '/:taskId/progress',
                 method: 'put',
                 handler: TaskController.updateTaskProgress,
+                typeResponse: 'TaskController.UpdateTaskProgressResponse',
                 validator: 'updateTaskProgress',
                 description: 'Update a task progress by id',
             },
@@ -354,6 +396,7 @@ export default [
                 url: '/project/:projectId',
                 method: 'get',
                 handler: TaskController.getTasksByProject,
+                typeResponse: 'TaskController.GetTasksByProjectResponse',
                 validator: 'getTasksByProject',
                 description: 'Get all tasks for a project',
             },
@@ -361,6 +404,7 @@ export default [
                 url: '/:parentTaskId/subtasks',
                 method: 'get',
                 handler: TaskController.getSubTasks,
+                typeResponse: 'TaskController.GetSubTasksResponse',
                 validator: 'getSubTasks',
                 description: 'Get all subtasks for a task',
             },
@@ -376,6 +420,7 @@ export default [
                 url: '/',
                 method: 'get',
                 handler: ProjectController.getProjects,
+                typeResponse: 'ProjectController.GetProjectsResponse',
                 description: 'Get all projects',
             },
             {
@@ -383,6 +428,7 @@ export default [
                 method: 'post',
                 handler: ProjectController.createProject,
                 validator: 'createProject',
+                typeResponse: 'ProjectController.CreateProjectResponse',
                 description: 'Create a new project',
             },
             {
@@ -390,6 +436,7 @@ export default [
                 method: 'get',
                 handler: ProjectController.getProject,
                 validator: 'getProject',
+                typeResponse: 'ProjectController.GetProjectResponse',
                 description: 'Get a project by id',
             },
             {
@@ -397,6 +444,7 @@ export default [
                 method: 'put',
                 handler: ProjectController.updateProject,
                 validator: 'updateProject',
+                typeResponse: 'ProjectController.UpdateProjectResponse',
                 description: 'Update a project by id',
             },
             {
@@ -404,6 +452,7 @@ export default [
                 method: 'delete',
                 handler: ProjectController.deleteProject,
                 validator: 'deleteProject',
+                typeResponse: 'ProjectController.DeleteProjectResponse',
                 description: 'Delete a project by id',
             },
             // Project specific routes
@@ -412,6 +461,7 @@ export default [
                 method: 'get',
                 handler: ProjectController.getProjectTasks,
                 validator: 'getProjectTasks',
+                typeResponse: 'ProjectController.GetProjectTasksResponse',
                 description: 'Get all tasks for a project',
             },
             {
@@ -419,6 +469,7 @@ export default [
                 method: 'get',
                 handler: ProjectController.getProjectStatistics,
                 validator: 'getProjectStatistics',
+                typeResponse: 'ProjectController.GetProjectStatisticsResponse',
                 description: 'Get statistics for a project',
             },
             {
@@ -426,6 +477,7 @@ export default [
                 method: 'put',
                 handler: ProjectController.archiveProject,
                 validator: 'archiveProject',
+                typeResponse: 'ProjectController.ArchiveProjectResponse',
                 description: 'Archive a project by id',
             },
         ],
@@ -440,30 +492,35 @@ export default [
                 url: '/',
                 method: 'get',
                 handler: PushSubscriptionController.getSubscriptions,
+                typeResponse: 'PushSubscriptionController.GetSubscriptionsResponse',
             },
             {
                 url: '/',
                 method: 'post',
                 handler: PushSubscriptionController.createSubscription,
                 validator: 'createPushSubscription',
+                typeResponse: 'PushSubscriptionController.CreateSubscriptionResponse',
             },
             {
                 url: '/:subscriptionId',
                 method: 'get',
                 handler: PushSubscriptionController.getSubscription,
                 validator: 'getPushSubscription',
+                typeResponse: 'PushSubscriptionController.GetSubscriptionResponse',
             },
             {
                 url: '/:subscriptionId',
                 method: 'put',
                 handler: PushSubscriptionController.updateSubscription,
                 validator: 'updatePushSubscription',
+                typeResponse: 'PushSubscriptionController.UpdateSubscriptionResponse',
             },
             {
                 url: '/:subscriptionId',
                 method: 'delete',
                 handler: PushSubscriptionController.deleteSubscription,
                 validator: 'deletePushSubscription',
+                typeResponse: 'PushSubscriptionController.DeleteSubscriptionResponse',
             },
             // Push Subscription specific routes
             {
@@ -471,18 +528,21 @@ export default [
                 method: 'get',
                 handler: PushSubscriptionController.getSubscriptionLogs,
                 validator: 'getPushSubscriptionLogs',
+                typeResponse: 'PushSubscriptionController.GetSubscriptionLogsResponse',
             },
             {
                 url: '/:subscriptionId/statistics',
                 method: 'get',
                 handler: PushSubscriptionController.getSubscriptionStatistics,
                 validator: 'getPushSubscriptionStatistics',
+                typeResponse: 'PushSubscriptionController.GetSubscriptionStatisticsResponse',
             },
             {
                 url: '/:subscriptionId/deactivate',
                 method: 'put',
                 handler: PushSubscriptionController.deactivateSubscription,
                 validator: 'deactivatePushSubscription',
+                typeResponse: 'PushSubscriptionController.DeactivateSubscriptionResponse',
             },
         ],
         description: 'Push Subscription routes',

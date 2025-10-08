@@ -1,4 +1,4 @@
-export default {
+export default Object.freeze({
     /*
    |--------------------------------------------------------------------------
    | Enabled
@@ -112,4 +112,4 @@ export default {
   |
   */
     maxAge: 90,
-};
+});

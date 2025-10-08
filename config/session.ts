@@ -1,6 +1,6 @@
 import { duration } from 'metautil';
 import { env } from 'node:process';
-export default {
+export default Object.freeze({
     // enabled: true,
     storage: 'redis',
     cookieName: 'uapi',
@@ -16,4 +16,4 @@ export default {
         sameSite: 'Strict', // 'Strict' || 'Lax' . 'None' is not secure use only for CSRF protection
     },
 
-};
+});

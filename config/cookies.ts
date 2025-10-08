@@ -1,5 +1,5 @@
 import { env } from 'node:process';
-export default {
+export default Object.freeze({
     default: {
         path: '/',
         httpOnly: true,
@@ -7,4 +7,4 @@ export default {
         maxAge: 3600,
         sameSite: 'None',
     },
-};
+});

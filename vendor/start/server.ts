@@ -362,11 +362,10 @@ const typesDirectory = path.join(projectRoot, 'app/controllers/http/types');
 
 // Parse types from .d.ts files
 let types: any = {};
-let mapping: Record<string, string> = {};
+// let mapping: Record<string, string> = {};
 if (configApp.docPage) {
-    ({ types, mapping } = getApiTypesForDocumentation(
+    ({ types } = getApiTypesForDocumentation(
         typesDirectory,
-        httpRoutes,
     ));
 }
 
@@ -395,7 +394,6 @@ const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
                         wsRoutes: serializedWsRoutes,
                         validationSchemas,
                         responseTypes: types,
-                        handlerTypeMapping: mapping,
                         pathPrefix: appConfig.pathPrefix,
                     }),
                 );

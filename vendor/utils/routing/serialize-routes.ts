@@ -1,3 +1,4 @@
+
 /**
  * Serializes routes by converting handler function references to their names
  * Supports unlimited nesting of groups within routes

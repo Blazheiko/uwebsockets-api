@@ -11,6 +11,7 @@ interface TypeField {
 
 interface ParsedType {
     name: string;
+    module: string;
     fields: Record<string, TypeField>;
     description?: string;
 }
@@ -43,7 +44,8 @@ export function parseTypesFromDtsFiles(typesDirectory: string): TypesRegistry {
             const content = fs.readFileSync(filePath, 'utf-8');
 
             // Parse interfaces from file
-            const interfaces = parseInterfaces(content);
+            const moduleName = file.replace('.d.ts', '');
+            const interfaces = parseInterfaces(content, moduleName);
             Object.assign(registry, interfaces);
         } catch (error) {
             console.warn(`Failed to parse types from ${file}:`, error);
@@ -56,20 +58,15 @@ export function parseTypesFromDtsFiles(typesDirectory: string): TypesRegistry {
 /**
  * Parse TypeScript interfaces from file content
  */
-function parseInterfaces(content: string): TypesRegistry {
+function parseInterfaces(content: string, moduleName: string): TypesRegistry {
     const registry: TypesRegistry = {};
-
-    // Remove comments
-    const cleanContent = content
-        .replace(/\/\*[\s\S]*?\*\//g, '') // Multi-line comments
-        .replace(/\/\/.*/g, ''); // Single-line comments
 
     // Match interface definitions with better handling of nested braces
     const interfaceRegex =
         /export\s+interface\s+(\w+)(?:\s+extends\s+[\w<>, ]+)?\s*\{/g;
     let match;
 
-    while ((match = interfaceRegex.exec(cleanContent)) !== null) {
+    while ((match = interfaceRegex.exec(content)) !== null) {
         const interfaceName = match[1];
         const startPos = match.index + match[0].length;
 
@@ -77,18 +74,19 @@ function parseInterfaces(content: string): TypesRegistry {
         let braceCount = 1;
         let endPos = startPos;
 
-        while (endPos < cleanContent.length && braceCount > 0) {
-            const char = cleanContent[endPos];
+        while (endPos < content.length && braceCount > 0) {
+            const char = content[endPos];
             if (char === '{') braceCount++;
             else if (char === '}') braceCount--;
             endPos++;
         }
 
         if (braceCount === 0) {
-            const interfaceBody = cleanContent.slice(startPos, endPos - 1);
+            const interfaceBody = content.slice(startPos, endPos - 1);
 
-            registry[interfaceName] = {
+            registry[`${moduleName}.${interfaceName}`] = {
                 name: interfaceName,
+                module: moduleName,
                 fields: parseFields(interfaceBody),
             };
         }
@@ -110,18 +108,28 @@ function parseFields(body: string): Record<string, TypeField> {
         .filter((line) => line);
 
     for (const line of lines) {
-        // Match field definition: fieldName?: type;
-        const fieldMatch = line.match(/^(\w+)(\?)?:\s*([^;]+);?$/);
+        // Match field definition with optional comment: fieldName?: type; // comment
+        const fieldMatch = line.match(
+            /^(\w+)(\?)?:\s*([^;]+?)(?:\s*;\s*\/\/\s*(.+))?;?$/,
+        );
         if (!fieldMatch) continue;
 
         const fieldName = fieldMatch[1];
         const isOptional = fieldMatch[2] === '?';
         const fieldType = fieldMatch[3].trim();
+        const comment = fieldMatch[4]?.trim();
 
         // Skip if it's just a closing brace or empty
         if (fieldType === '}' || !fieldType) continue;
 
-        fields[fieldName] = parseFieldType(fieldType, !isOptional);
+        const field = parseFieldType(fieldType, !isOptional);
+
+        // If there's a comment, use it as example
+        if (comment) {
+            field.example = comment;
+        }
+
+        fields[fieldName] = field;
     }
 
     return fields;
@@ -155,7 +163,8 @@ function parseFieldType(typeString: string, required: boolean): TypeField {
             .split('|')
             .map((t) => t.trim().replace(/['"]/g, ''));
         field.type = 'enum';
-        field.example = types[0];
+        // Store the full enum definition as example
+        field.example = cleanType;
         return field;
     }
 
@@ -222,62 +231,61 @@ export function getHandlerMethodName(handler: Function): string {
  * Build a mapping between route handlers and their response types
  * Based on naming convention: methodName -> MethodNameResponse
  */
-export function buildHandlerToTypeMapping(
-    registry: TypesRegistry,
-    routes: any[],
-): Record<string, string> {
-    const mapping: Record<string, string> = {};
+// export function buildHandlerToTypeMapping(
+//     registry: TypesRegistry,
+//     routes: any[],
+// ): Record<string, string> {
+//     const mapping: Record<string, string> = {};
 
-    for (const routeGroup of routes) {
-        if (!routeGroup.group) continue;
+//     for (const routeGroup of routes) {
+//         if (!routeGroup.group) continue;
 
-        for (const route of routeGroup.group) {
-            if (!route.handler) continue;
+//         for (const route of routeGroup.group) {
+//             if (!route.handler) continue;
 
-            const methodName = getHandlerMethodName(route.handler);
-            if (methodName === 'unknown') continue;
+//             const methodName = getHandlerMethodName(route.handler);
+//             if (methodName === 'unknown') continue;
 
-            // Try to find matching response type
-            // Convention: methodName -> MethodNameResponse
-            const possibleTypeNames = [
-                // Exact match
-                `${capitalize(methodName)}Response`,
-                // Without prefix (e.g., getUsers -> UsersResponse)
-                `${capitalize(methodName.replace(/^(get|create|update|delete|send)/, ''))}Response`,
-            ];
+//             // Try to find matching response type
+//             // Convention: methodName -> MethodNameResponse
+//             const possibleTypeNames = [
+//                 // Exact match
+//                 `${capitalize(methodName)}Response`,
+//                 // Without prefix (e.g., getUsers -> UsersResponse)
+//                 `${capitalize(methodName.replace(/^(get|create|update|delete|send)/, ''))}Response`,
+//             ];
 
-            for (const typeName of possibleTypeNames) {
-                if (registry[typeName]) {
-                    mapping[methodName] = typeName;
-                    break;
-                }
-            }
-        }
-    }
+//             for (const typeName of possibleTypeNames) {
+//                 if (registry[typeName]) {
+//                     mapping[methodName] = typeName;
+//                     break;
+//                 }
+//             }
+//         }
+//     }
 
-    return mapping;
-}
+//     return mapping;
+// }
 
 /**
  * Capitalize first letter of string
  */
-function capitalize(str: string): string {
-    if (!str) return '';
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
+// function capitalize(str: string): string {
+//     if (!str) return '';
+//     return str.charAt(0).toUpperCase() + str.slice(1);
+// }
 
 /**
  * Export main function for use in server
  */
 export function getApiTypesForDocumentation(
     typesDirectory: string,
-    routes: any[],
+    // routes: any[],
 ): {
     types: TypesRegistry;
-    mapping: Record<string, string>;
 } {
     const types = parseTypesFromDtsFiles(typesDirectory);
-    const mapping = buildHandlerToTypeMapping(types, routes);
+    // const mapping = buildHandlerToTypeMapping(types, routes);
 
-    return { types, mapping };
+    return { types };
 }

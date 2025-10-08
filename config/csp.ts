@@ -1,4 +1,4 @@
-export default {
+export default Object.freeze({
     enabled: true,
     reportOnly: false,
     // Provide a full CSP policy string, or remove `policy` and set `directives` map instead
@@ -16,4 +16,4 @@ export default {
         "font-src": ["'self'", 'data:'],
         "connect-src": ["'self'", 'ws:', 'wss:', 'https:'],
     },
-};
+});

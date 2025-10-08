@@ -1,5 +1,5 @@
 import { env } from "node:process";
-export default {
+export default Object.freeze({
     /* eslint-disable no-undef */
     client: env.DB_CONNECTION,
     host: env.MYSQL_HOST,
@@ -7,4 +7,4 @@ export default {
     user: env.MYSQL_USER,
     password: env.MYSQL_PASSWORD,
     database: env.MYSQL_DB_NAME,
-};
+});

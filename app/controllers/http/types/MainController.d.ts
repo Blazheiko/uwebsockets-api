@@ -8,13 +8,13 @@ export interface PingResponse {
 
 export interface InitResponse {
     status: 'ok' | 'error' | 'unauthorized';
-    message?: string;
+    message?: string;// User not found
     user?: {
         id: number;
         name: string;
         email: string;
     };
-    wsUrl?: string;
+    wsUrl?: string; // ws://127.0.0.1:8088/websocket/PWdWMkn2aHRecaS7
 }
 
 export interface TestHeadersResponse {

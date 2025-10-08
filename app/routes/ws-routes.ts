@@ -6,6 +6,7 @@ export default [
             {
                 url: 'event_typing',
                 handler: WSApiController.eventTyping,
+                typeResponse: 'WSApiController.EventTypingResponse',
                 description: 'Handle typing events',
                 rateLimit: {
                     windowMs: 1 * 60 * 1000, // 1 minute
@@ -15,12 +16,14 @@ export default [
             {
                 url: 'error',
                 handler: WSApiController.error,
+                typeResponse: 'WSApiController.ErrorResponse',
                 middleware: 'test2',
                 description: 'Error handling test',
             },
             {
                 url: 'save-user',
                 handler: WSApiController.saveUser,
+                typeResponse: 'WSApiController.SaveUserResponse',
                 validator: 'register',
                 description: 'Save user data',
                 rateLimit: {

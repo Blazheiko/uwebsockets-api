@@ -1,6 +1,3 @@
-🇺🇦 Stand With Ukraine - Support Independence, Resist Russian Aggression 🇺🇦
-
-🇮🇱 Stand With Israel - Support its Fight Against Terrorism 🇮🇱
 
 # uWebSockets API
 
