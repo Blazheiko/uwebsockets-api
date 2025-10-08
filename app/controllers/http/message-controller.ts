@@ -17,7 +17,7 @@ export default {
         const { contactId, userId } = httpData.payload;
         const sessionUserId = sessionInfo.data?.userId;
         if (!userId || !sessionUserId || +userId !== +sessionUserId) {
-            return { status: 'unauthorized', message: 'User ID not found' };
+            return { status: 'unauthorized', message: 'Session expired' };
         }
 
         if (!contactId) {
@@ -44,7 +44,7 @@ export default {
         }
         const sessionUserId = sessionInfo.data?.userId;
         if (!sessionUserId) {
-            return { status: 'unauthorized', message: 'User ID not found' };
+            return { status: 'unauthorized', message: 'Session expired' };
         }
 
         const { contactId, content, userId } = httpData.payload;
@@ -74,7 +74,7 @@ export default {
         }
         const userId = sessionInfo.data?.userId;
         if (!userId) {
-            return { status: 'unauthorized', message: 'User ID not found' };
+            return { status: 'unauthorized', message: 'Session expired' };
         }
 
         const { messageId } = httpData.params;
@@ -112,7 +112,7 @@ export default {
         const { messageId, content, userId } = httpData.payload;
         const sessionUserId = sessionInfo.data?.userId;
         if (!userId || +userId !== +sessionUserId) {
-            return { status: 'unauthorized', message: 'User ID not found' };
+            return { status: 'unauthorized', message: 'Session expired' };
         }
 
         if (!messageId || !content) {
@@ -147,7 +147,7 @@ export default {
         }
         const userId = sessionInfo.data?.userId;
         if (!userId) {
-            return { status: 'unauthorized', message: 'User ID not found' };
+            return { status: 'unauthorized', message: 'Session expired' };
         }
 
         const { messageId } = httpData.payload;

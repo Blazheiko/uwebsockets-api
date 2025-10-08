@@ -6,7 +6,7 @@ const authGuard = async (context: HttpContext, next: Function) => {
         context.responseData.status = 401;
         context.responseData.payload = {
             status: 'unauthorized',
-            message: 'Unauthorized',
+            message: 'Session expired or not found',
         };
         return;
     }

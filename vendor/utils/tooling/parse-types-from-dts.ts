@@ -12,7 +12,7 @@ interface TypeField {
 interface ParsedType {
     name: string;
     module: string;
-    fields: Record<string, TypeField>;
+    fields: string | undefined;//Record<string, TypeField>;
     description?: string;
 }
 
@@ -82,12 +82,14 @@ function parseInterfaces(content: string, moduleName: string): TypesRegistry {
         }
 
         if (braceCount === 0) {
-            const interfaceBody = content.slice(startPos, endPos - 1);
+            const interfaceBody = content.slice(startPos - 1, endPos);
+            const fields: Record<string, TypeField> = {};
 
             registry[`${moduleName}.${interfaceName}`] = {
                 name: interfaceName,
                 module: moduleName,
-                fields: parseFields(interfaceBody),
+                fields: interfaceBody
+                // fields: parseFields(interfaceBody, fields),
             };
         }
     }
@@ -96,28 +98,73 @@ function parseInterfaces(content: string, moduleName: string): TypesRegistry {
 }
 
 /**
- * Parse fields from interface body
+ * Parse fields from interface body with proper multiline object handling
  */
-function parseFields(body: string): Record<string, TypeField> {
-    const fields: Record<string, TypeField> = {};
+function parseFields(body: string, currentFields: Record<string, TypeField>): Record<string, TypeField> {
+    
 
-    // Split by lines and process each line
-    const lines = body
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line);
+    let i = 0;
+    while (i < body.length) {
+        // Skip whitespace
+        while (i < body.length && /\s/.test(body[i])) {
+            i++;
+        }
+        if (i >= body.length) break;
 
-    for (const line of lines) {
-        // Match field definition with optional comment: fieldName?: type; // comment
-        const fieldMatch = line.match(
-            /^(\w+)(\?)?:\s*([^;]+?)(?:\s*;\s*\/\/\s*(.+))?;?$/,
-        );
-        if (!fieldMatch) continue;
+        // Find field name
+        const fieldNameMatch = body.slice(i).match(/^(\w+)(\?)?:\s*/);
+        if (!fieldNameMatch) {
+            i++;
+            continue;
+        }
 
-        const fieldName = fieldMatch[1];
-        const isOptional = fieldMatch[2] === '?';
-        const fieldType = fieldMatch[3].trim();
-        const comment = fieldMatch[4]?.trim();
+        const fieldName = fieldNameMatch[1];
+        const isOptional = fieldNameMatch[2] === '?';
+        i += fieldNameMatch[0].length;
+
+        // Find the field type and value - handle multiline objects properly
+        let fieldType = '';
+        let comment = '';
+        let braceCount = 0;
+        let inString = false;
+        let stringChar = '';
+
+        while (i < body.length) {
+            const char = body[i];
+            const nextChar = i + 1 < body.length ? body[i + 1] : '';
+
+            // Handle comments - if we see // and we're not in a string, skip to end of line
+            if (!inString && char === '/' && nextChar === '/') {
+                // Extract comment content
+                i += 2; // Skip //
+                while (i < body.length && body[i] !== '\n') {
+                    comment += body[i];
+                    i++;
+                }
+                if (i < body.length) i++; // Skip the newline
+                break;
+            }
+
+            if (!inString && (char === '"' || char === "'")) {
+                inString = true;
+                stringChar = char;
+            } else if (inString && char === stringChar) {
+                inString = false;
+            } else if (!inString) {
+                if (char === '{') braceCount++;
+                else if (char === '}') braceCount--;
+                else if (char === ';' && braceCount === 0) {
+                    i++; // Skip the semicolon
+                    break;
+                }
+            }
+
+            fieldType += char;
+            i++;
+        }
+
+        // Clean up field type
+        fieldType = fieldType.trim();
 
         // Skip if it's just a closing brace or empty
         if (fieldType === '}' || !fieldType) continue;
@@ -125,14 +172,14 @@ function parseFields(body: string): Record<string, TypeField> {
         const field = parseFieldType(fieldType, !isOptional);
 
         // If there's a comment, use it as example
-        if (comment) {
-            field.example = comment;
+        if (comment.trim()) {
+            field.example = comment.trim();
         }
 
-        fields[fieldName] = field;
+        currentFields[fieldName] = field;
     }
 
-    return fields;
+    return currentFields;
 }
 
 /**
@@ -172,6 +219,12 @@ function parseFieldType(typeString: string, required: boolean): TypeField {
     if (cleanType.startsWith('{') && cleanType.endsWith('}')) {
         field.type = 'object';
         field.description = 'Object with properties';
+        // Parse nested object properties
+        const objectBody = cleanType.slice(1, -1).trim();
+        if (objectBody) {
+            const fields: Record<string, TypeField> = {};
+            field.properties = parseFields(objectBody, fields);
+        }
         return field;
     }
 
@@ -182,6 +235,13 @@ function parseFieldType(typeString: string, required: boolean): TypeField {
         field.properties = {
             items: parseFieldType(arrayMatch[1], false),
         };
+        return field;
+    }
+
+    // Handle string literals (e.g., 'ok', 'error')
+    if (cleanType.startsWith("'") && cleanType.endsWith("'")) {
+        field.type = 'string';
+        field.example = cleanType.slice(1, -1);
         return field;
     }
 
@@ -226,54 +286,6 @@ export function getHandlerMethodName(handler: Function): string {
     if (!handler || !handler.name) return 'unknown';
     return handler.name;
 }
-
-/**
- * Build a mapping between route handlers and their response types
- * Based on naming convention: methodName -> MethodNameResponse
- */
-// export function buildHandlerToTypeMapping(
-//     registry: TypesRegistry,
-//     routes: any[],
-// ): Record<string, string> {
-//     const mapping: Record<string, string> = {};
-
-//     for (const routeGroup of routes) {
-//         if (!routeGroup.group) continue;
-
-//         for (const route of routeGroup.group) {
-//             if (!route.handler) continue;
-
-//             const methodName = getHandlerMethodName(route.handler);
-//             if (methodName === 'unknown') continue;
-
-//             // Try to find matching response type
-//             // Convention: methodName -> MethodNameResponse
-//             const possibleTypeNames = [
-//                 // Exact match
-//                 `${capitalize(methodName)}Response`,
-//                 // Without prefix (e.g., getUsers -> UsersResponse)
-//                 `${capitalize(methodName.replace(/^(get|create|update|delete|send)/, ''))}Response`,
-//             ];
-
-//             for (const typeName of possibleTypeNames) {
-//                 if (registry[typeName]) {
-//                     mapping[methodName] = typeName;
-//                     break;
-//                 }
-//             }
-//         }
-//     }
-
-//     return mapping;
-// }
-
-/**
- * Capitalize first letter of string
- */
-// function capitalize(str: string): string {
-//     if (!str) return '';
-//     return str.charAt(0).toUpperCase() + str.slice(1);
-// }
 
 /**
  * Export main function for use in server

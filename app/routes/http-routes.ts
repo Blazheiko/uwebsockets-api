@@ -156,6 +156,7 @@ export default [
                 handler: MainController.init,
                 typeResponse: 'MainController.InitResponse',
                 description: 'Initialize the main controller',
+                middlewares: ['auth_guard'],
             },
             {
                 url: '/test-header/:testParam/param2/:testParam2',

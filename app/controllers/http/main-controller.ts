@@ -118,13 +118,13 @@ export default {
         const userId = sessionInfo.data?.userId;
         if (!userId) {
             responseData.status = 401;
-            return { status: 'unauthorized', message: 'User ID not found' };
+            return { status: 'unauthorized', message: 'Session expired' };
         }
         const user = await User.query().findUnique({
             where: { id: Number(userId) },
         });
         if (!user) {
-            return { status: 'unauthorized', message: 'User not found' };
+            return { status: 'unauthorized', message: 'Session expired' };
         }
         let wsToken = '';
         if (sessionInfo)

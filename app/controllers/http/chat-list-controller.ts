@@ -15,13 +15,13 @@ export default {
         const sessionUserId = sessionInfo.data?.userId;
         const userId = httpData.payload?.userId;
         if (!userId || !sessionUserId)
-            return { status: 'unauthorized', message: 'User ID not found' };
+            return { status: 'unauthorized', message: 'Session expired' };
 
         if (+userId !== +sessionUserId) {
             logger.error('User used the wrong session');
             return {
                 status: 'unauthorized',
-                message: 'User used the wrong session',
+                message: 'Session expired',
             };
         }
 
@@ -51,7 +51,7 @@ export default {
         }
         const userId = sessionInfo.data?.userId;
         if (!userId) {
-            return { status: 'unauthorized', message: 'User ID not found' };
+            return { status: 'unauthorized', message: 'Session expired' };
         }
 
         const { participantId } = httpData.payload;
@@ -113,7 +113,7 @@ export default {
         }
         const userId = sessionInfo.data?.userId;
         if (!userId) {
-            return { status: 'unauthorized', message: 'User ID not found' };
+            return { status: 'unauthorized', message: 'Session expired' };
         }
 
         const { chatId } = httpData.payload;
