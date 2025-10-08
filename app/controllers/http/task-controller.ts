@@ -1,9 +1,20 @@
 import Project from '#app/models/project.js';
 import { HttpContext } from '../../../vendor/types/types.js';
 import Task from '../../models/task.js';
+import type {
+    GetTasksResponse,
+    CreateTaskResponse,
+    GetTaskResponse,
+    UpdateTaskResponse,
+    DeleteTaskResponse,
+    UpdateTaskStatusResponse,
+    UpdateTaskProgressResponse,
+    GetTasksByProjectResponse,
+    GetSubTasksResponse,
+} from '../types/TaskController.js';
 
 export default {
-    async getTasks(context: HttpContext) {
+    async getTasks(context: HttpContext): Promise<GetTasksResponse> {
         const { auth, logger } = context;
         logger.info('getTasks handler');
 
@@ -28,7 +39,7 @@ export default {
         }
     },
 
-    async createTask(context: HttpContext) {
+    async createTask(context: HttpContext): Promise<CreateTaskResponse> {
         const { httpData, auth, logger } = context;
         logger.info('createTask handler');
 
@@ -76,7 +87,7 @@ export default {
         }
     },
 
-    async getTask(context: HttpContext) {
+    async getTask(context: HttpContext): Promise<GetTaskResponse> {
         const { httpData, auth, logger } = context;
         logger.info('getTask handler');
 
@@ -104,7 +115,7 @@ export default {
         }
     },
 
-    async updateTask(context: HttpContext) {
+    async updateTask(context: HttpContext): Promise<UpdateTaskResponse> {
         const { httpData, auth, logger } = context;
         logger.info('updateTask handler');
 
@@ -155,7 +166,7 @@ export default {
         }
     },
 
-    async deleteTask(context: HttpContext) {
+    async deleteTask(context: HttpContext): Promise<DeleteTaskResponse> {
         const { httpData, auth, logger } = context;
         logger.info('deleteTask handler');
 
@@ -180,7 +191,9 @@ export default {
         }
     },
 
-    async updateTaskStatus(context: HttpContext) {
+    async updateTaskStatus(
+        context: HttpContext,
+    ): Promise<UpdateTaskStatusResponse> {
         const { httpData, auth, logger } = context;
         logger.info('updateTaskStatus handler');
 
@@ -210,7 +223,9 @@ export default {
         }
     },
 
-    async updateTaskProgress(context: HttpContext) {
+    async updateTaskProgress(
+        context: HttpContext,
+    ): Promise<UpdateTaskProgressResponse> {
         const { httpData, auth, logger } = context;
         logger.info('updateTaskProgress handler');
 
@@ -240,7 +255,9 @@ export default {
         }
     },
 
-    async getTasksByProject(context: HttpContext) {
+    async getTasksByProject(
+        context: HttpContext,
+    ): Promise<GetTasksByProjectResponse> {
         const { httpData, auth, logger } = context;
         logger.info('getTasksByProject handler');
 
@@ -268,7 +285,7 @@ export default {
         }
     },
 
-    async getSubTasks(context: HttpContext) {
+    async getSubTasks(context: HttpContext): Promise<GetSubTasksResponse> {
         const { httpData, auth, logger } = context;
         logger.info('getSubTasks handler');
 

@@ -1,8 +1,17 @@
 import { HttpContext } from '../../../vendor/types/types.js';
 import { prisma } from '#database/prisma.js';
+import type {
+    GetEventsResponse,
+    CreateEventResponse,
+    GetEventResponse,
+    UpdateEventResponse,
+    DeleteEventResponse,
+    GetEventsByDateResponse,
+    GetEventsByRangeResponse,
+} from '../types/CalendarController.js';
 
 export default {
-    async getEvents(context: HttpContext) {
+    async getEvents(context: HttpContext): Promise<GetEventsResponse> {
         const { auth, logger } = context;
         logger.info('getEvents handler');
 
@@ -22,7 +31,7 @@ export default {
         }
     },
 
-    async createEvent(context: HttpContext) {
+    async createEvent(context: HttpContext): Promise<CreateEventResponse> {
         const { httpData, auth, logger } = context;
         logger.info('createEvent handler');
 
@@ -49,7 +58,7 @@ export default {
         }
     },
 
-    async getEvent(context: HttpContext) {
+    async getEvent(context: HttpContext): Promise<GetEventResponse> {
         const { httpData, auth, logger } = context;
         logger.info('getEvent handler');
 
@@ -78,7 +87,7 @@ export default {
         }
     },
 
-    async updateEvent(context: HttpContext) {
+    async updateEvent(context: HttpContext): Promise<UpdateEventResponse> {
         const { httpData, auth, logger } = context;
         logger.info('updateEvent handler');
 
@@ -118,7 +127,7 @@ export default {
         }
     },
 
-    async deleteEvent(context: HttpContext) {
+    async deleteEvent(context: HttpContext): Promise<DeleteEventResponse> {
         const { httpData, auth, logger } = context;
         logger.info('deleteEvent handler');
 
@@ -147,7 +156,9 @@ export default {
         }
     },
 
-    async getEventsByDate(context: HttpContext) {
+    async getEventsByDate(
+        context: HttpContext,
+    ): Promise<GetEventsByDateResponse> {
         const { httpData, auth, logger } = context;
         logger.info('getEventsByDate handler');
 
@@ -198,7 +209,9 @@ export default {
         }
     },
 
-    async getEventsByRange(context: HttpContext) {
+    async getEventsByRange(
+        context: HttpContext,
+    ): Promise<GetEventsByRangeResponse> {
         const { httpData, auth, logger } = context;
         logger.info('getEventsByRange handler');
 

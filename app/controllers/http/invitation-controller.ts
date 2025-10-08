@@ -2,9 +2,18 @@ import { randomUUID } from 'crypto';
 import { prisma } from '#database/prisma.js';
 import { HttpContext } from '../../../vendor/types/types.js';
 import inventionAccept from '#app/servises/invention-accept.js';
+import type {
+    CreateInvitationResponse,
+    GetUserInvitationsResponse,
+    UseInvitationResponse,
+} from '../types/InvitationController.js';
 export default {
     // Create new invitation
-    async createInvitation({ httpData, session, logger }: HttpContext) {
+    async createInvitation({
+        httpData,
+        session,
+        logger,
+    }: HttpContext): Promise<CreateInvitationResponse> {
         logger.info('createInvitation');
         const { userId, name } = httpData.payload;
 
@@ -43,7 +52,11 @@ export default {
     },
 
     // Get all user invitations
-    async getUserInvitations({ httpData, responseData, logger }: HttpContext) {
+    async getUserInvitations({
+        httpData,
+        responseData,
+        logger,
+    }: HttpContext): Promise<GetUserInvitationsResponse> {
         logger.info('getUserInvitations');
 
         const { userId } = httpData.payload;
@@ -77,7 +90,7 @@ export default {
         responseData,
         logger,
         session,
-    }: HttpContext) {
+    }: HttpContext): Promise<UseInvitationResponse> {
         logger.info('useInvitation');
 
         const { token } = httpData.payload;

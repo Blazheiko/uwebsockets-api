@@ -9,7 +9,7 @@ import { generateKey } from 'metautil';
 import redis from '#database/redis.js';
 import configApp from '#config/app.js';
 import configSession from '#config/session.js';
-import generateWsToken from '../../servises/generate-ws-token.js';
+import generateWsToken from '#app/servises/generate-ws-token.js';
 import { prisma } from '#database/prisma.js';
 import type {
     PingResponse,
@@ -18,7 +18,7 @@ import type {
     GetSetCookiesResponse,
     TestSessionResponse,
     SaveUserResponse,
-} from './types/MainController.js';
+} from '../types/MainController.js';
 
 export default {
     // async joinСhat({ httpData, logger }: HttpContext): Promise<any> {

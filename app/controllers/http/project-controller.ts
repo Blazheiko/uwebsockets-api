@@ -1,8 +1,18 @@
 import { HttpContext } from '../../../vendor/types/types.js';
 import Project from '../../models/project.js';
+import type {
+    GetProjectsResponse,
+    CreateProjectResponse,
+    GetProjectResponse,
+    UpdateProjectResponse,
+    DeleteProjectResponse,
+    GetProjectTasksResponse,
+    GetProjectStatisticsResponse,
+    ArchiveProjectResponse,
+} from '../types/ProjectController.js';
 
 export default {
-    async getProjects(context: HttpContext) {
+    async getProjects(context: HttpContext): Promise<GetProjectsResponse> {
         const { auth, logger, responseData } = context;
         logger.info('getProjects handler');
 
@@ -21,7 +31,7 @@ export default {
         }
     },
 
-    async createProject(context: HttpContext) {
+    async createProject(context: HttpContext): Promise<CreateProjectResponse> {
         const { httpData, auth, logger, responseData } = context;
         logger.info('createProject handler');
 
@@ -56,7 +66,7 @@ export default {
         }
     },
 
-    async getProject(context: HttpContext) {
+    async getProject(context: HttpContext): Promise<GetProjectResponse> {
         const { httpData, auth, logger, responseData } = context;
         logger.info('getProject handler');
 
@@ -85,7 +95,7 @@ export default {
         }
     },
 
-    async updateProject(context: HttpContext) {
+    async updateProject(context: HttpContext): Promise<UpdateProjectResponse> {
         const { httpData, auth, logger, responseData } = context;
         logger.info('updateProject handler');
 
@@ -135,7 +145,7 @@ export default {
         }
     },
 
-    async deleteProject(context: HttpContext) {
+    async deleteProject(context: HttpContext): Promise<DeleteProjectResponse> {
         const { httpData, auth, logger, responseData } = context;
         logger.info('deleteProject handler');
 
@@ -164,7 +174,9 @@ export default {
         }
     },
 
-    async getProjectTasks(context: HttpContext) {
+    async getProjectTasks(
+        context: HttpContext,
+    ): Promise<GetProjectTasksResponse> {
         const { httpData, auth, logger, responseData } = context;
         logger.info('getProjectTasks handler');
 
@@ -193,7 +205,9 @@ export default {
         }
     },
 
-    async getProjectStatistics(context: HttpContext) {
+    async getProjectStatistics(
+        context: HttpContext,
+    ): Promise<GetProjectStatisticsResponse> {
         const { httpData, auth, logger, responseData } = context;
         logger.info('getProjectStatistics handler');
 
@@ -222,7 +236,9 @@ export default {
         }
     },
 
-    async archiveProject(context: HttpContext) {
+    async archiveProject(
+        context: HttpContext,
+    ): Promise<ArchiveProjectResponse> {
         const { httpData, auth, logger, responseData } = context;
         logger.info('archiveProject handler');
 

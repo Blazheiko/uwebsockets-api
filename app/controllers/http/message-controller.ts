@@ -2,13 +2,20 @@ import { HttpContext } from './../../../vendor/types/types.js';
 import sendMessage from '#app/servises/chat/send-message.js';
 import getChatMessages from '#app/servises/chat/get-chat-messages.js';
 import Message from '#app/models/message.js';
+import type {
+    GetMessagesResponse,
+    SendMessageResponse,
+    DeleteMessageResponse,
+    EditMessageResponse,
+    MarkAsReadResponse,
+} from '../types/ChatListController.js';
 
 export default {
     async getMessages({
         session,
         httpData,
         logger,
-    }: HttpContext): Promise<any> {
+    }: HttpContext): Promise<GetMessagesResponse> {
         logger.info('getMessages');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
@@ -36,7 +43,7 @@ export default {
         session,
         httpData,
         logger,
-    }: HttpContext): Promise<any> {
+    }: HttpContext): Promise<SendMessageResponse> {
         logger.info('sendMessage');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
@@ -66,7 +73,7 @@ export default {
         session,
         httpData,
         logger,
-    }: HttpContext): Promise<any> {
+    }: HttpContext): Promise<DeleteMessageResponse> {
         logger.info('deleteMessage');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
@@ -103,7 +110,7 @@ export default {
         session,
         httpData,
         logger,
-    }: HttpContext): Promise<any> {
+    }: HttpContext): Promise<EditMessageResponse> {
         logger.info('editMessage');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
@@ -139,7 +146,11 @@ export default {
         };
     },
 
-    async markAsRead({ session, httpData, logger }: HttpContext): Promise<any> {
+    async markAsRead({
+        session,
+        httpData,
+        logger,
+    }: HttpContext): Promise<MarkAsReadResponse> {
         logger.info('markAsRead');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {

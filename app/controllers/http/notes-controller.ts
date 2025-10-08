@@ -1,14 +1,23 @@
 import { HttpContext } from '../../../vendor/types/types.js';
 import Notes from '../../models/notes.js';
 import NotesPhoto from '../../models/notes-photo.js';
+import type {
+    GetNotesResponse,
+    CreateNoteResponse,
+    GetNoteResponse,
+    UpdateNoteResponse,
+    DeleteNoteResponse,
+    AddPhotoResponse,
+    DeletePhotoResponse,
+} from '../types/NotesController.js';
 
 export default {
-    async getNotes(context: HttpContext) {
+    async getNotes(context: HttpContext): Promise<GetNotesResponse> {
         const { auth, logger } = context;
         logger.info('getNotes handler');
 
         if (!auth?.check()) {
-            return { status: '', message: 'Unauthorized' };
+            return { status: 'error', message: 'Unauthorized' };
         }
 
         try {
@@ -27,7 +36,7 @@ export default {
         }
     },
 
-    async createNote(context: HttpContext) {
+    async createNote(context: HttpContext): Promise<CreateNoteResponse> {
         const { httpData, auth, logger } = context;
         logger.info('createNote handler');
 
@@ -57,7 +66,7 @@ export default {
         }
     },
 
-    async getNote(context: HttpContext) {
+    async getNote(context: HttpContext): Promise<GetNoteResponse> {
         const { httpData, auth, logger } = context;
         logger.info('getNote handler');
 
@@ -83,7 +92,7 @@ export default {
         }
     },
 
-    async updateNote(context: HttpContext) {
+    async updateNote(context: HttpContext): Promise<UpdateNoteResponse> {
         const { httpData, auth, logger } = context;
         logger.info('updateNote handler');
 
@@ -113,7 +122,7 @@ export default {
         }
     },
 
-    async deleteNote(context: HttpContext) {
+    async deleteNote(context: HttpContext): Promise<DeleteNoteResponse> {
         const { httpData, auth, logger } = context;
         logger.info('deleteNote handler');
 
@@ -139,7 +148,7 @@ export default {
         }
     },
 
-    async addPhoto(context: HttpContext) {
+    async addPhoto(context: HttpContext): Promise<AddPhotoResponse> {
         const { httpData, auth, logger } = context;
         logger.info('addPhoto handler');
 
@@ -170,6 +179,7 @@ export default {
                 filename,
                 size,
             });
+            return { status: 'ok', photo };
         } catch (error) {
             logger.error({ err: error }, 'Error adding photo:');
             return {
@@ -182,7 +192,7 @@ export default {
         }
     },
 
-    async deletePhoto(context: HttpContext) {
+    async deletePhoto(context: HttpContext): Promise<DeletePhotoResponse> {
         const { httpData, auth, logger } = context;
         logger.info('deletePhoto handler');
 

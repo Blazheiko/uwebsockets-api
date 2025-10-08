@@ -1,12 +1,17 @@
 import { HttpContext } from './../../../vendor/types/types.js';
 import { prisma } from '#database/prisma.js';
 import { getOnlineUser } from '#vendor/utils/routing/ws-router.js';
+import type {
+    GetContactListResponse,
+    CreateChatResponse,
+    DeleteChatResponse,
+} from '../types/ChatListController.js';
 export default {
     async getContactList({
         session,
         httpData,
         logger,
-    }: HttpContext): Promise<any> {
+    }: HttpContext): Promise<GetContactListResponse> {
         logger.info('getChatList');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo)
@@ -43,7 +48,11 @@ export default {
         return { status: 'ok', contactList, onlineUsers };
     },
 
-    async createChat({ session, httpData, logger }: HttpContext): Promise<any> {
+    async createChat({
+        session,
+        httpData,
+        logger,
+    }: HttpContext): Promise<CreateChatResponse> {
         logger.info('createChat');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
@@ -105,7 +114,11 @@ export default {
         return { status: 'ok', chat };
     },
 
-    async deleteChat({ session, httpData, logger }: HttpContext): Promise<any> {
+    async deleteChat({
+        session,
+        httpData,
+        logger,
+    }: HttpContext): Promise<DeleteChatResponse> {
         logger.info('deleteChat');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {

@@ -1,9 +1,21 @@
 import { HttpContext } from '../../../vendor/types/types.js';
 import { prisma } from '#database/prisma.js';
 import { PushNotificationStatus } from '@prisma/client';
+import type {
+    GetSubscriptionsResponse,
+    CreateSubscriptionResponse,
+    GetSubscriptionResponse,
+    UpdateSubscriptionResponse,
+    DeleteSubscriptionResponse,
+    GetSubscriptionLogsResponse,
+    GetSubscriptionStatisticsResponse,
+    DeactivateSubscriptionResponse,
+} from '../types/PushSubscriptionController.js';
 
 export default {
-    async getSubscriptions(context: HttpContext) {
+    async getSubscriptions(
+        context: HttpContext,
+    ): Promise<GetSubscriptionsResponse> {
         const { auth, logger, responseData } = context;
         logger.info('getSubscriptions handler');
 
@@ -37,7 +49,9 @@ export default {
         }
     },
 
-    async createSubscription(context: HttpContext) {
+    async createSubscription(
+        context: HttpContext,
+    ): Promise<CreateSubscriptionResponse> {
         const { httpData, auth, logger, responseData } = context;
         logger.info('createSubscription handler');
 
@@ -121,7 +135,9 @@ export default {
         }
     },
 
-    async getSubscription(context: HttpContext) {
+    async getSubscription(
+        context: HttpContext,
+    ): Promise<GetSubscriptionResponse> {
         const { httpData, auth, logger, responseData } = context;
         logger.info('getSubscription handler');
 
@@ -159,7 +175,9 @@ export default {
         }
     },
 
-    async updateSubscription(context: HttpContext) {
+    async updateSubscription(
+        context: HttpContext,
+    ): Promise<UpdateSubscriptionResponse> {
         const { httpData, auth, logger, responseData } = context;
         logger.info('updateSubscription handler');
 
@@ -223,7 +241,9 @@ export default {
         }
     },
 
-    async deleteSubscription(context: HttpContext) {
+    async deleteSubscription(
+        context: HttpContext,
+    ): Promise<DeleteSubscriptionResponse> {
         const { httpData, auth, logger, responseData } = context;
         logger.info('deleteSubscription handler');
 
@@ -261,7 +281,9 @@ export default {
         }
     },
 
-    async getSubscriptionLogs(context: HttpContext) {
+    async getSubscriptionLogs(
+        context: HttpContext,
+    ): Promise<GetSubscriptionLogsResponse> {
         const { httpData, auth, logger, responseData } = context;
         logger.info('getSubscriptionLogs handler');
 
@@ -294,7 +316,9 @@ export default {
         }
     },
 
-    async getSubscriptionStatistics(context: HttpContext) {
+    async getSubscriptionStatistics(
+        context: HttpContext,
+    ): Promise<GetSubscriptionStatisticsResponse> {
         const { httpData, auth, logger, responseData } = context;
         logger.info('getSubscriptionStatistics handler');
 
@@ -368,7 +392,9 @@ export default {
         }
     },
 
-    async deactivateSubscription(context: HttpContext) {
+    async deactivateSubscription(
+        context: HttpContext,
+    ): Promise<DeactivateSubscriptionResponse> {
         const { httpData, auth, logger, responseData } = context;
         logger.info('deactivateSubscription handler');
 
