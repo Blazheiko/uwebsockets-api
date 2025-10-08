@@ -145,7 +145,7 @@ export default [
             },
         ],
         description: 'Chat routes',
-        middlewares: ['session_web'],
+        middlewares: ['session_web', 'auth_guard'],
         prefix: 'chat',
     },
     {

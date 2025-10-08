@@ -45,7 +45,7 @@ export type {
     DeleteMessageResponse,
     EditMessageResponse,
     MarkAsReadResponse,
-} from './ChatController.js';
+} from './ChatListController.js';
 
 // Invitation Controller
 export type {
@@ -136,11 +136,11 @@ export type ResponseTypeRegistry = {
     logout: import('./AuthController.js').LogoutResponse;
 
     // Chat Controller
-    getContactList: import('./ChatController.js').GetContactListResponse;
-    createChat: import('./ChatController.js').CreateChatResponse;
-    deleteChat: import('./ChatController.js').DeleteChatResponse;
-    getMessages: import('./ChatController.js').GetMessagesResponse;
-    sendMessage: import('./ChatController.js').SendMessageResponse;
+    getContactList: import('./ChatListController.js').GetContactListResponse;
+    createChat: import('./ChatListController.js').CreateChatResponse;
+    deleteChat: import('./ChatListController.js').DeleteChatResponse;
+    getMessages: import('./ChatListController.js').GetMessagesResponse;
+    sendMessage: import('./ChatListController.js').SendMessageResponse;
 
     // Notes Controller
     getNotes: import('./NotesController.js').GetNotesResponse;
