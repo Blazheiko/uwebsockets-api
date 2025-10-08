@@ -358,7 +358,7 @@ const staticRoutes = [
 
 // Always point to source types directory, not dist
 const projectRoot = process.cwd();
-const typesDirectory = path.join(projectRoot, 'app/controllers/http/types');
+const typesDirectory = path.join(projectRoot, 'app/controllers/types');
 
 // Parse types from .d.ts files
 let types: any = {};
