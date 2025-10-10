@@ -227,7 +227,7 @@ export default [
         ],
         description: 'Main routes',
         middlewares: ['session_web'],
-        prefix: 'test',
+        prefix: 'main',
     },
     {
         group: [
