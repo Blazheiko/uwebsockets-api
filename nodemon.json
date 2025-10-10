@@ -1,6 +1,6 @@
 {
   "watch": ["."],
-  "ignore": ["node_modules", "dist"],
+  "ignore": ["node_modules", "dist", "public"],
   "ext": "*",
   "exec": "tsc && node dist/index.js"
 }

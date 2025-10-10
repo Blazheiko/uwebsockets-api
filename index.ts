@@ -5,19 +5,15 @@ import vine from '@vinejs/vine';
 import logger from '#logger';
 import { initServer, stopServer } from '#vendor/start/server.js';
 import configApp from '#config/app.js';
-import db from '#database/db.js';
 import redis from '#database/redis.js';
 import schemas from '#app/validate/schemas/schemas.js';
 import validators from '#vendor/start/validators.js';
 import { getListRoutes, routesHandler } from '#vendor/start/router.js';
-import httpRoutes from '#app/routes/httpRoutes.js';
-import wsRoutes from '#app/routes/wsRoutes.js';
+import httpRoutes from '#app/routes/http-routes.js';
+import wsRoutes from '#app/routes/ws-routes.js';
 
 // logger.info(configApp);
 
-const migrationDB = async () => {
-    await db.migrate.up({ directory: './database/migrations' });
-};
 const testRedis = async () => {
     await redis.set('test', Date.now().toString());
 };
@@ -25,7 +21,7 @@ const testRedis = async () => {
 const compileValidateSchema = () => {
     const schemaKeys = Object.keys(schemas);
     schemaKeys.forEach((key: string) => {
-        validators.set(key, vine.compile(schemas[key]));
+        validators.set(key, vine.compile(schemas[key].validator));
     });
 };
 
@@ -43,10 +39,6 @@ const start = async () => {
                 '.node',
         );
         compileValidateSchema();
-        if (configApp.startMigration) {
-            await migrationDB();
-            logger.info('migrate success');
-        }
         await testRedis();
         logger.info('test redis success');
         routesHandler(httpRoutes, false);
@@ -94,9 +86,9 @@ const stopSIGTERM = () => {
     process.exit(1);
 };
 const stopUncaughtException = (err: any, origin: any) => {
-    logger.error('event uncaughtException');
-    logger.error(err);
-    logger.error(origin);
+    logger.error({ err }, 'event uncaughtException');
+    // logger.error(err);
+    // logger.error(origin);
     // console.error(err);
     // console.error(origin);
     stopHandler('uncaughtException');

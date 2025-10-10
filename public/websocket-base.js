@@ -14,6 +14,7 @@ class WebsocketBase {
         );
     }
     initConnect(url) {
+        console.log(`Sending Websocket connection to: ${url}`);
         const ws = new WebSocket(url);
         console.log(`Sending Websocket connection to: ${url}`);
         this.wsConnection.ws = ws;

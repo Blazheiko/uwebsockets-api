@@ -1,6 +1,3 @@
-🇺🇦 Stand With Ukraine - Support Independence, Resist Russian Aggression 🇺🇦
-
-🇮🇱 Stand With Israel - Support its Fight Against Terrorism 🇮🇱
 
 # uWebSockets API
 
@@ -40,22 +37,37 @@ export default [
                 method: 'post',
                 handler: AuthController.register,
                 validator: 'register',
+                rateLimit: {
+                    windowMs: 1 * 60 * 1000,
+                    maxRequests: 10,             
+                },
+                description: 'Register a new user',
             },
             {
                 url: '/login',
                 method: 'post',
                 handler: AuthController.login,
                 validator: 'login',
+                rateLimit: {
+                    windowMs: 1 * 60 * 1000,
+                    maxRequests: 10,             
+                },
+                description: 'Login a user',
             },
             {
                 url: '/logout',
                 method: 'post',
                 handler: AuthController.logout,
-                validator: 'login',
+                description: 'Logout a user',
             },
         ],
+        description: 'Auth routes',
         middlewares: ['session_web'],
-        prefix: 'auth',
+        prefix: 'api/auth',
+        rateLimit: {
+            windowMs: 15 * 60 * 1000,
+            maxRequests: 100,             
+        },
     },
 ];
 
@@ -64,27 +76,42 @@ export default [
 routing ws `app/routes/wsRoutes.ts`
 
 ```ts
-import WSApiController from '#app/controllers/ws/WSApiController.js';
+import WSApiController from '#app/controllers/ws/ws-api-controller.js';
 
 export default [
   {
     group: [
       {
-        url: 'test',
-        handler: WSApiController.test,
+        url: 'event_typing',
+        handler: WSApiController.eventTyping,
+        description: 'Handle typing events',
+        rateLimit: {
+          windowMs: 1 * 60 * 1000, // 1 minute
+          maxRequests: 30,  // Max 30 typing events per minute
+        },
       },
       {
         url: 'error',
         handler: WSApiController.error,
         middleware: 'test2',
+        description: 'Error handling test',
       },
       {
         url: 'save-user',
         handler: WSApiController.saveUser,
         validator: 'register',
+        description: 'Save user data',
+        rateLimit: {
+          windowMs: 5 * 60 * 1000, // 5 minutes
+          maxRequests: 5, // Max 5 user save operations per 5 minutes
+        },
       },
     ],
     prefix: 'api:',
+    rateLimit: {
+      windowMs: 1 * 60 * 1000, // 1 minute
+      maxRequests: 600, // Max 600 requests per minute for the whole group
+    },
   },
 ];
 
@@ -203,6 +230,50 @@ export default {
     },
 };
 ```
+
+## Route Configuration
+
+### Route Fields
+
+Each route can be configured with the following fields:
+
+- **`url`** - The route path (required)
+- **`method`** - HTTP method for HTTP routes (required for HTTP routes)
+- **`handler`** - Controller method to handle the request (required)
+- **`validator`** - Validation schema name (optional)
+- **`middleware`** - Single middleware for WebSocket routes (optional)
+- **`middlewares`** - Array of middlewares for HTTP routes (optional)
+- **`description`** - Human-readable description of the route (optional)
+- **`rateLimit`** - Rate limiting configuration (optional)
+
+### Rate Limiting
+
+Rate limiting can be configured at both route and group levels:
+
+```ts
+{
+  url: '/api/endpoint',
+  method: 'post',
+  handler: Controller.method,
+  rateLimit: {
+    windowMs: 1 * 60 * 1000, // Time window in milliseconds
+    maxRequests: 10,          // Maximum requests per window
+  },
+}
+```
+
+**Rate Limit Fields:**
+- **`windowMs`** - Time window in milliseconds
+- **`maxRequests`** - Maximum number of requests allowed in the time window
+
+### Route Groups
+
+Route groups support additional configuration:
+
+- **`prefix`** - URL prefix for all routes in the group
+- **`middlewares`** - Middlewares applied to all routes in the group
+- **`description`** - Description for the entire group
+- **`rateLimit`** - Rate limiting applied to all routes in the group
 
 ## Modules used
 

@@ -1,6 +1,8 @@
 import { duration } from 'metautil';
-export default {
-    enabled: true,
+import { env } from 'node:process';
+export default Object.freeze({
+    // enabled: true,
+    storage: 'redis',
     cookieName: 'uapi',
     age: Math.floor( duration('2h')/1000 ), // d - days, h - hours, m - minutes, s - seconds
 
@@ -10,8 +12,8 @@ export default {
     cookie: {
         path: '/',
         httpOnly: true,
-        secure: true,
-        sameSite: 'lax',
+        secure: env.APP_ENV !== 'local',
+        sameSite: 'Strict', // 'Strict' || 'Lax' . 'None' is not secure use only for CSRF protection
     },
 
-};
+});
