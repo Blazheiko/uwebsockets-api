@@ -67,6 +67,6 @@ export interface SetHeaderAndCookieResponse {
 }
 
 export interface TestMiddlewareResponse {
-    m: any;
+    middlewares: string[];
     status: 'ok';
 }

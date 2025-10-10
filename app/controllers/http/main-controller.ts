@@ -18,7 +18,9 @@ import type {
     GetSetCookiesResponse,
     TestSessionResponse,
     SaveUserResponse,
+    TestMiddlewareResponse,
 } from '../types/MainController.js';
+import middlewares from '#app/middlewares/kernel.js';
 
 export default {
     // async joinСhat({ httpData, logger }: HttpContext): Promise<any> {
@@ -162,9 +164,13 @@ export default {
         responseData.setCookie('cookieTest2', 'test');
         return { status: 'ok' };
     },
-    async testMiddleware({ responseData, logger }: HttpContext): Promise<any> {
+    async testMiddleware({ responseData, logger }: HttpContext): Promise<TestMiddlewareResponse> {
         logger.info('testMiddleware handler');
-        return { m: responseData.middlewareData, status: 'ok' };
+        return { middlewares: responseData.middlewareData, status: 'ok' };
+    },
+    async testMiddleware2({ responseData, logger }: HttpContext): Promise<TestMiddlewareResponse> {
+        logger.info('testMiddleware handler');
+        return { middlewares: responseData.middlewareData, status: 'ok' };
     },
     async saveUser({
         httpData,

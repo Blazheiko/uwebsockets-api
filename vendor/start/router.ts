@@ -75,7 +75,9 @@ const parseGroups = (
     routeList.forEach((route) => {
         if (route.group) {
             if (Array.isArray(route.group) && route.group.length) {
-                const prefixGroup = route.prefix ? route.prefix : '';
+
+                const prefixInitial = normalizePath(prefix || '');
+                const prefixGroup = normalizePath(route.prefix || '');
                 const middlewaresGroup = route.middlewares
                     ? route.middlewares
                     : [];
@@ -83,7 +85,7 @@ const parseGroups = (
                 const currentGroupRateLimit = route.rateLimit || groupRateLimit;
                 const routeGroup = parseGroups(
                     route.group,
-                    prefixGroup,
+                    `${prefixInitial}/${prefixGroup}`,
                     middlewaresGroup,
                     isWs,
                     currentGroupRateLimit,

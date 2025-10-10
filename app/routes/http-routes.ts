@@ -202,6 +202,28 @@ export default [
                 typeResponse: 'MainController.TestMiddlewareResponse',
                 description: 'Test middleware',
             },
+            {
+                group: [
+                    {
+                        url: '/test-middleware-2',
+                        method: 'get',
+                        handler: MainController.testMiddleware2,
+                        middlewares: ['test2'],
+                    },
+                    {
+                        group: [
+                            {
+                                url: '/test-middleware-3',
+                                method: 'get',
+                                handler: MainController.testMiddleware2,
+                                middlewares: ['test2'],
+                            },
+                        ],
+                        prefix: 'test3',
+                    }
+                ],
+                prefix: 'test2',
+            }
         ],
         description: 'Main routes',
         middlewares: ['session_web'],
@@ -211,14 +233,14 @@ export default [
         group: [
             // Notes Routes
             {
-                url: '/notes',
+                url: '/',
                 method: 'get',
                 handler: NotesController.getNotes,
                 typeResponse: 'NotesController.GetNotesResponse',
                 description: 'Get all notes',
             },
             {
-                url: '/notes',
+                url: '/',
                 method: 'post',
                 handler: NotesController.createNote,
                 validator: 'createNote',
@@ -226,7 +248,7 @@ export default [
                 description: 'Create a new note',
             },
             {
-                url: '/notes/:noteId',
+                url: '/:noteId',
                 method: 'get',
                 handler: NotesController.getNote,
                 validator: 'getNote',
@@ -234,7 +256,7 @@ export default [
                 description: 'Get a note by id',
             },
             {
-                url: '/notes/:noteId',
+                url: '/:noteId',
                 method: 'put',
                 handler: NotesController.updateNote,
                 validator: 'updateNote',
@@ -242,7 +264,7 @@ export default [
                 description: 'Update a note by id',
             },
             {
-                url: '/notes/:noteId',
+                url: '/:noteId',
                 method: 'delete',
                 handler: NotesController.deleteNote,
                 validator: 'deleteNote',
@@ -251,7 +273,7 @@ export default [
             },
             // Notes Photo Routes
             {
-                url: '/notes/:noteId/photos',
+                url: '/:noteId/photos',
                 method: 'post',
                 handler: NotesController.addPhoto,
                 validator: 'addNotePhoto',
@@ -259,7 +281,7 @@ export default [
                 description: 'Add a photo to a note',
             },
             {
-                url: '/notes/:noteId/photos/:photoId',
+                url: '/:noteId/photos/:photoId',
                 method: 'delete',
                 handler: NotesController.deletePhoto,
                 validator: 'deleteNotePhoto',
