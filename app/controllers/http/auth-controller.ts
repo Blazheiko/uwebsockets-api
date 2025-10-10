@@ -1,4 +1,4 @@
-import User from '#app/models/user.js';
+import User from '#app/models/User.js';
 import { HttpContext } from '../../../vendor/types/types.js';
 import { generateKey, hashPassword, validatePassword } from 'metautil';
 // import configSession from '#config/session.js';
