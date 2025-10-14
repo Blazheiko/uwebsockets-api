@@ -215,7 +215,7 @@ export default [
                             {
                                 url: '/test-middleware-3',
                                 method: 'get',
-                                handler: MainController.testMiddleware2,
+                                handler: MainController.testMiddleware3,
                                 middlewares: ['test4'],
                             },
                         ],

@@ -156,11 +156,15 @@ export default {
         return { status: 'ok' };
     },
     async testMiddleware({ responseData, logger }: HttpContext): Promise<TestMiddlewareResponse> {
-        logger.info('testMiddleware handler');
+        logger.info('testMiddleware controller');
         return { middlewares: responseData.middlewareData, status: 'ok' };
     },
     async testMiddleware2({ responseData, logger }: HttpContext): Promise<TestMiddlewareResponse> {
-        logger.info('testMiddleware handler');
+        logger.info('testMiddleware2 controller');
+        return { middlewares: responseData.middlewareData, status: 'ok' };
+    },
+    async testMiddleware3({ responseData, logger }: HttpContext): Promise<TestMiddlewareResponse> {
+        logger.info('testMiddleware3 controller');
         return { middlewares: responseData.middlewareData, status: 'ok' };
     },
     async saveUser({
