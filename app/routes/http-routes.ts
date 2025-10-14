@@ -216,12 +216,14 @@ export default [
                                 url: '/test-middleware-3',
                                 method: 'get',
                                 handler: MainController.testMiddleware2,
-                                middlewares: ['test2'],
+                                middlewares: ['test4'],
                             },
                         ],
+                        middlewares: ['test3'],
                         prefix: 'test3',
                     }
                 ],
+                middlewares: ['test2'],
                 prefix: 'test2',
             }
         ],

@@ -214,7 +214,7 @@ export default [
             {
                 url: 'error',
                 handler: WSApiController.error,
-                middleware: 'test2',
+                middlewares: ['test2'],
                 description: 'Error handling test',
             },
             {
@@ -487,8 +487,7 @@ Each route can be configured with the following fields:
 - **`method`** - HTTP method for HTTP routes (required for HTTP routes)
 - **`handler`** - Controller method to handle the request (required)
 - **`validator`** - Validation schema name (optional)
-- **`middleware`** - Single middleware for WebSocket routes (optional)
-- **`middlewares`** - Array of middlewares for HTTP routes (optional)
+- **`middlewares`** - Array of middlewares for HTTP || WebSocket routes (optional)
 - **`description`** - Human-readable description of the route (optional)
 - **`rateLimit`** - Rate limiting configuration (optional)
 

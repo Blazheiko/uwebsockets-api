@@ -79,8 +79,8 @@ const parseGroups = (
                 const prefixInitial = normalizePath(prefix || '');
                 const prefixGroup = normalizePath(route.prefix || '');
                 const middlewaresGroup = route.middlewares
-                    ? route.middlewares
-                    : [];
+                    ? middlewares.concat(route.middlewares)
+                    : middlewares;
                 // Group limits are passed to subgroups
                 const currentGroupRateLimit = route.rateLimit || groupRateLimit;
                 const routeGroup = parseGroups(

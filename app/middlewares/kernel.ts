@@ -10,5 +10,7 @@ const middlewares: Record<string, Function> = {
     auth_guard: authGuard,
     test1: testMiddleware,
     test2: testMiddleware2,
+    test3: testMiddleware2,
+    test4: testMiddleware2,
 };
 export default middlewares;
