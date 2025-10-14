@@ -17,7 +17,7 @@ export default [
                 url: 'error',
                 handler: WSApiController.error,
                 typeResponse: 'WSApiController.ErrorResponse',
-                middleware: 'test2',
+                middlewares: ['test2'],
                 description: 'Error handling test',
             },
             {

@@ -1,4 +1,3 @@
-
 # uWebSockets API
 
 `uWebSockets-api` — This wrapper simplifies the usage of [uWebSockets.js](https://github.com/uNetworking/uWebSockets.js) by offering more convenient tools for handling WebSockets and HTTP routing.Supports Node 22 versions.
@@ -6,6 +5,130 @@
 ## Basics
 
 This wrapper simplifies the usage of `uWebSockets.js` by offering more convenient tools for handling WebSockets and HTTP routing.
+
+## Project Structure
+
+```
+uwebsockets-api/
+├── app/                          # Main application folder
+│   ├── controllers/              # Controllers
+│   │   ├── http/                 # HTTP controllers
+│   │   │   ├── auth-controller.ts
+│   │   │   ├── calendar-controller.ts
+│   │   │   ├── chat-list-controller.ts
+│   │   │   ├── invitation-controller.ts
+│   │   │   ├── main-controller.ts
+│   │   │   ├── message-controller.ts
+│   │   │   ├── notes-controller.ts
+│   │   │   ├── project-controller.ts
+│   │   │   ├── push-subscription-controller.ts
+│   │   │   └── task-controller.ts
+│   │   ├── types/                # Controller types
+│   │   │   ├── AuthController.d.ts
+│   │   │   ├── CalendarController.d.ts
+│   │   │   ├── ChatListController.d.ts
+│   │   │   ├── InvitationController.d.ts
+│   │   │   ├── MainController.d.ts
+│   │   │   ├── NotesController.d.ts
+│   │   │   ├── ProjectController.d.ts
+│   │   │   ├── PushSubscriptionController.d.ts
+│   │   │   ├── TaskController.d.ts
+│   │   │   └── index.d.ts
+│   │   └── ws/                   # WebSocket controllers
+│   │       └── ws-api-controller.ts
+│   ├── middlewares/              # Middleware functions
+│   │   ├── kernel.ts
+│   │   ├── test-middleware.ts
+│   │   └── test-middleware-2.ts
+│   ├── models/                   # Data models
+│   │   ├── contact-list.ts
+│   │   ├── Message.ts
+│   │   ├── notes-photo.ts
+│   │   ├── Notes.ts
+│   │   ├── Project.ts
+│   │   ├── Task.ts
+│   │   └── User.ts
+│   ├── routes/                   # Routes
+│   │   ├── http-routes.ts
+│   │   └── ws-routes.ts
+│   ├── servises/                 # Services
+│   │   ├── chat/
+│   │   │   ├── get-chat-messages.ts
+│   │   │   └── send-message.ts
+│   │   ├── generate-ws-token.ts
+│   │   └── invention-accept.ts
+│   ├── state/                    # Application state
+│   │   ├── state.ts
+│   │   └── user-storage.ts
+│   └── validate/                 # Validation
+│       └── schemas/
+│           └── schemas.ts
+├── config/                       # Configuration
+│   ├── app.ts
+│   ├── cookies.ts
+│   ├── cors.ts
+│   ├── csp.ts
+│   ├── database.ts
+│   ├── redis.ts
+│   └── session.ts
+├── database/                     # Database
+│   ├── prisma.js
+│   └── redis.ts
+├── dist/                         # Compiled files
+├── docs/                         # Documentation
+│   ├── API_TYPES_README.md
+│   ├── RESPONSE_TYPES_GUIDE.md
+│   └── SESSION_SECURITY.md
+├── frontend/                     # Frontend part
+│   └── src/
+│       └── types/
+├── prisma/                       # Prisma schema and migrations
+│   ├── migrations/
+│   └── schema.prisma
+├── public/                       # Public files
+│   ├── assets/
+│   ├── index.html
+│   ├── 404.html
+│   ├── favicon.ico
+│   └── websocket-base.js
+├── scripts/                      # Scripts
+│   └── export-types.js
+├── vendor/                       # External libraries and utilities
+│   ├── start/
+│   │   ├── router.ts
+│   │   ├── server.ts
+│   │   ├── staticServer.ts
+│   │   └── validators.ts
+│   ├── types/
+│   │   └── types.d.ts
+│   └── utils/
+│       ├── context/
+│       ├── middlewares/
+│       ├── network/
+│       ├── rate-limit/
+│       ├── routing/
+│       ├── serialization/
+│       ├── session/
+│       └── tooling/
+├── docker-compose.yml
+├── Dockerfile
+├── index.ts                      # Entry point
+├── logger.ts                     # Logger
+├── nodemon.json
+├── package.json
+├── tsconfig.json
+└── README.md
+```
+
+### Description of main folders:
+
+- **`app/`** - Main application folder with controllers, models, routes and services
+- **`config/`** - Configuration files for various system components
+- **`database/`** - Database settings and connections
+- **`vendor/`** - External libraries and utilities for working with uWebSockets
+- **`prisma/`** - Database schema and migrations
+- **`public/`** - Static files for frontend
+- **`docs/`** - Project documentation
 
 ## Installation
 
@@ -17,12 +140,11 @@ Create `.env` file following the `.env.example`
 
 Start server `npm run start`
 
-Starting the server in development mode  `npm run dev`
+Starting the server in development mode `npm run dev`
 
 ## Usage Example
 
 Inspired by the frameworks `Laravel` and `AdonisJs`, `uWebSockets-api` aims to provide a similar experience in organizing project structure and route descriptions.
-
 
 routing http `app/routes/httpRoutes.ts`
 
@@ -39,7 +161,7 @@ export default [
                 validator: 'register',
                 rateLimit: {
                     windowMs: 1 * 60 * 1000,
-                    maxRequests: 10,             
+                    maxRequests: 10,
                 },
                 description: 'Register a new user',
             },
@@ -50,7 +172,7 @@ export default [
                 validator: 'login',
                 rateLimit: {
                     windowMs: 1 * 60 * 1000,
-                    maxRequests: 10,             
+                    maxRequests: 10,
                 },
                 description: 'Login a user',
             },
@@ -66,11 +188,10 @@ export default [
         prefix: 'api/auth',
         rateLimit: {
             windowMs: 15 * 60 * 1000,
-            maxRequests: 100,             
+            maxRequests: 100,
         },
     },
 ];
-
 ```
 
 routing ws `app/routes/wsRoutes.ts`
@@ -79,45 +200,45 @@ routing ws `app/routes/wsRoutes.ts`
 import WSApiController from '#app/controllers/ws/ws-api-controller.js';
 
 export default [
-  {
-    group: [
-      {
-        url: 'event_typing',
-        handler: WSApiController.eventTyping,
-        description: 'Handle typing events',
+    {
+        group: [
+            {
+                url: 'event_typing',
+                handler: WSApiController.eventTyping,
+                description: 'Handle typing events',
+                rateLimit: {
+                    windowMs: 1 * 60 * 1000, // 1 minute
+                    maxRequests: 30, // Max 30 typing events per minute
+                },
+            },
+            {
+                url: 'error',
+                handler: WSApiController.error,
+                middleware: 'test2',
+                description: 'Error handling test',
+            },
+            {
+                url: 'save-user',
+                handler: WSApiController.saveUser,
+                validator: 'register',
+                description: 'Save user data',
+                rateLimit: {
+                    windowMs: 5 * 60 * 1000, // 5 minutes
+                    maxRequests: 5, // Max 5 user save operations per 5 minutes
+                },
+            },
+        ],
+        prefix: 'api:',
         rateLimit: {
-          windowMs: 1 * 60 * 1000, // 1 minute
-          maxRequests: 30,  // Max 30 typing events per minute
+            windowMs: 1 * 60 * 1000, // 1 minute
+            maxRequests: 600, // Max 600 requests per minute for the whole group
         },
-      },
-      {
-        url: 'error',
-        handler: WSApiController.error,
-        middleware: 'test2',
-        description: 'Error handling test',
-      },
-      {
-        url: 'save-user',
-        handler: WSApiController.saveUser,
-        validator: 'register',
-        description: 'Save user data',
-        rateLimit: {
-          windowMs: 5 * 60 * 1000, // 5 minutes
-          maxRequests: 5, // Max 5 user save operations per 5 minutes
-        },
-      },
-    ],
-    prefix: 'api:',
-    rateLimit: {
-      windowMs: 1 * 60 * 1000, // 1 minute
-      maxRequests: 600, // Max 600 requests per minute for the whole group
     },
-  },
 ];
-
-
 ```
+
 http controller `app/controllers/http/AuthController.ts`
+
 ```ts
 import logger from '#logger';
 import User from '#app/models/User.js';
@@ -128,7 +249,7 @@ export default {
     async register(context: HttpContext) {
         logger.info('register handler');
         const { httpData, auth, session } = context;
-        const {name , email , password} = httpData.payload;
+        const { name, email, password } = httpData.payload;
         const hash = await hashPassword(password);
 
         const user = await User.create({
@@ -136,40 +257,48 @@ export default {
             email: email,
             password: hash,
         });
-        await session.destroySession()
+        await session.destroySession();
         const res = await auth.login(user);
-        return { status: (res ? 'success':'error'), user: User.serialize(user) };
-
+        return {
+            status: res ? 'success' : 'error',
+            user: User.serialize(user),
+        };
     },
-    async login(context: HttpContext){
+    async login(context: HttpContext) {
         logger.info('login handler');
         const { httpData, responseData, auth } = context;
-        const { email , password } = httpData.payload;
-        const user = await User.query()
-            .where('email','=', email)
-            .first();
-        if(user){
+        const { email, password } = httpData.payload;
+        const user = await User.query().where('email', '=', email).first();
+        if (user) {
             const valid = await validatePassword(password, user.password);
             if (valid) {
                 const res = await auth.login(user);
-                return { status: (res ? 'success':'error'), user: User.serialize(user) };
+                return {
+                    status: res ? 'success' : 'error',
+                    user: User.serialize(user),
+                };
             }
         }
         responseData.status = 401;
         return 'unauthorized';
     },
-    async logout(context: HttpContext){
+    async logout(context: HttpContext) {
         logger.info('logout handler');
         const { auth } = context;
         const res = await auth.logout();
-        return { status: (res ? 'success':'error')}
-    }
-}
+        return { status: res ? 'success' : 'error' };
+    },
+};
 ```
+
 http controller `app/controllers/http/MainController.ts`
 
 ```ts
-import { HttpContext, HttpData, ResponseData } from './../../../vendor/types/types.js';
+import {
+    HttpContext,
+    HttpData,
+    ResponseData,
+} from './../../../vendor/types/types.js';
 
 export default {
     async setHeaderAndCookie({ responseData }: HttpContext): Promise<any> {
@@ -191,13 +320,13 @@ export default {
         logger.info(session);
         const cookies: any[] = [];
         httpData.cookies.forEach((value, key) => {
-            cookies.push({ key, value});
+            cookies.push({ key, value });
         });
         const sessionInfo = session?.sessionInfo;
 
-        return { status: 'ok' , cookies , sessionInfo };
+        return { status: 'ok', cookies, sessionInfo };
     },
-}
+};
 ```
 
 ws controller `app/controllers/ws/WSApiController.ts`
@@ -205,16 +334,20 @@ ws controller `app/controllers/ws/WSApiController.ts`
 ```ts
 import logger from '#logger';
 import User from '#app/models/User.js';
-import { WsContext, WsData, WsResponseData } from '../../../vendor/types/types.js';
+import {
+    WsContext,
+    WsData,
+    WsResponseData,
+} from '../../../vendor/types/types.js';
 
 export default {
-    test({ responseData}: WsContext) {
+    test({ responseData }: WsContext) {
         logger.info('ws test');
         responseData.payload = { test: true };
 
         return responseData;
     },
-    async saveUser({ wsData, responseData}: WsContext) {
+    async saveUser({ wsData, responseData }: WsContext) {
         logger.info('ws saveUser');
         const { payload } = wsData;
         console.log({ payload });
@@ -223,12 +356,125 @@ export default {
             email: payload.email,
             password: payload.password,
         });
-       
+
         responseData.payload = { status: 'ok', user };
 
         return responseData;
     },
 };
+```
+
+## Context Objects
+
+### HttpContext
+
+The `HttpContext` object is passed to HTTP controller methods and contains all the necessary data and utilities for handling HTTP requests.
+
+```typescript
+interface HttpContext {
+    requestId: string; // Unique request identifier
+    logger: Logger; // Pino logger instance with request context
+    httpData: HttpData; // Incoming request data
+    responseData: ResponseData; // Response configuration object
+    session: Session; // Session management utilities
+    auth: any; // Authentication utilities
+}
+```
+
+#### HttpData Structure
+
+```typescript
+interface HttpData {
+    ip: string | null | undefined; // Client IP address
+    params: any; // Route parameters
+    payload: any; // Request body data
+    query: URLSearchParams; // URL query parameters
+    headers: Map<string, string>; // Request headers
+    contentType: string | undefined; // Content-Type header
+    cookies: Map<string, string>; // Request cookies
+    isJson: boolean; // Whether request is JSON
+}
+```
+
+#### ResponseData Structure
+
+```typescript
+interface ResponseData {
+    aborted: boolean; // Whether response was aborted
+    payload: object; // Response payload
+    middlewareData: any; // Data from middlewares
+    headers: Header[]; // Response headers
+    cookies: Record<string, Cookie>; // Response cookies
+    status: number; // HTTP status code
+    deleteCookie: Function; // Delete cookie method
+    setCookie: Function; // Set cookie method
+    setHeader: Function; // Set header method
+}
+```
+
+#### Session Structure
+
+```typescript
+interface Session {
+    sessionInfo: SessionInfo | null; // Session data
+    updateSessionData: Function; // Update session data
+    changeSessionData: Function; // Change session data
+    destroySession: Function; // Destroy session
+}
+
+interface SessionInfo {
+    id: string; // Session ID
+    data: SessionData; // Session data object
+    createdAt: string; // Creation timestamp
+    updatedAt?: string; // Last update timestamp
+}
+```
+
+### WsContext
+
+The `WsContext` object is passed to WebSocket controller methods and contains all the necessary data and utilities for handling WebSocket connections.
+
+```typescript
+interface WsContext {
+    requestId: string; // Unique request identifier
+    wsData: WsData; // Incoming WebSocket data
+    responseData: WsResponseData; // Response configuration object
+    session: Session | null; // Session management utilities (nullable)
+    auth: any; // Authentication utilities
+    logger: Logger; // Pino logger instance with request context
+}
+```
+
+#### WsData Structure
+
+```typescript
+interface WsData {
+    middlewareData: any; // Data from middlewares
+    status: string; // WebSocket status
+    payload?: any; // Message payload (optional)
+}
+```
+
+#### WsResponseData Structure
+
+```typescript
+interface WsResponseData {
+    payload: any; // Response payload
+    event: string; // WebSocket event name
+    status: number; // Response status code
+}
+```
+
+#### Auth Structure
+
+```typescript
+interface Auth {
+    getUserId: Function; // Get current user ID
+    check: Function; // Check authentication status
+    login: Function; // Login user
+    logout: Function; // Logout user
+    logoutAll: Function; // Logout from all sessions
+}
 ```
 
 ## Route Configuration
@@ -263,6 +509,7 @@ Rate limiting can be configured at both route and group levels:
 ```
 
 **Rate Limit Fields:**
+
 - **`windowMs`** - Time window in milliseconds
 - **`maxRequests`** - Maximum number of requests allowed in the time window
 
@@ -277,7 +524,7 @@ Route groups support additional configuration:
 
 ## Modules used
 
-Query Builder `database/db.ts` [khex](https://knexjs.org/guide/)
+ORM `database/prisma.ts` [khex](https://www.prisma.io/orm)
 
 Redis client `database/redis.ts` [ioredis](https://github.com/redis/ioredis)
 

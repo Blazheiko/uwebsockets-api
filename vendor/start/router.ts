@@ -1,7 +1,7 @@
 import logger from '#logger';
 import { normalizePath } from '#vendor/utils/network/http-request-handlers.js';
 import appConfig from '#config/app.js';
-import { Method, RouteItem, routeList, WsRoutes } from './../types/types.js';
+import { Method, RouteItem, WsRoutes } from './../types/types.js';
 
 const listRoutes: RouteItem[] = [];
 const wsRoutes: WsRoutes = {};
