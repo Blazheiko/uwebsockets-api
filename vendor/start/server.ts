@@ -69,6 +69,16 @@ const broadcastMessage = (userId: number, event: string, payload: any) => {
         );
 };
 
+const broadcastToChannel = (channel: string, event: string, payload: any) => {
+    server.publish(
+        channel,
+        JSON.stringify(
+            { event: `broadcast:${event}`, status: 200, payload },
+            (_, v) => (typeof v === 'bigint' ? v.toString() : v),
+        ),
+    );
+};
+
 const broadcastOnline = (userId: number, status: string) => {
     server.publish(
         `change_online`,
@@ -76,8 +86,9 @@ const broadcastOnline = (userId: number, status: string) => {
             event: `broadcast:change_online`,
             status: 200,
             payload: { userId, status },
-        }),
-    );
+        },
+        (_, v) => (typeof v === 'bigint' ? v.toString() : v),
+    ));
 };
 
 const configureWebsockets = (server: TemplatedApp) => {
@@ -572,4 +583,4 @@ const stopServer = (type = 'handle') => {
     state.listenSocket = null;
 };
 
-export { initServer, stopServer, broadcastMessage, broadcastOnline };
+export { initServer, stopServer, broadcastMessage, broadcastOnline, broadcastToChannel };

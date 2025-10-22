@@ -11,7 +11,7 @@ import getIP from '../network/get-ip.js';
 const wsStorage: Set<MyWebSocket> = new Set();
 const userStorage: Map<
     number,
-    Map<string, { ip: string; userAgent: string }>
+    Map<string, { ip: string; userAgent: string; connection: MyWebSocket }>
 > = new Map();
 
 const getUserConnections = (userId: number) => {
@@ -236,7 +236,7 @@ const onOpen = async (ws: MyWebSocket) => {
                 activity_timeout: 30,
             },
         };
-        ws.subscribe(`user:${userData.userId}`);
+        // ws.subscribe(`user:${userData.userId}`);
         ws.subscribe(`change_online`);
         sendJson(ws, broadcastMessage);
         wsStorage.add(ws);
@@ -246,6 +246,7 @@ const onOpen = async (ws: MyWebSocket) => {
             userConnection.set(userData.uuid, {
                 ip: userData.ip,
                 userAgent: userData.userAgent,
+                connection: ws,
             });
         else {
             userStorage.set(
@@ -253,7 +254,7 @@ const onOpen = async (ws: MyWebSocket) => {
                 new Map([
                     [
                         userData.uuid,
-                        { ip: userData.ip, userAgent: userData.userAgent },
+                        { ip: userData.ip, userAgent: userData.userAgent, connection: ws }
                     ],
                 ]),
             );
