@@ -1,6 +1,6 @@
 import { HttpContext } from './../../../vendor/types/types.js';
 import { prisma } from '#database/prisma.js';
-import { getOnlineUser } from '#vendor/utils/routing/ws-router.js';
+import { getOnlineUser } from '#vendor/utils/network/ws-handlers.js';
 import type {
     GetContactListResponse,
     CreateChatResponse,
@@ -42,7 +42,7 @@ export default {
             orderBy: { updatedAt: 'desc' },
         });
         const onlineUsers = getOnlineUser(
-            contactList.map((contact) => Number(contact.contactId)),
+            contactList.map((contact) => String(contact.contactId)),
         );
 
         return { status: 'ok', contactList, onlineUsers };

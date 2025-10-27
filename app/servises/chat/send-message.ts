@@ -1,6 +1,6 @@
 import { prisma } from "#database/prisma.js";
 import logger from "#logger";
-import { broadcastMessage } from "#vendor/start/server.js";
+import broadcastig from "#app/servises/broadcastig.js";
 
 export default async (content: string, userId: number, contactId: number) => {
    if (!contactId || !content || !userId) return null;
@@ -35,7 +35,8 @@ export default async (content: string, userId: number, contactId: number) => {
     });
     logger.info(`updated: ${updated}`);
 
-    broadcastMessage(contactId, 'new_message', { message });
+    // broadcastMessage(contactId, 'new_message', { message });
+    broadcastig.broadcastMessageToUser(contactId, 'new_message', { message });
 
     return message;
 }

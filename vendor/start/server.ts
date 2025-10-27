@@ -16,7 +16,7 @@ import {
     onClose,
     handleUpgrade,
     closeAllWs,
-} from '#vendor/utils/routing/ws-router.js';
+} from '#vendor/utils/network/ws-handlers.js';
 import {
     getHeaders,
     getData,

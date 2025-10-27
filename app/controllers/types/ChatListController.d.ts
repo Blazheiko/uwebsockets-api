@@ -43,7 +43,7 @@ export interface GetContactListResponse {
     status: 'ok' | 'error' | 'unauthorized';
     message?: Message | string | null;
     contactList?: Contact[] | null;
-    onlineUsers?: number[];
+    onlineUsers?: string[];
 }
 
 export interface ContactList {
@@ -87,7 +87,7 @@ export interface GetMessagesResponse {
     message?: string;
     messages?: Message[];
     contact?: any;
-    onlineUsers?: number[];
+    onlineUsers?: string[];
 }
 
 export interface SendMessageResponse {

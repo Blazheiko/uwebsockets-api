@@ -11,6 +11,7 @@ import validators from '#vendor/start/validators.js';
 import { getListRoutes, routesHandler } from '#vendor/start/router.js';
 import httpRoutes from '#app/routes/http-routes.js';
 import wsRoutes from '#app/routes/ws-routes.js';
+import '#app/start/index.js';
 
 // logger.info(configApp);
 

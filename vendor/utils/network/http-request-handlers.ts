@@ -80,7 +80,11 @@ const getData = async (res: HttpResponse, contentType: string) => {
 };
 
 const normalizePath = (path: string) => {
-    return path.startsWith('/') ? path.slice(1) : path;
+    if (!path) return '';
+    let normalizedPath = path;
+    if (normalizedPath.endsWith('/')) normalizedPath = normalizedPath.slice(0, -1);
+    if (normalizedPath.startsWith('/')) normalizedPath = normalizedPath.slice(1);
+    return normalizedPath;
 };
 
 const isValidUrl = (url: string): boolean => {

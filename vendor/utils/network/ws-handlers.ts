@@ -1,27 +1,38 @@
 import logger from '#logger';
-import wsApiHandler from './ws-api-dispatcher.js';
+import wsApiHandler from '../routing/ws-api-dispatcher.js';
 import { generateUUID } from 'metautil';
 import redis from '#database/redis.js';
 import { HttpRequest, HttpResponse, us_socket_context_t } from 'uWebSockets.js';
 import { MyWebSocket } from '../../types/types.js';
 import { broadcastOnline } from '#vendor/start/server.js';
 import { wsSessionHandler } from '../session/session-handler.js';
-import getIP from '../network/get-ip.js';
+import getIP from './get-ip.js';
+import { wsEventEmitter } from '#vendor/utils/events/ws-event-manager.js';
 
 const wsStorage: Set<MyWebSocket> = new Set();
 const userStorage: Map<
-    number,
+    string,
     Map<string, { ip: string; userAgent: string; connection: MyWebSocket }>
 > = new Map();
 
-const getUserConnections = (userId: number) => {
-    return userStorage.get(userId);
+const getUserConnections = (userId: string) => {
+    return userStorage.get(String(userId));
 };
 
-const getOnlineUser = (usersOnline: number[]) => {
-    const onlineUsers: number[] = [];
+const setUserConnections = (
+    userId: string,
+    connections: Map<
+        string,
+        { ip: string; userAgent: string; connection: MyWebSocket }
+    >,
+) => {
+    return userStorage.set(String(userId), connections);
+};
+
+const getOnlineUser = (usersOnline: string[]) => {
+    const onlineUsers: string[] = [];
     for (const userId of usersOnline) {
-        if (userStorage.has(userId)) onlineUsers.push(userId);
+        if (userStorage.has(String(userId))) onlineUsers.push(String(userId));
     }
     return onlineUsers;
 };
@@ -140,7 +151,18 @@ const onClose = async (ws: MyWebSocket, code: number, message: any) => {
         wsStorage.delete(ws);
         const userData = ws.getUserData();
         logger.info(userData);
-        const userConnection = userStorage.get(userData.userId);
+
+        if (userData.userId && userData.sessionId && userData.uuid) {
+            wsEventEmitter.emit('user_disconnected', {
+                userId: userData.userId,
+                sessionId: userData.sessionId,
+                uuid: userData.uuid,
+                code: code,
+                timestamp: Date.now(),
+            });
+        }
+
+        const userConnection = getUserConnections(userData.userId);
         if (userConnection) {
             userConnection.delete(userData.uuid);
             if (userConnection.size === 0) {
@@ -240,8 +262,9 @@ const onOpen = async (ws: MyWebSocket) => {
         ws.subscribe(`change_online`);
         sendJson(ws, broadcastMessage);
         wsStorage.add(ws);
+        logger.info(`onOpen ws userId: ${userData.userId} `);
 
-        const userConnection = userStorage.get(userData.userId);
+        const userConnection = getUserConnections(userData.userId);
         if (userConnection)
             userConnection.set(userData.uuid, {
                 ip: userData.ip,
@@ -249,17 +272,31 @@ const onOpen = async (ws: MyWebSocket) => {
                 connection: ws,
             });
         else {
-            userStorage.set(
+            setUserConnections(
                 userData.userId,
                 new Map([
                     [
                         userData.uuid,
-                        { ip: userData.ip, userAgent: userData.userAgent, connection: ws }
+                        {
+                            ip: userData.ip,
+                            userAgent: userData.userAgent,
+                            connection: ws,
+                        },
                     ],
                 ]),
             );
             broadcastOnline(userData.userId, 'online');
         }
+
+        wsEventEmitter.emit('user_connected', {
+            userId: userData.userId,
+            sessionId: userData.sessionId,
+            uuid: userData.uuid,
+            ip: userData.ip,
+            userAgent: userData.userAgent,
+            timestamp: Date.now(),
+        });
+
         logger.info('onOpen ws end');
     } catch (e) {
         logger.error({ err: e }, 'Error in onOpen:');
@@ -345,7 +382,7 @@ const handleUpgrade = async (
                     user: null,
                     uuid: generateUUID(),
                     sessionId: dataAccess ? dataAccess.sessionId : undefined,
-                    userId: dataAccess ? dataAccess.userId : undefined,
+                    userId: dataAccess ? String(dataAccess.userId) : undefined,
                     timeStart: Date.now(),
                     userAgent,
                 },

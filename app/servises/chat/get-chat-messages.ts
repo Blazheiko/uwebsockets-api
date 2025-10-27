@@ -1,5 +1,5 @@
 import { prisma } from '#database/prisma.js';
-import { getOnlineUser } from '#vendor/utils/routing/ws-router.js';
+import { getOnlineUser } from '#vendor/utils/network/ws-handlers.js';
 import { Message } from '@prisma/client';
 import { ContactList } from '@prisma/client';
 
@@ -9,7 +9,7 @@ export default async (
 ): Promise<{
     messages: Message[];
     contact: ContactList;
-    onlineUsers: number[];
+    onlineUsers: string[];
 } | null> => {
     if (!userId || !contactId) return null;
 
@@ -54,7 +54,7 @@ export default async (
         take: 50,
     });
 
-    const onlineUsers = getOnlineUser([Number(contact.contactId)]);
+    const onlineUsers = getOnlineUser([String(contact.contactId)]);
 
     return { messages, contact: contact as ContactList, onlineUsers };
 };

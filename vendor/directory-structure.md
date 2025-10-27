@@ -3,7 +3,7 @@ vendor/utils/
 │   ├── http-context.ts 
 │   └── ws-context.ts 
 ├── routing/
-│   ├── ws-router.ts 
+│   ├ 
 │   ├── ws-api-dispatcher.ts 
 │   └── serialize-routes.ts
 ├── rate-limit/

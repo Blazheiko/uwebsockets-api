@@ -3,7 +3,10 @@ import { DateTime } from 'luxon';
 import redis from '#database/redis.js';
 import logger from '#logger';
 import sessionConfig from '#config/session.js';
-import { normalizeUserId } from '#vendor/utils/normalize-user-id.js';
+import {
+    normalizeUserId,
+    UserId,
+} from '#vendor/utils/helpers/normalize-user-id.js';
 import redisConfig from '#config/redis.js';
 
 /**

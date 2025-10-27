@@ -23,13 +23,14 @@ import {
     createSignedToken,
     verifySignedToken,
 } from '#vendor/utils/session/token-handler.js';
-import { normalizeUserId } from '#vendor/utils/normalize-user-id.js';
+import {
+    normalizeUserId,
+    UserId,
+} from '#vendor/utils/helpers/normalize-user-id.js';
 
 logger.info(`Session storage: ${sessionConfig.storage}`);
 
 const generateSessionId = (): string => crypto.randomUUID();
-
-
 
 /**
  * Sanitizes Redis keys for protection against injections
@@ -108,19 +109,25 @@ export const sessionHandler = async (
             try {
                 cookieUserId = normalizeUserId(cookieUserId);
             } catch (error) {
-                logger.error({
-                    cookieUserId,
-                    ip: context.httpData.ip,
-                    userAgent: context.httpData.headers.get('user-agent'),
-                }, 'Invalid cookieUserId from token');
+                logger.error(
+                    {
+                        cookieUserId,
+                        ip: context.httpData.ip,
+                        userAgent: context.httpData.headers.get('user-agent'),
+                    },
+                    'Invalid cookieUserId from token',
+                );
                 cookieUserId = undefined;
                 sessionId = undefined;
             }
         } else {
-            logger.warn({
-                ip: context.httpData.ip,
-                userAgent: context.httpData.headers.get('user-agent'),
-            }, 'Invalid access token');
+            logger.warn(
+                {
+                    ip: context.httpData.ip,
+                    userAgent: context.httpData.headers.get('user-agent'),
+                },
+                'Invalid access token',
+            );
         }
     }
 
@@ -193,7 +200,7 @@ export const sessionHandler = async (
 
             return true;
         } catch (err) {
-            logger.error({ err },'Login error:');
+            logger.error({ err }, 'Login error:');
             throw err;
         }
     };
@@ -226,10 +233,7 @@ export const sessionHandler = async (
 
             return true;
         } catch (err) {
-            logger.error(
-                { err, userId, sessionId },
-                'Logout error'
-            );
+            logger.error({ err, userId, sessionId }, 'Logout error');
             throw err;
         }
     };
@@ -243,12 +247,12 @@ export const sessionHandler = async (
 
             sessionId = sessionInfo?.id;
             if (sessionId) {
-                
                 deletedCount = await destroyAllSessions(userId);
 
-                logger.info(`User ${userId} logged out all sessions ${deletedCount}`);
+                logger.info(
+                    `User ${userId} logged out all sessions ${deletedCount}`,
+                );
             }
-
 
             const newSessionInfo = await createSessionInfo({});
 
@@ -261,10 +265,7 @@ export const sessionHandler = async (
 
             return deletedCount;
         } catch (err) {
-            logger.error(
-                { err, userId, sessionId },
-                'Logout error'
-            );
+            logger.error({ err, userId, sessionId }, 'Logout error');
             throw err;
         }
     };
@@ -281,10 +282,13 @@ export const wsSessionHandler = async (
         let sessionInfo = await getSession(sessionId, normalizedUserId);
 
         if (!sessionInfo) {
-            logger.warn({
-                sessionId,
-                userId: normalizedUserId,
-            }, 'Session not found');
+            logger.warn(
+                {
+                    sessionId,
+                    userId: normalizedUserId,
+                },
+                'Session not found',
+            );
             return null;
         }
 
@@ -293,15 +297,16 @@ export const wsSessionHandler = async (
 
         // CRITICAL: use strict comparison !== for protection against type coercion
         if (sessionUserId !== normalizedUserId) {
-            logger.error({
-                sessionId,
-                expectedUserId: normalizedUserId,
-                expectedType: typeof normalizedUserId,
-                actualUserId: sessionUserId,
-                actualType: typeof sessionUserId,
-                rawSessionUserId: sessionInfo.data?.userId,
-            },
-                `Session userId mismatch - potential security breach`
+            logger.error(
+                {
+                    sessionId,
+                    expectedUserId: normalizedUserId,
+                    expectedType: typeof normalizedUserId,
+                    actualUserId: sessionUserId,
+                    actualType: typeof sessionUserId,
+                    rawSessionUserId: sessionInfo.data?.userId,
+                },
+                `Session userId mismatch - potential security breach`,
             );
             return null;
         }
@@ -324,10 +329,7 @@ export const wsSessionHandler = async (
                 await destroySession(sessionInfo!.id, normalizedUserId),
         };
     } catch (err) {
-        logger.error(
-            { err, sessionId, userId },
-            'wsSessionHandler error'
-        );
+        logger.error({ err, sessionId, userId }, 'wsSessionHandler error');
         return null;
     }
 };
