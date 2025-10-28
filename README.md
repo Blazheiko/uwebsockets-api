@@ -120,6 +120,32 @@ uwebsockets-api/
 └── README.md
 ```
 
+### Startup Handlers (app/start/)
+
+You can register initialization logic that runs when the application starts.
+
+- **Location**: place your startup handlers under `app/start/` (for example, `app/start/listeners/`).
+- **Registration**: import your handler files inside `app/start/index.ts` so they are executed on boot.
+
+Example:
+
+```ts
+// app/start/listeners/my-startup-handler.ts
+import logger from '#logger';
+
+// Perform any boot-time wiring or subscriptions here
+logger.info('My startup handler initialized');
+```
+
+```ts
+// app/start/index.ts
+// Import your startup handlers so they run on application boot
+import '#app/start/listeners/ws-event.js';
+import '#app/start/listeners/my-startup-handler.js';
+```
+
+All files imported by `app/start/index.ts` will be executed once at application startup.
+
 ### Description of main folders:
 
 - **`app/`** - Main application folder with controllers, models, routes and services
