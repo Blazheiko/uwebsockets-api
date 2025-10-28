@@ -150,6 +150,23 @@ export interface groupRouteItem {
     rateLimit?: RateLimit;
 }
 
+export interface WebSocketConnectionEvent {
+    userId: string;
+    sessionId: string;
+    uuid: string;
+    ip: string;
+    userAgent: string;
+    timestamp: number;
+    ws: MyWebSocket;
+}
+
+export interface WebSocketDisconnectionEvent {
+    userId: string;
+    sessionId: string;
+    uuid: string;
+    code: number;
+    timestamp: number;
+}
 // Legacy alias for backward compatibility
 export type routeItem = RouteItem;
 

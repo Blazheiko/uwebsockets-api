@@ -1,5 +1,5 @@
 import logger from "#logger";
-import { broadcastMessage, broadcastToChannel } from "#vendor/start/server.js";
+import { broadcastToChannel } from "#vendor/start/server.js";
 import { makeBroadcastJson } from "#vendor/utils/helpers/json-handlers.js";
 import { getUserConnections } from "#vendor/utils/network/ws-handlers.js";
 export default {
@@ -28,4 +28,8 @@ export default {
         logger.info(`broadcastMessageToChannel: ${channel} ${event}`);
         broadcastToChannel(channel, event, payload);
     },
+    broadcastOnline(userId: string, status: string) {   
+        logger.info(`broadcastOnline: ${userId} ${status}`);
+        broadcastToChannel('change_online', 'change_online', { userId, status });
+    }
 }

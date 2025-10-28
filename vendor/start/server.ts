@@ -54,6 +54,7 @@ import getIP from '#vendor/utils/network/get-ip.js';
 import { getApiTypesForDocumentation } from '#vendor/utils/tooling/parse-types-from-dts.js';
 import { serializeRoutes } from '#vendor/utils/routing/serialize-routes.js';
 import path from 'path';
+import { makeBroadcastJson } from '#vendor/utils/helpers/json-handlers.js';
 
 const server: TemplatedApp = uWS.App();
 
@@ -71,25 +72,21 @@ const broadcastMessage = (userId: number, event: string, payload: any) => {
 
 const broadcastToChannel = (channel: string, event: string, payload: any) => {
     server.publish(
-        channel,
-        JSON.stringify(
-            { event: `broadcast:${event}`, status: 200, payload },
-            (_, v) => (typeof v === 'bigint' ? v.toString() : v),
-        ),
+        channel, makeBroadcastJson(event, 200, payload)
     );
 };
 
-const broadcastOnline = (userId: number, status: string) => {
-    server.publish(
-        `change_online`,
-        JSON.stringify({
-            event: `broadcast:change_online`,
-            status: 200,
-            payload: { userId, status },
-        },
-        (_, v) => (typeof v === 'bigint' ? v.toString() : v),
-    ));
-};
+// const broadcastOnline = (userId: string, status: string) => {
+//     server.publish(
+//         `change_online`,
+//         JSON.stringify({
+//             event: `broadcast:change_online`,
+//             status: 200,
+//             payload: { userId, status },
+//         },
+//         (_, v) => (typeof v === 'bigint' ? v.toString() : v),
+//     ));
+// };
 
 const configureWebsockets = (server: TemplatedApp) => {
     return server.ws('/websocket/:token', {
@@ -583,4 +580,4 @@ const stopServer = (type = 'handle') => {
     state.listenSocket = null;
 };
 
-export { initServer, stopServer, broadcastMessage, broadcastOnline, broadcastToChannel };
+export { initServer, stopServer, broadcastMessage, broadcastToChannel };

@@ -4,7 +4,7 @@ import { generateUUID } from 'metautil';
 import redis from '#database/redis.js';
 import { HttpRequest, HttpResponse, us_socket_context_t } from 'uWebSockets.js';
 import { MyWebSocket } from '../../types/types.js';
-import { broadcastOnline } from '#vendor/start/server.js';
+// import { broadcastOnline } from '#vendor/start/server.js';
 import { wsSessionHandler } from '../session/session-handler.js';
 import getIP from './get-ip.js';
 import { wsEventEmitter } from '#vendor/utils/events/ws-event-manager.js';
@@ -167,7 +167,7 @@ const onClose = async (ws: MyWebSocket, code: number, message: any) => {
             userConnection.delete(userData.uuid);
             if (userConnection.size === 0) {
                 userStorage.delete(userData.userId);
-                broadcastOnline(userData.userId, 'offline');
+                // broadcastOnline(userData.userId, 'offline');
             }
         }
     } catch (e) {
@@ -259,7 +259,7 @@ const onOpen = async (ws: MyWebSocket) => {
             },
         };
         // ws.subscribe(`user:${userData.userId}`);
-        ws.subscribe(`change_online`);
+        // ws.subscribe(`change_online`);
         sendJson(ws, broadcastMessage);
         wsStorage.add(ws);
         logger.info(`onOpen ws userId: ${userData.userId} `);
@@ -285,7 +285,7 @@ const onOpen = async (ws: MyWebSocket) => {
                     ],
                 ]),
             );
-            broadcastOnline(userData.userId, 'online');
+            // broadcastOnline(userData.userId, 'online');
         }
 
         wsEventEmitter.emit('user_connected', {
@@ -295,6 +295,7 @@ const onOpen = async (ws: MyWebSocket) => {
             ip: userData.ip,
             userAgent: userData.userAgent,
             timestamp: Date.now(),
+            ws,
         });
 
         logger.info('onOpen ws end');

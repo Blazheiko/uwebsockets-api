@@ -1,6 +1,6 @@
 import User from '#app/models/User.js';
 import { HttpContext } from '../../../vendor/types/types.js';
-import { generateKey, hashPassword, validatePassword } from 'metautil';
+import { hashPassword, validatePassword } from 'metautil';
 // import configSession from '#config/session.js';
 import configApp from '#config/app.js';
 import { prisma } from '#database/prisma.js';
