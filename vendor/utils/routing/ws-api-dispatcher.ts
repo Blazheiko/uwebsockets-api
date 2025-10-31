@@ -18,7 +18,7 @@ import logger from '#logger';
 const wsRoutes: WsRoutes = getWsRoutes();
 
 export default async (
-    message: { event: string; payload?: any },
+    message: { event: string; payload?: any; timestamp?: number },
     ws: MyWebSocket,
     userData: unknown,
     session: Session,
@@ -26,6 +26,7 @@ export default async (
     const responseData: WsResponseData = {
         data: {},
         event: message.event,
+        timestamp: message.timestamp,
         status: 200,
         error: null,
     };

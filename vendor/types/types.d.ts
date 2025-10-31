@@ -87,6 +87,7 @@ export interface WsResponseData {
     error: ErrorResponse | null;
     event: string;
     status: number;
+    timestamp?: number;
 }
 
 export interface WsData {
