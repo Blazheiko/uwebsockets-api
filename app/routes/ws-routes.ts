@@ -38,7 +38,8 @@ export default [
                 },
             },
         ],
-        prefix: 'test',
+        prefix: 'main',
+        description: 'Main routes',
         rateLimit: {
             windowMs: 1 * 60 * 1000, // 15 minutes
             maxRequests: 600, // Max 100 requests per 15 minutes for the whole group
