@@ -76,8 +76,15 @@ export interface HttpData {
     isJson: boolean;
 }
 
+export interface ErrorResponse {
+    code: number;
+    message: string;
+    messages?: any;
+}
+
 export interface WsResponseData {
-    payload: any;
+    data: any;
+    error: ErrorResponse | null;
     event: string;
     status: number;
 }

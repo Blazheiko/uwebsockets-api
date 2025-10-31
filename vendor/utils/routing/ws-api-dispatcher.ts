@@ -24,9 +24,10 @@ export default async (
     session: Session,
 ) => {
     const responseData: WsResponseData = {
-        payload: {},
+        data: {},
         event: message.event,
         status: 200,
+        error: null,
     };
     try {
         const route = wsRoutes[message.event];
@@ -70,23 +71,31 @@ export default async (
                 (await executeMiddlewares(route.middlewares, context))
             ) {
                 const handler = route.handler;
-                responseData.payload = await handler(context);
+                responseData.data = await handler(context);
             }
 
             return responseData;
         }
         responseData.status = 404;
+        responseData.error = {
+                code: 404,
+                message: 'Route not found',
+            };
     } catch (e: any) {
         if (e.code === 'E_VALIDATION_ERROR') {
             // logger.error('WS E_VALIDATION_ERROR');
             responseData.status = 422;
-            responseData.payload = {
+            responseData.error = {
+                code: 422,
                 message: 'Validation failure',
                 messages: e.messages,
             };
         } else {
             responseData.status = 500;
-            responseData.payload = { message: e.message };
+            responseData.error = {
+                code: 500,
+                message: e.message,
+            };
         }
     }
 

@@ -21,6 +21,12 @@ export default [
                 description: 'Error handling test',
             },
             {
+                url: 'test-ws',
+                handler: WSApiController.testWs,
+                typeResponse: 'WSApiController.TestWsResponse',
+                description: 'Test WebSocket',
+            },
+            {
                 url: 'save-user',
                 handler: WSApiController.saveUser,
                 typeResponse: 'WSApiController.SaveUserResponse',
@@ -32,7 +38,7 @@ export default [
                 },
             },
         ],
-        prefix: 'api:',
+        prefix: 'test',
         rateLimit: {
             windowMs: 1 * 60 * 1000, // 15 minutes
             maxRequests: 600, // Max 100 requests per 15 minutes for the whole group

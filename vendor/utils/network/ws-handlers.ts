@@ -8,7 +8,7 @@ import { MyWebSocket } from '../../types/types.js';
 import { wsSessionHandler } from '../session/session-handler.js';
 import getIP from './get-ip.js';
 import { wsEventEmitter } from '#vendor/utils/events/ws-event-manager.js';
-
+import { makeJson } from '#vendor/utils/helpers/json-handlers.js';
 const wsStorage: Set<MyWebSocket> = new Set();
 const userStorage: Map<
     string,
@@ -82,8 +82,10 @@ const onMessage = async (
     wsMessage: ArrayBuffer,
     isBinary: boolean,
 ) => {
+    logger.info('new onMessage');
     const userData = ws.getUserData();
     const message = JSON.parse(ab2str(wsMessage));
+    logger.info(message);
 
     // let tokenData = null;
     // if (isBinary) logger.info('isBinary', isBinary);
@@ -92,20 +94,18 @@ const onMessage = async (
         // if (token) tokenData = await redis.getex(`auth:ws:${token}`, 'EX', 120);
         // let message = null;
         let session = null;
-        if (userData.sessionId && userData.userId)
+        if (userData.sessionId && userData.userId) {
+            logger.info(`onMessage userData.sessionId: ${userData.sessionId}`);
+            logger.info(`onMessage userData.userId: ${userData.userId}`);
             session = await wsSessionHandler(
                 userData.sessionId,
                 userData.userId,
             );
-
+        }
         if (!session) {
             ws.cork(() => {
                 try {
-                    ws.send(
-                        JSON.stringify(unAuthorizedMessage(), (_, v) =>
-                            typeof v === 'bigint' ? v.toString() : v,
-                        ),
-                    );
+                    ws.send(makeJson(unAuthorizedMessage()));
                     ws.end(4001);
                 } catch (e) {
                     logger.error(
@@ -119,8 +119,16 @@ const onMessage = async (
         }
 
         if (message) {
-            if (message.event === 'service:ping') handlePong(ws);
-            else {
+            if (!message.event) {
+                logger.error('onMessage message.event is null');
+                sendJson(ws, {
+                    status: '404',
+                    message: 'Event not found',
+                });
+
+            } else if (message.event === 'service:ping') {
+                handlePong(ws);
+            } else {
                 const result = await wsApiHandler(
                     message,
                     ws,
@@ -128,7 +136,20 @@ const onMessage = async (
                     session,
                 );
                 if (result) sendJson(ws, result);
+                else {
+                    logger.error('onMessage result is null');
+                    sendJson(ws, {
+                        status: '404',
+                        message: 'Event not found',
+                    });
+                }
             }
+        }else{
+            logger.error('onMessage message is null');
+            sendJson(ws, {
+                status: '404',
+                message: 'Message is null',
+            });
         }
     } catch (err: any) {
         logger.error({ err }, 'Error parse onMessage');
@@ -201,9 +222,7 @@ const sendJson = (ws: MyWebSocket, data: any) => {
     try {
         ws.cork(() => {
             ws.send(
-                JSON.stringify(data, (_, v) =>
-                    typeof v === 'bigint' ? v.toString() : v,
-                ),
+                makeJson(data)
             );
         });
     } catch (e) {

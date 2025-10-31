@@ -17,6 +17,10 @@ export default {
 
         // return responseData;
     },
+    testWs() {
+        logger.info('ws testWs');
+        return { status: 'ok', message: 'testWs' };
+    },
     async saveUser({ wsData, responseData}: WsContext) {
         logger.info('ws saveUser');
         const { payload } = wsData;

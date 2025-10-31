@@ -127,6 +127,16 @@ export type {
     DeactivateSubscriptionResponse,
 } from './PushSubscriptionController.js';
 
+// WebSocket API Controller
+export type {
+    EventTypingResponse,
+    ErrorResponse as WSErrorResponse,
+    TestWsResponse,
+    SaveUserResponse as WSSaveUserResponse,
+    EventTypingPayload,
+    SaveUserPayload,
+} from './WSApiController.js';
+
 // Response type registry for documentation
 export type ResponseTypeRegistry = {
     // Main Controller
@@ -177,6 +187,12 @@ export type ResponseTypeRegistry = {
     updateProject: import('./ProjectController.js').UpdateProjectResponse;
     deleteProject: import('./ProjectController.js').DeleteProjectResponse;
     getProjectStatistics: import('./ProjectController.js').GetProjectStatisticsResponse;
+
+    // WebSocket API Controller
+    eventTyping: import('./WSApiController.js').EventTypingResponse;
+    wsError: import('./WSApiController.js').ErrorResponse;
+    testWs: import('./WSApiController.js').TestWsResponse;
+    wsSaveUser: import('./WSApiController.js').SaveUserResponse;
 };
 
 // Helper type for controller handlers with typed responses

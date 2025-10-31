@@ -20,9 +20,10 @@ const createRoute = (
 ): RouteItem => {
     return {
         method,
-        url: isWs
-            ? `${appConfig.pathPrefix}${route.url}`
-            : `${appConfig.pathPrefix}/${normalizePath(route.url)}`,
+        url: `${appConfig.pathPrefix}/${normalizePath(route.url)}`,
+        // url: isWs
+        //     ? `${appConfig.pathPrefix}${route.url}`
+        //     : `${appConfig.pathPrefix}/${normalizePath(route.url)}`,
         handler: route.handler,
         middlewares: route.middlewares ? route.middlewares : [],
         validator: route.validator ? route.validator : '',
@@ -96,8 +97,9 @@ const parseGroups = (
             }
         } else if (route.url && route.handler) {
             if (prefix) {
-                if (isWs) route.url = `${prefix}${route.url}`;
-                else route.url = `${prefix}/${normalizePath(route.url)}`;
+                route.url = `${prefix}/${normalizePath(route.url)}`;
+                // if (isWs) route.url = `${prefix}${route.url}`;
+                // else route.url = `${prefix}/${normalizePath(route.url)}`;
             }
             if (middlewares && middlewares.length) {
                 if (!route.middlewares || !Array.isArray(route.middlewares))

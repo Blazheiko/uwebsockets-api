@@ -8,7 +8,7 @@ import configApp from '#config/app.js';
 import redis from '#database/redis.js';
 import schemas from '#app/validate/schemas/schemas.js';
 import validators from '#vendor/start/validators.js';
-import { getListRoutes, routesHandler } from '#vendor/start/router.js';
+import { getListRoutes, getWsRoutes, routesHandler } from '#vendor/start/router.js';
 import httpRoutes from '#app/routes/http-routes.js';
 import wsRoutes from '#app/routes/ws-routes.js';
 import '#app/start/index.js';
@@ -45,7 +45,7 @@ const start = async () => {
         routesHandler(httpRoutes, false);
         console.log(getListRoutes());
         routesHandler(wsRoutes, true);
-        // console.log(getListRoutes());
+        console.log(getWsRoutes());
 
         initServer();
         process.on('SIGINT', stopSIGINT);
