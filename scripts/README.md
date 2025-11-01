@@ -9,6 +9,7 @@ This directory contains utility scripts for the build process.
 Copies static files and directories to the `dist` folder during the build process.
 
 **Usage:**
+
 ```bash
 node scripts/copy-static.js
 # or
@@ -16,10 +17,12 @@ npm run copy:static
 ```
 
 **What it copies:**
+
 - `public/` → `dist/public/` - Main frontend files (HTML, JS, CSS, icons, audio)
 - `public-test/` → `dist/public-test/` - Test frontend files
 
 This script is automatically executed:
+
 - During production build (`npm run build`)
 - During development with nodemon (`npm run dev`)
 
@@ -28,6 +31,7 @@ This script is automatically executed:
 Exports TypeScript types from backend controllers to frontend.
 
 **Usage:**
+
 ```bash
 node scripts/export-types.js [destination]
 # or
@@ -35,6 +39,7 @@ npm run export-types
 ```
 
 **What it does:**
+
 - Reads types from `app/controllers/http/types/index.d.ts`
 - Exports them to `frontend/src/types/api-responses.d.ts` (or custom destination)
 - Adds auto-generated header with timestamp
@@ -42,12 +47,14 @@ npm run export-types
 ## Development Workflow
 
 When running `npm run dev`:
+
 1. TypeScript compiles `.ts` files to `dist/`
 2. Static files are copied to `dist/`
 3. Server starts from `dist/index.js`
 4. Nodemon watches for changes and repeats the process
 
 When running `npm run build`:
+
 1. TypeScript compiles in production mode
 2. Static files are copied to `dist/`
 
@@ -62,4 +69,3 @@ const itemsToCopy = [
     // Add more items here as needed
 ];
 ```
-
