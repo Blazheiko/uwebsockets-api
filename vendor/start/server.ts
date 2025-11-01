@@ -45,7 +45,7 @@ import {
     startStaticServer,
     staticHandler,
     staticIndexHandler,
-} from './staticServer.js';
+} from './static-server.js';
 import configApp from '#config/app.js';
 import httpRoutes from '#app/routes/http-routes.js';
 import wsRoutes from '#app/routes/ws-routes.js';

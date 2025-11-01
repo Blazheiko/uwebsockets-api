@@ -1,6 +1,24 @@
 {
-  "watch": ["."],
-  "ignore": ["node_modules", "dist", "public"],
-  "ext": "*",
-  "exec": "tsc && node dist/index.js"
+    "watch": [
+        "app",
+        "config",
+        "database",
+        "prisma",
+        "routes",
+        "start",
+        "utils",
+        "vendor",
+        "index.ts",
+        "logger.ts"
+    ],
+    "ignore": [
+        "node_modules",
+        "dist",
+        "public",
+        "public-test",
+        "**/*.test.ts",
+        "**/*.spec.ts"
+    ],
+    "ext": "ts,json",
+    "exec": "tsc && node scripts/copy-static.js && node dist/index.js"
 }

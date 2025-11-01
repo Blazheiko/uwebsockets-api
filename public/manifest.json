@@ -1,0 +1,23 @@
+{
+    "name": "Easy chat",
+    "short_name": "Easy chat",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#f6f8fc",
+    "theme_color": "#0f4b9c",
+    "description": "A free social network ensures every user the right to freely express their thoughts, opinions, and ideas without censorship within their circle of friends. However, users must show respect for others and take responsibility for their words to prevent the abuse of free speech.",
+    "icons": [
+        {
+            "src": "icons/icon_192x192.png",
+            "type": "image/png",
+            "sizes": "192x192",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon_512x512.png",
+            "type": "image/png",
+            "sizes": "512x512",
+            "purpose": "any"
+        }
+    ]
+}

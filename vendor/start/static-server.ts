@@ -6,7 +6,9 @@ import appConfig from '#config/app.js';
 import cspConfig from '#config/csp.js';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 
-const STATIC_PATH = path.join(process.cwd(), './public');
+const STATIC_PATH = appConfig.env === 'test' ? 
+    path.join(process.cwd(), './public-test') : 
+    path.join(process.cwd(), './public');
 
 const cache = new Map();
 

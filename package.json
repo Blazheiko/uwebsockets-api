@@ -18,8 +18,9 @@
     "scripts": {
         "lint": "eslint .",
         "start": "node dist/index.js",
-        "dev": "nodemon && node dist/index.js",
-        "build": "NODE_ENV=production tsc",
+        "dev": "nodemon",
+        "build": "NODE_ENV=production tsc && npm run copy:static",
+        "copy:static": "node scripts/copy-static.js",
         "test": "echo \"Error: no test specified\" && exit 1",
         "prisma:generate": "prisma generate",
         "prisma:migrate": "prisma migrate dev",
