@@ -4,6 +4,7 @@ import configApp from '#config/app.js';
 import generateWsToken from '#app/servises/generate-ws-token.js';
 import type {
     PingResponse,
+    TestRouteResponse,
     InitResponse,
     TestHeadersResponse,
     GetSetCookiesResponse,
@@ -25,6 +26,10 @@ export default {
     // },
 
     async ping(): Promise<PingResponse> {
+        return { status: 'ok' };
+    },
+
+    async testRoute(): Promise<TestRouteResponse> {
         return { status: 'ok' };
     },
 

@@ -21,6 +21,11 @@ export interface Task {
     updatedAt: string;
 }
 
+export interface TestTasksResponse {
+    status: 'ok' | 'error';
+    tasks?: any[];
+}
+
 export interface GetTasksResponse {
     status: 'success' | 'error';
     message?: string;

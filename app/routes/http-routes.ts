@@ -13,6 +13,26 @@ export default [
     {
         group: [
             {
+                url: '/test-route',
+                method: 'get',
+                handler: MainController.testRoute,
+                typeResponse: 'MainController.TestRouteResponse',
+                description: 'Test route',
+            },
+            {
+                url: '/test-tasks',
+                method: 'get',
+                handler: TaskController.testTasks,
+                typeResponse: 'TaskController.TestTasksResponse',
+                description: 'Get all tasks',
+            },
+        ],
+        description: 'Test routes',
+        prefix: 'test',
+    },
+    {
+        group: [
+            {
                 url: '/register',
                 method: 'post',
                 handler: AuthController.register,

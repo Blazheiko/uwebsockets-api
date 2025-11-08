@@ -3,7 +3,7 @@
  */
 
 export interface PingResponse {
-    status: 'ok';
+    status: string;
 }
 
 export interface InitResponse {
@@ -19,25 +19,29 @@ export interface InitResponse {
     wsUrl?: string; // ws://127.0.0.1:8088/websocket/PWdWMkn2aHRecaS7
 }
 
+export interface TestRouteResponse {
+    status: string;
+}
+
 export interface TestHeadersResponse {
-    status: 'ok';
+    status: string;
     headers: Array<{ key: string; value: string }>;
     params: any[];
 }
 
 export interface GetSetCookiesResponse {
-    status: 'ok';
+    status: string;
     cookies: Array<{ key: string; value: string }>;
 }
 
 export interface TestSessionResponse {
-    status: 'ok';
+    status: string;
     cookies: Array<{ key: string; value: string }>;
     sessionInfo: any;
 }
 
 export interface SaveUserResponse {
-    status: 'ok';
+    status: string;
     user: {
         id: number;
         name: string;
@@ -46,7 +50,7 @@ export interface SaveUserResponse {
 }
 
 export interface TestApiSessionResponse {
-    status: 'ok';
+    status: string;
     headers: Array<{ key: string; value: string }>;
     sessionInfo: any;
 }
@@ -59,14 +63,14 @@ export interface IndexResponse {
 export interface TestParamsResponse {
     params: any;
     query: string[];
-    status: 'ok';
+    status: string;
 }
 
 export interface SetHeaderAndCookieResponse {
-    status: 'ok';
+    status: string;
 }
 
 export interface TestMiddlewareResponse {
     middlewares: string[];
-    status: 'ok';
+    status: string;
 }

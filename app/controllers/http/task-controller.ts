@@ -1,6 +1,7 @@
 import Project from '#app/models/Project.js';
 import { HttpContext } from '../../../vendor/types/types.js';
 import Task from '#app/models/Task.js';
+import { prisma } from '#database/prisma.js';
 import type {
     GetTasksResponse,
     CreateTaskResponse,
@@ -11,9 +12,14 @@ import type {
     UpdateTaskProgressResponse,
     GetTasksByProjectResponse,
     GetSubTasksResponse,
+    TestTasksResponse,
 } from '../types/TaskController.js';
 
 export default {
+    async testTasks(context: HttpContext): Promise<TestTasksResponse> {
+        
+        return { status: 'ok', tasks: await prisma.task.findMany() };
+    },
     async getTasks(context: HttpContext): Promise<GetTasksResponse> {
         const { auth, logger } = context;
         logger.info('getTasks handler');

@@ -429,7 +429,7 @@ const setHttpHandler = async (
     req: HttpRequest,
     route: RouteItem,
 ) => {
-    logger.info('Handler method:' + route.method + ' url:' + route.url);
+    // logger.info('Handler method:' + route.method + ' url:' + route.url);
     if (state.listenSocket) {
         try {
             let aborted = false;
