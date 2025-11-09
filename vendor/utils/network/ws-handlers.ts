@@ -82,10 +82,10 @@ const onMessage = async (
     wsMessage: ArrayBuffer,
     isBinary: boolean,
 ) => {
-    logger.info('new onMessage');
+    // logger.info('new onMessage');
     const userData = ws.getUserData();
     const message = JSON.parse(ab2str(wsMessage));
-    logger.info(message);
+    // logger.info(message);
 
     // let tokenData = null;
     // if (isBinary) logger.info('isBinary', isBinary);
@@ -95,8 +95,8 @@ const onMessage = async (
         // let message = null;
         let session = null;
         if (userData.sessionId && userData.userId) {
-            logger.info(`onMessage userData.sessionId: ${userData.sessionId}`);
-            logger.info(`onMessage userData.userId: ${userData.userId}`);
+            // logger.info(`onMessage userData.sessionId: ${userData.sessionId}`);
+            // logger.info(`onMessage userData.userId: ${userData.userId}`);
             session = await wsSessionHandler(
                 userData.sessionId,
                 userData.userId,

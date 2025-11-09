@@ -2,17 +2,17 @@ import { prisma } from "#database/prisma.js";
 import logger from "#logger";
 import broadcastig from "#app/servises/broadcastig.js";
 
-export default async (content: string, userId: number, contactId: number) => {
+export default async (content: string, userId: string, contactId: string) => {
    if (!contactId || !content || !userId) return null;
                
    // Verify contact exists              
-   const contact = await prisma.contactList.findFirst({where: { userId: contactId , contactId: userId }});
+   const contact = await prisma.contactList.findFirst({where: { userId: Number(userId), contactId: Number(contactId) }});
    if (!contact) return null;
    
    const message = await prisma.message.create({
                data: {
-                senderId: userId,
-                receiverId: contactId,
+                senderId: Number(userId),
+                receiverId: Number(contactId),
                 content,
                 type: 'TEXT'
             },
@@ -27,7 +27,7 @@ export default async (content: string, userId: number, contactId: number) => {
         }
     });
     const updated = await prisma.contactList.update({
-        where: { userId_contactId: { userId: userId, contactId: contactId } },
+        where: { userId_contactId: { userId: Number(userId), contactId: Number(contactId) } },
         data: {
             updatedAt: new Date(),
             lastMessageId: message.id

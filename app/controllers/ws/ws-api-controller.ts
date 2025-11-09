@@ -2,12 +2,14 @@ import logger from '#logger';
 import User from '#app/models/User.js';
 import { WsContext, WsData, WsResponseData } from '../../../vendor/types/types.js';
 import { broadcastMessage } from '#vendor/start/server.js';
+import broadcastig from '#app/servises/broadcastig.js';
 export default {
     eventTyping({ wsData, responseData}: WsContext) {
         logger.info('ws eventTyping');
         const { payload } = wsData;
         logger.info(payload);
-        broadcastMessage(payload.contactId, 'event_typing', payload);
+        // broadcastMessage(payload.contactId, 'event_typing', payload);
+        broadcastig.broadcastMessageToUser(payload.contactId, 'event_typing', payload);
 
         return { status: 'ok'};
     },

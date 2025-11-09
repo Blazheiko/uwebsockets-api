@@ -3,7 +3,7 @@ import { broadcastToChannel } from "#vendor/start/server.js";
 import { makeBroadcastJson } from "#vendor/utils/helpers/json-handlers.js";
 import { getUserConnections } from "#vendor/utils/network/ws-handlers.js";
 export default {
-    broadcastMessageToUser(userId: number, event: string, payload: any) {
+    broadcastMessageToUser(userId: string, event: string, payload: any) {
         logger.info(`broadcastMessageToUser: ${userId} ${event}`);
         let counter = 0;
         const userConnections = getUserConnections(String(userId));
