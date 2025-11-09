@@ -14,6 +14,12 @@ export default [
                 },
             },
             {
+                url: 'incoming_call',
+                handler: WSApiController.incomingCall,
+                typeResponse: 'WSApiController.IncomingCallResponse',
+                description: 'Handle incoming call events',
+            },
+            {
                 url: 'error',
                 handler: WSApiController.error,
                 typeResponse: 'WSApiController.ErrorResponse',

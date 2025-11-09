@@ -13,6 +13,14 @@ export default {
 
         return { status: 'ok'};
     },
+    incomingCall({ wsData, responseData}: WsContext) {
+        logger.info('ws incomingCall');
+        const { payload } = wsData;
+        logger.info(payload);
+        
+        broadcastig.broadcastMessageToUser(payload.contactId, 'incoming_call', payload);
+        return { status: 'ok', message: 'Incoming call event sent'};
+    },
     error() {
         logger.info('ws error');
         throw new Error('Test error');

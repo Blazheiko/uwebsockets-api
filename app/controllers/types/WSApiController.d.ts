@@ -3,7 +3,12 @@
  */
 
 export interface EventTypingResponse {
-    status: 'ok';
+    status: 'ok' | 'error';
+}
+
+export interface IncomingCallResponse {
+    status: 'ok' | 'error';
+    message: string;
 }
 
 export interface ErrorResponse {
