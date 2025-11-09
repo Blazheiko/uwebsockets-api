@@ -168,14 +168,16 @@ Start server `npm run start`
 
 Starting the server in development mode `npm run dev`
 
+Starting the server in manual test mode `npm run manual:test` - This command starts the server with `APP_ENV=manual-test` environment variable. You can manually test your API in the playground by navigating to http://127.0.0.1:8088
+
 ## Usage Example
 
 Inspired by the frameworks `Laravel` and `AdonisJs`, `uWebSockets-api` aims to provide a similar experience in organizing project structure and route descriptions.
 
-routing http `app/routes/httpRoutes.ts`
+routing http `app/routes/http-routes.ts`
 
 ```ts
-import MainController from '#app/controllers/http/MainController.ts';
+import AuthController from '#app/controllers/http/auth-controller.ts';
 
 export default [
     {
@@ -220,7 +222,7 @@ export default [
 ];
 ```
 
-routing ws `app/routes/wsRoutes.ts`
+routing ws `app/routes/ws-routes.ts`
 
 ```ts
 import WSApiController from '#app/controllers/ws/ws-api-controller.js';
@@ -231,6 +233,7 @@ export default [
             {
                 url: 'event_typing',
                 handler: WSApiController.eventTyping,
+                typeResponse: 'WSApiController.EventTypingResponse',
                 description: 'Handle typing events',
                 rateLimit: {
                     windowMs: 1 * 60 * 1000, // 1 minute
@@ -238,14 +241,15 @@ export default [
                 },
             },
             {
-                url: 'error',
-                handler: WSApiController.error,
-                middlewares: ['test2'],
-                description: 'Error handling test',
+                url: 'test-ws',
+                handler: WSApiController.testWs,
+                typeResponse: 'WSApiController.TestWsResponse',
+                description: 'Test WebSocket',
             },
             {
                 url: 'save-user',
                 handler: WSApiController.saveUser,
+                typeResponse: 'WSApiController.SaveUserResponse',
                 validator: 'register',
                 description: 'Save user data',
                 rateLimit: {
@@ -254,7 +258,8 @@ export default [
                 },
             },
         ],
-        prefix: 'api:',
+        prefix: 'main',
+        description: 'Main routes',
         rateLimit: {
             windowMs: 1 * 60 * 1000, // 1 minute
             maxRequests: 600, // Max 600 requests per minute for the whole group
@@ -263,7 +268,7 @@ export default [
 ];
 ```
 
-http controller `app/controllers/http/AuthController.ts`
+http controller `app/controllers/http/auth-controller.ts`
 
 ```ts
 import logger from '#logger';
@@ -317,7 +322,7 @@ export default {
 };
 ```
 
-http controller `app/controllers/http/MainController.ts`
+http controller `app/controllers/http/main-controller.ts`
 
 ```ts
 import {
@@ -355,7 +360,7 @@ export default {
 };
 ```
 
-ws controller `app/controllers/ws/WSApiController.ts`
+ws controller `app/controllers/ws/ws-api-controller.ts`
 
 ```ts
 import logger from '#logger';
