@@ -6,7 +6,7 @@ import appConfig from '#config/app.js';
 import cspConfig from '#config/csp.js';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 
-const STATIC_PATH = appConfig.env === 'test' ? 
+const STATIC_PATH = appConfig.env === 'manual-test' ? 
     path.join(process.cwd(), './public-test') : 
     path.join(process.cwd(), './public');
 
