@@ -1,7 +1,7 @@
 {
     "name": "uwebsockets-api",
     "version": "1.0.0",
-    "description": "",
+    "description": "uWebSockets API",
     "main": "index.ts",
     "type": "module",
     "imports": {
@@ -26,8 +26,6 @@
         "prisma:generate": "prisma generate",
         "prisma:migrate": "prisma migrate dev",
         "prisma:studio": "prisma studio",
-        "build:doc": "npx tailwindcss -i ./front-doc/src/input.css -o ./public/doc/tailwind.css --watch",
-        "build:doc:prod": "npx tailwindcss -i ./front-doc/src/input.css -o ./public/doc/tailwind.css --minify",
         "export-types": "node scripts/export-types.js"
     },
     "keywords": [],
@@ -61,7 +59,6 @@
         "nodemon": "^3.1.9",
         "prettier": "^3.2.4",
         "prisma": "^6.12.0",
-        "tailwindcss": "^3.4.17",
         "ts-node": "^10.9.2",
         "typescript": "^5.7.3"
     }
