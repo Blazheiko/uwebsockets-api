@@ -8,7 +8,11 @@ import configApp from '#config/app.js';
 import redis from '#database/redis.js';
 import schemas from '#app/validate/schemas/schemas.js';
 import validators from '#vendor/start/validators.js';
-import { getListRoutes, getWsRoutes, routesHandler } from '#vendor/start/router.js';
+import {
+    getListRoutes,
+    getWsRoutes,
+    routesHandler,
+} from '#vendor/start/router.js';
 import httpRoutes from '#app/routes/http-routes.js';
 import wsRoutes from '#app/routes/ws-routes.js';
 import '#app/start/index.js';
@@ -16,7 +20,12 @@ import '#app/start/index.js';
 // logger.info(configApp);
 
 const testRedis = async () => {
-    await redis.set('test', Date.now().toString());
+    try {
+        await redis.set('test', Date.now().toString());
+    } catch (err) {
+        logger.error({ err }, 'Redis connection failed');
+        throw err;
+    }
 };
 
 const compileValidateSchema = () => {
@@ -30,6 +39,7 @@ const start = async () => {
     try {
         /* eslint-disable no-undef */
         process.title = configApp.appName;
+        logger.info(`Starting application on port ${configApp.port}`);
         logger.info(
             'use module: uws_' +
                 process.platform +
@@ -54,7 +64,8 @@ const start = async () => {
         process.on('uncaughtException', stopUncaughtException);
     } catch (err) {
         /* eslint-disable no-undef */
-        console.error(err);
+        logger.error({ err }, 'Failed to start application');
+        console.error('Failed to start application:', err);
         process.exit(1);
     }
 };
@@ -97,6 +108,12 @@ const stopUncaughtException = (err: any, origin: any) => {
 };
 
 console.log('start');
-start().then(() => {
-    logger.info('start success');
-});
+start()
+    .then(() => {
+        logger.info('start success');
+    })
+    .catch((err) => {
+        logger.error({ err }, 'Unhandled error during startup');
+        console.error('Unhandled error during startup:', err);
+        process.exit(1);
+    });

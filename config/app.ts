@@ -14,6 +14,20 @@ function parseBoolean(
     );
 }
 
+// Parse port with validation and default value
+function parsePort(
+    value: string | undefined,
+    defaultValue: number = 3000,
+): number {
+    console.log('parsePort value: ' + value);
+    if (value === undefined) return defaultValue;
+    const port = Number(value);
+    if (isNaN(port) || port < 1 || port > 65535) {
+        return defaultValue;
+    }
+    return port;
+}
+
 const config = Object.freeze({
     /* eslint-disable no-undef */
     appName: env.APP_NAME || 'uwebsockets-api',
@@ -21,7 +35,7 @@ const config = Object.freeze({
     env: env.APP_ENV,
     url: env.APP_URL,
     host: '0.0.0.0',
-    port: Number(process.env.PORT),
+    port: parsePort(process.env.PORT, 3000),
     pathPrefix: normalizePath(env.API_PATH_PREFIX || 'api'),
     unixPath: env.APP_UNIX_PATH,
     // Примеры использования логических значений:
