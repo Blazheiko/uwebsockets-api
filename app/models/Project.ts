@@ -1,7 +1,8 @@
 import { prisma } from '#database/prisma.js';
 import { DateTime } from 'luxon';
 import { serializeModel } from '#vendor/utils/serialization/serialize-model.js';
-import { Prisma, ProjectStatus } from '@prisma/client';
+import pkg from '@prisma/client';
+const { Prisma, ProjectStatus } = pkg;
 import logger from '#logger';
 
 const schema = {
@@ -299,11 +300,15 @@ export default {
 
         const tasks = project.tasks;
         const totalTasks = tasks.length;
-        const completedTasks = tasks.filter((task: any) => task.isCompleted).length;
+        const completedTasks = tasks.filter(
+            (task: any) => task.isCompleted,
+        ).length;
         const inProgressTasks = tasks.filter(
             (task: any) => task.status === 'IN_PROGRESS',
         ).length;
-        const todoTasks = tasks.filter((task: any) => task.status === 'TODO').length;
+        const todoTasks = tasks.filter(
+            (task: any) => task.status === 'TODO',
+        ).length;
         const onHoldTasks = tasks.filter(
             (task: any) => task.status === 'ON_HOLD',
         ).length;
@@ -321,8 +326,10 @@ export default {
         );
         const averageProgress =
             totalTasks > 0
-                ? tasks.reduce((sum: number, task: any) => sum + task.progress, 0) /
-                  totalTasks
+                ? tasks.reduce(
+                      (sum: number, task: any) => sum + task.progress,
+                      0,
+                  ) / totalTasks
                 : 0;
 
         const overdueTasks = tasks.filter(

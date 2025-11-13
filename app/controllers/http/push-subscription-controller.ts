@@ -1,6 +1,7 @@
 import { HttpContext } from '../../../vendor/types/types.js';
 import { prisma } from '#database/prisma.js';
-import { Prisma, PushNotificationStatus } from '@prisma/client';
+import pkg from '@prisma/client';
+const { Prisma, PushNotificationStatus } = pkg;
 import type {
     GetSubscriptionsResponse,
     CreateSubscriptionResponse,

@@ -1,7 +1,8 @@
 import { prisma } from '#database/prisma.js';
 import { DateTime } from 'luxon';
 import { serializeModel } from '#vendor/utils/serialization/serialize-model.js';
-import { Prisma } from '@prisma/client';
+import pkg from '@prisma/client';
+const { Prisma } = pkg;
 import logger from '#logger';
 
 const schema = {

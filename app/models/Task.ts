@@ -1,7 +1,8 @@
 import { prisma } from '#database/prisma.js';
 import { DateTime } from 'luxon';
 import { serializeModel } from '#vendor/utils/serialization/serialize-model.js';
-import { Prisma, TaskStatus, TaskPriority } from '@prisma/client';
+import pkg from '@prisma/client';
+const { Prisma, TaskStatus, TaskPriority } = pkg;
 import logger from '#logger';
 
 const schema = {
@@ -205,7 +206,7 @@ export default {
         return serializeModel(updatedTask, schema, hidden);
     },
 
-    async updateStatus(id: number, userId: number, status: TaskStatus) {
+    async updateStatus(id: number, userId: number, status: typeof TaskStatus[keyof typeof TaskStatus]) {
         logger.info(
             `update task status id: ${id} for user: ${userId} to: ${status}`,
         );
@@ -241,7 +242,7 @@ export default {
         );
 
         const progressValue = parseInt(progress.toString());
-        let status: TaskStatus = TaskStatus.TODO;
+        let status: typeof TaskStatus[keyof typeof TaskStatus] = TaskStatus.TODO;
 
         if (progressValue === 100) {
             status = TaskStatus.COMPLETED;
