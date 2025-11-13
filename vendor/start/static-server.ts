@@ -141,8 +141,8 @@ const staticHandler = (res: HttpResponse, req: HttpRequest) => {
     let statusCode = '404';
     let mimeType = '';
     const url = req.getUrl();
-    const ext = path.extname(url).substring(1).toLowerCase();
-    logger.info(`Static handler request: ${url}, ext: ${ext}`);
+    const ext = url.indexOf('.') !== -1 ? path.extname(url).substring(1).toLowerCase() : '';
+    // logger.info(`Static handler request: ${url}, ext: ${ext}`);
     if (ext) {
         mimeType = MIME_TYPES[ext] || MIME_TYPES.html;
         data = cache.get(url);
@@ -152,13 +152,17 @@ const staticHandler = (res: HttpResponse, req: HttpRequest) => {
             data = cache.get('/404.html');
             logger.warn(`File not found in cache: ${url}`);
         } else {
-            logger.info(`Serving file from cache: ${url}`);
+            // logger.info(`Serving file from cache: ${url}`);
         }
+    }else{
+        data = cache.get('/index.html');
+        statusCode = data ? '200' : '404';
+        mimeType = MIME_TYPES.html;
     }
 
     res.cork(() => {
         res.writeStatus(statusCode);
-        if (ext === 'html') setCspHeader(res);
+        if (mimeType === MIME_TYPES.html) setCspHeader(res);
         res.writeHeader('Content-Type', mimeType);
         res.end(data || '');
     });

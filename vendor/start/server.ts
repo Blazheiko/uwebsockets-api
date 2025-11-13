@@ -478,11 +478,11 @@ const configureHttp = (server: TemplatedApp) => {
     // console.log(getGetRoutes());
     if (appConfig.serveStatic) {
         startStaticServer();
-        staticRoutes.forEach((route) => {
-            server.get(route, (res, req) => {
-                staticIndexHandler(res, req);
-            });
-        });
+        // staticRoutes.forEach((route) => {
+        //     server.get(route, (res, req) => {
+        //         staticIndexHandler(res, req);
+        //     });
+        // });
     }
     getListRoutes().forEach((route: RouteItem) => {
         if (route.method !== 'ws' && route.method !== 'delete') {
@@ -505,8 +505,7 @@ const configureHttp = (server: TemplatedApp) => {
 
         if (
             appConfig.serveStatic &&
-            req.getMethod() === 'get' &&
-            url.indexOf('.') !== -1
+            req.getMethod() === 'get'
         ) {
             staticHandler(res, req);
         } else if (corsConfig.enabled && req.getMethod() === 'options') {
