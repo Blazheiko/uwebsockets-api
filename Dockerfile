@@ -1,5 +1,5 @@
 # --- Этап 1: сборка ---
-    FROM node:lts AS builder
+    FROM node:22 AS builder
     WORKDIR /app
     
     # Устанавливаем зависимости
@@ -14,7 +14,7 @@
     
     
     # --- Этап 2: продакшн ---
-    FROM node:lts AS production
+    FROM node:22 AS production
     WORKDIR /app
     EXPOSE 8088
     ENV NODE_ENV=production
