@@ -5,3 +5,5 @@ dist/
 settings.json
 .DS_Store
 .vscode/
+public-test/.DS_Store
+public/.DS_Store

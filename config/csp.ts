@@ -1,3 +1,4 @@
+import { env } from 'node:process';
 export default Object.freeze({
     enabled: true,
     reportOnly: false,
@@ -14,6 +15,6 @@ export default Object.freeze({
         "style-src": ["'self'", "'unsafe-inline'"],
         "img-src": ["'self'", 'data:', 'blob:'],
         "font-src": ["'self'", 'data:'],
-        "connect-src": ["'self'", 'ws:', 'wss:', 'https:'],
+        "connect-src": env.APP_ENV === 'production' || env.APP_ENV === 'prod' ? ["'self'", 'wss:', 'https:', 'blob:'] : ["'self'", 'ws:', 'wss:', 'https:', 'http:', 'blob:'],
     },
 });
