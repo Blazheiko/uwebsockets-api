@@ -137,12 +137,12 @@ export default {
 
         const totalPhotos = photos.length;
         const totalSize = photos.reduce(
-            (sum: number, photo: Prisma.NotesPhotoGetPayload<{}>) => sum + (photo.size || 0),
+            (sum: number, photo) => sum + (photo.size || 0),
             0,
         );
         const averageSize = totalPhotos > 0 ? totalSize / totalPhotos : 0;
 
-        const recentPhotos = photos.filter((photo: Prisma.NotesPhotoGetPayload<{}>) => {
+        const recentPhotos = photos.filter((photo) => {
             const photoDate = new Date(photo.createdAt);
             const weekAgo = new Date();
             weekAgo.setDate(weekAgo.getDate() - 7);

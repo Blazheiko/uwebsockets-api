@@ -1,6 +1,6 @@
 import { HttpContext } from '../../../vendor/types/types.js';
 import { prisma } from '#database/prisma.js';
-import { PushNotificationStatus, Prisma } from '@prisma/client';
+import { Prisma, PushNotificationStatus } from '@prisma/client';
 import type {
     GetSubscriptionsResponse,
     CreateSubscriptionResponse,
@@ -349,20 +349,17 @@ export default {
             const logs = subscription.notificationLogs;
             const totalNotifications = logs.length;
             const sentNotifications = logs.filter(
-                (log: Prisma.PushNotificationLogGetPayload<{}>) =>
-                    log.status === PushNotificationStatus.SENT,
+                (log) => log.status === PushNotificationStatus.SENT,
             ).length;
             const failedNotifications = logs.filter(
-                (log: Prisma.PushNotificationLogGetPayload<{}>) =>
-                    log.status === PushNotificationStatus.FAILED,
+                (log) => log.status === PushNotificationStatus.FAILED,
             ).length;
             const pendingNotifications = logs.filter(
-                (log: Prisma.PushNotificationLogGetPayload<{}>) =>
-                    log.status === PushNotificationStatus.PENDING,
+                (log) => log.status === PushNotificationStatus.PENDING,
             ).length;
 
             const last7DaysLogs = logs.filter(
-                (log: Prisma.PushNotificationLogGetPayload<{}>) =>
+                (log) =>
                     new Date(log.sentAt) >=
                     new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
             );

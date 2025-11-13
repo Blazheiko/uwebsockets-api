@@ -1,13 +1,19 @@
 import { prisma } from '#database/prisma.js';
 import { getOnlineUser } from '#vendor/utils/network/ws-handlers.js';
-import { Prisma } from '@prisma/client';
+
+type Message = Awaited<ReturnType<typeof prisma.message.findMany>>[0];
+type ContactListWithContact = Awaited<
+    ReturnType<
+        typeof prisma.contactList.findFirst<{ include: { contact: true } }>
+    >
+>;
 
 export default async (
     userId: bigint,
     contactId: bigint,
 ): Promise<{
-    messages: Prisma.MessageGetPayload<{}>[];
-    contact: Prisma.ContactListGetPayload<{ include: { contact: true } }>;
+    messages: Message[];
+    contact: NonNullable<ContactListWithContact>;
     onlineUsers: string[];
 } | null> => {
     if (!userId || !contactId) return null;
