@@ -31,6 +31,16 @@ const MIME_TYPES: Record<string, string> = {
 const cacheFile = async (filePath: string) => {
     const ext = path.extname(filePath).substring(1).toLowerCase();
     const isBinary = [
+        'webp',
+        'mp4',
+        'mp3',
+        'ogg',
+        'wav',
+        'webm',
+        'avi',
+        'mov',
+        'flv',
+        'wmv',
         'ico',
         'png',
         'jpg',
