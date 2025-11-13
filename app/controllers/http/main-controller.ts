@@ -138,7 +138,7 @@ export default {
             status: 'ok',
             user: User.serialize(user),
             wsUrl: wsToken
-                ? `ws://${configApp.host}:${configApp.port}/websocket/${wsToken}`
+                ? `ws://${configApp.domain}/websocket/${wsToken}`
                 : '',
         };
     },

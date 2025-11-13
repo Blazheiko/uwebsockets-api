@@ -44,7 +44,7 @@ export default {
             status: res ? 'success' : 'error',
             user: User.serialize(userCreated),
             wsUrl: wsToken
-                ? `ws://${configApp.host}:${configApp.port}/websocket/${wsToken}`
+                ? `ws://${configApp.domain}/websocket/${wsToken}`
                 : '',
         };
     },
@@ -74,7 +74,7 @@ export default {
                     status: res ? 'success' : 'error',
                     user: User.serialize(user),
                     wsUrl: wsToken
-                        ? `ws://${configApp.host}:${configApp.port}/websocket/${wsToken}`
+                        ? `ws://${configApp.domain}/websocket/${wsToken}`
                         : '',
                 };
             }

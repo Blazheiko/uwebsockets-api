@@ -34,6 +34,7 @@ const config = Object.freeze({
     key: env.APP_KEY,
     env: env.APP_ENV,
     url: env.APP_URL,
+    domain: env.DOMAIN || '127.0.0.1',
     host: '0.0.0.0',
     port: parsePort(process.env.PORT, 3000),
     pathPrefix: normalizePath(env.API_PATH_PREFIX || 'api'),
