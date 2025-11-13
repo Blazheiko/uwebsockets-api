@@ -15,7 +15,7 @@ RUN npm run build:docker
 # --- Этап 2: продакшн ---
 FROM node:22 AS production
 WORKDIR /app
-EXPOSE 8088
+EXPOSE 8080
 ENV NODE_ENV=production
 
 # Копируем только нужное

@@ -43,9 +43,9 @@ const start = async () => {
         await testRedis();
         logger.info('test redis success');
         routesHandler(httpRoutes, false);
-        console.log(getListRoutes());
+        // console.log(getListRoutes());
         routesHandler(wsRoutes, true);
-        console.log(getWsRoutes());
+        // console.log(getWsRoutes());
 
         initServer();
         process.on('SIGINT', stopSIGINT);

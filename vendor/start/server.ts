@@ -59,7 +59,7 @@ import { makeBroadcastJson } from '#vendor/utils/helpers/json-handlers.js';
 const server: TemplatedApp = uWS.App();
 
 const broadcastMessage = (userId: number, event: string, payload: any) => {
-    logger.info(`broadcastMessage: ${userId} ${event}`);
+    // logger.info(`broadcastMessage: ${userId} ${event}`);
     if (server && state.listenSocket)
         server.publish(
             `user:${userId}`,
