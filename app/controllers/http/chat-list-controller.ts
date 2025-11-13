@@ -5,6 +5,7 @@ import type {
     GetContactListResponse,
     CreateChatResponse,
     DeleteChatResponse,
+    Contact,
 } from '../types/ChatListController.js';
 export default {
     async getContactList({
@@ -42,7 +43,7 @@ export default {
             orderBy: { updatedAt: 'desc' },
         });
         const onlineUsers = getOnlineUser(
-            contactList.map((contact) => String(contact.contactId)),
+            contactList.map((contact: Contact) => String(contact.contactId)),
         );
 
         return { status: 'ok', contactList, onlineUsers };
