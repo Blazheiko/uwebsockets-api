@@ -137,12 +137,12 @@ export default {
 
         const totalPhotos = photos.length;
         const totalSize = photos.reduce(
-            (sum: number, photo) => sum + (photo.size || 0),
+            (sum: number, photo: any) => sum + (photo.size || 0),
             0,
         );
         const averageSize = totalPhotos > 0 ? totalSize / totalPhotos : 0;
 
-        const recentPhotos = photos.filter((photo) => {
+        const recentPhotos = photos.filter((photo: any) => {
             const photoDate = new Date(photo.createdAt);
             const weekAgo = new Date();
             weekAgo.setDate(weekAgo.getDate() - 7);

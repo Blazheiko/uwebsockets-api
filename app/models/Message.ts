@@ -34,7 +34,7 @@ export default {
         }
 
         // Start transaction to create message and update unread count
-        const result = await prisma.$transaction(async (prisma) => {
+        const result = await prisma.$transaction(async (prisma: any) => {
             // Create message
             const message = await prisma.message.create({
                 data: {
@@ -133,7 +133,7 @@ export default {
 
     async markAsRead(messageId: number, userId: number) {
         // Start transaction to update message and contact list
-        const result = await prisma.$transaction(async (prisma) => {
+        const result = await prisma.$transaction(async (prisma: any) => {
             // Get message to find sender
             const message = await prisma.message.findUnique({
                 where: { id: messageId },

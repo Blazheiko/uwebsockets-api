@@ -278,7 +278,7 @@ export default {
         logger.info(`delete task id: ${id} for user: ${userId}`);
 
         // Start transaction to handle subtasks and parent task deletion
-        const result = await prisma.$transaction(async (prisma) => {
+        const result = await prisma.$transaction(async (prisma: any) => {
             // First, check if task has subtasks and update them
             await prisma.task.updateMany({
                 where: {
@@ -314,49 +314,49 @@ export default {
         });
 
         const totalTasks = tasks.length;
-        const completedTasks = tasks.filter((task) => task.isCompleted).length;
+        const completedTasks = tasks.filter((task: any) => task.isCompleted).length;
         const inProgressTasks = tasks.filter(
-            (task) => task.status === TaskStatus.IN_PROGRESS,
+            (task: any) => task.status === TaskStatus.IN_PROGRESS,
         ).length;
         const todoTasks = tasks.filter(
-            (task) => task.status === TaskStatus.TODO,
+            (task: any) => task.status === TaskStatus.TODO,
         ).length;
         const onHoldTasks = tasks.filter(
-            (task) => task.status === TaskStatus.ON_HOLD,
+            (task: any) => task.status === TaskStatus.ON_HOLD,
         ).length;
         const cancelledTasks = tasks.filter(
-            (task) => task.status === TaskStatus.CANCELLED,
+            (task: any) => task.status === TaskStatus.CANCELLED,
         ).length;
 
         const totalEstimatedHours = tasks.reduce(
-            (sum: number, task) => sum + (task.estimatedHours || 0),
+            (sum: number, task: any) => sum + (task.estimatedHours || 0),
             0,
         );
         const totalActualHours = tasks.reduce(
-            (sum: number, task) => sum + (task.actualHours || 0),
+            (sum: number, task: any) => sum + (task.actualHours || 0),
             0,
         );
         const averageProgress =
             totalTasks > 0
-                ? tasks.reduce((sum: number, task) => sum + task.progress, 0) /
+                ? tasks.reduce((sum: number, task: any) => sum + task.progress, 0) /
                   totalTasks
                 : 0;
 
         const overdueTasks = tasks.filter(
-            (task) =>
+            (task: any) =>
                 task.dueDate &&
                 new Date(task.dueDate) < new Date() &&
                 !task.isCompleted,
         ).length;
 
         const highPriorityTasks = tasks.filter(
-            (task) => task.priority === TaskPriority.HIGH,
+            (task: any) => task.priority === TaskPriority.HIGH,
         ).length;
         const mediumPriorityTasks = tasks.filter(
-            (task) => task.priority === TaskPriority.MEDIUM,
+            (task: any) => task.priority === TaskPriority.MEDIUM,
         ).length;
         const lowPriorityTasks = tasks.filter(
-            (task) => task.priority === TaskPriority.LOW,
+            (task: any) => task.priority === TaskPriority.LOW,
         ).length;
 
         return {

@@ -349,17 +349,17 @@ export default {
             const logs = subscription.notificationLogs;
             const totalNotifications = logs.length;
             const sentNotifications = logs.filter(
-                (log) => log.status === PushNotificationStatus.SENT,
+                (log: any) => log.status === PushNotificationStatus.SENT,
             ).length;
             const failedNotifications = logs.filter(
-                (log) => log.status === PushNotificationStatus.FAILED,
+                (log: any) => log.status === PushNotificationStatus.FAILED,
             ).length;
             const pendingNotifications = logs.filter(
-                (log) => log.status === PushNotificationStatus.PENDING,
+                (log: any) => log.status === PushNotificationStatus.PENDING,
             ).length;
 
             const last7DaysLogs = logs.filter(
-                (log) =>
+                (log: any) =>
                     new Date(log.sentAt) >=
                     new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
             );

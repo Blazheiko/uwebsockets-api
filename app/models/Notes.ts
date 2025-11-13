@@ -104,7 +104,7 @@ export default {
         logger.info(`delete note id: ${id} for user: ${userId}`);
 
         // Start transaction to handle photos and note deletion
-        const result = await prisma.$transaction(async (prisma) => {
+        const result = await prisma.$transaction(async (prisma: any) => {
             // First, delete all photos associated with the note
             await prisma.notesPhoto.deleteMany({
                 where: {
@@ -153,16 +153,16 @@ export default {
 
         const totalNotes = notes.length;
         const totalPhotos = notes.reduce(
-            (sum: number, note) => sum + note.photos.length,
+            (sum: number, note: any) => sum + note.photos.length,
             0,
         );
         const notesWithPhotos = notes.filter(
-            (note) => note.photos.length > 0,
+            (note: any) => note.photos.length > 0,
         ).length;
         const averagePhotosPerNote =
             totalNotes > 0 ? totalPhotos / totalNotes : 0;
 
-        const recentNotes = notes.filter((note) => {
+        const recentNotes = notes.filter((note: any) => {
             const noteDate = new Date(note.createdAt);
             const weekAgo = new Date();
             weekAgo.setDate(weekAgo.getDate() - 7);

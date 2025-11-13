@@ -189,7 +189,7 @@ export default {
         logger.info(`delete project id: ${id} for user: ${userId}`);
 
         // Start transaction to handle tasks and project deletion
-        const result = await prisma.$transaction(async (prisma) => {
+        const result = await prisma.$transaction(async (prisma: any) => {
             // First, update all tasks to remove project reference
             await prisma.task.updateMany({
                 where: {
@@ -299,34 +299,34 @@ export default {
 
         const tasks = project.tasks;
         const totalTasks = tasks.length;
-        const completedTasks = tasks.filter((task) => task.isCompleted).length;
+        const completedTasks = tasks.filter((task: any) => task.isCompleted).length;
         const inProgressTasks = tasks.filter(
-            (task) => task.status === 'IN_PROGRESS',
+            (task: any) => task.status === 'IN_PROGRESS',
         ).length;
-        const todoTasks = tasks.filter((task) => task.status === 'TODO').length;
+        const todoTasks = tasks.filter((task: any) => task.status === 'TODO').length;
         const onHoldTasks = tasks.filter(
-            (task) => task.status === 'ON_HOLD',
+            (task: any) => task.status === 'ON_HOLD',
         ).length;
         const cancelledTasks = tasks.filter(
-            (task) => task.status === 'CANCELLED',
+            (task: any) => task.status === 'CANCELLED',
         ).length;
 
         const totalEstimatedHours = tasks.reduce(
-            (sum: number, task) => sum + (task.estimatedHours || 0),
+            (sum: number, task: any) => sum + (task.estimatedHours || 0),
             0,
         );
         const totalActualHours = tasks.reduce(
-            (sum: number, task) => sum + (task.actualHours || 0),
+            (sum: number, task: any) => sum + (task.actualHours || 0),
             0,
         );
         const averageProgress =
             totalTasks > 0
-                ? tasks.reduce((sum: number, task) => sum + task.progress, 0) /
+                ? tasks.reduce((sum: number, task: any) => sum + task.progress, 0) /
                   totalTasks
                 : 0;
 
         const overdueTasks = tasks.filter(
-            (task) =>
+            (task: any) =>
                 task.dueDate &&
                 new Date(task.dueDate) < new Date() &&
                 !task.isCompleted,

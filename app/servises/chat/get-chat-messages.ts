@@ -3,10 +3,8 @@ import { getOnlineUser } from '#vendor/utils/network/ws-handlers.js';
 
 type Message = Awaited<ReturnType<typeof prisma.message.findMany>>[0];
 type ContactListWithContact = Awaited<
-    ReturnType<
-        typeof prisma.contactList.findFirst<{ include: { contact: true } }>
-    >
->;
+    ReturnType<typeof prisma.contactList.findFirst>
+> & { contact: any };
 
 export default async (
     userId: bigint,
