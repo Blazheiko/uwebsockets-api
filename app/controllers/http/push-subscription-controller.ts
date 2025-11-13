@@ -349,13 +349,16 @@ export default {
             const logs = subscription.notificationLogs;
             const totalNotifications = logs.length;
             const sentNotifications = logs.filter(
-                (log: Prisma.PushNotificationLogGetPayload<{}>) => log.status === PushNotificationStatus.SENT,
+                (log: Prisma.PushNotificationLogGetPayload<{}>) =>
+                    log.status === PushNotificationStatus.SENT,
             ).length;
             const failedNotifications = logs.filter(
-                (log: Prisma.PushNotificationLogGetPayload<{}>) => log.status === PushNotificationStatus.FAILED,
+                (log: Prisma.PushNotificationLogGetPayload<{}>) =>
+                    log.status === PushNotificationStatus.FAILED,
             ).length;
             const pendingNotifications = logs.filter(
-                (log: Prisma.PushNotificationLogGetPayload<{}>) => log.status === PushNotificationStatus.PENDING,
+                (log: Prisma.PushNotificationLogGetPayload<{}>) =>
+                    log.status === PushNotificationStatus.PENDING,
             ).length;
 
             const last7DaysLogs = logs.filter(
