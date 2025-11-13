@@ -12,7 +12,8 @@ import type {
     SaveUserResponse,
     TestMiddlewareResponse,
 } from '../types/MainController.js';
-import middlewares from '#app/middlewares/kernel.js';
+// import middlewares from '#app/middlewares/kernel.js';
+import getWsUrl from '#app/servises/getWsUrl.js';
 
 export default {
     // async joinСhat({ httpData, logger }: HttpContext): Promise<any> {
@@ -138,7 +139,7 @@ export default {
             status: 'ok',
             user: User.serialize(user),
             wsUrl: wsToken
-                ? `ws://${configApp.domain}/websocket/${wsToken}`
+                ? getWsUrl(wsToken)
                 : '',
         };
     },

@@ -11,6 +11,7 @@ import type {
     LoginResponse,
     LogoutResponse,
 } from '../types/AuthController.js';
+import getWsUrl from '#app/servises/getWsUrl.js';
 
 export default {
     async register(context: HttpContext): Promise<RegisterResponse> {
@@ -44,7 +45,7 @@ export default {
             status: res ? 'success' : 'error',
             user: User.serialize(userCreated),
             wsUrl: wsToken
-                ? `ws://${configApp.domain}/websocket/${wsToken}`
+                ? getWsUrl(wsToken)
                 : '',
         };
     },
@@ -74,7 +75,7 @@ export default {
                     status: res ? 'success' : 'error',
                     user: User.serialize(user),
                     wsUrl: wsToken
-                        ? `ws://${configApp.domain}/websocket/${wsToken}`
+                        ? getWsUrl(wsToken)
                         : '',
                 };
             }
