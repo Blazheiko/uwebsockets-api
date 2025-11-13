@@ -1,14 +1,13 @@
 import { prisma } from '#database/prisma.js';
 import { getOnlineUser } from '#vendor/utils/network/ws-handlers.js';
-import { Message } from '@prisma/client';
-import { ContactList } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 export default async (
     userId: bigint,
     contactId: bigint,
 ): Promise<{
-    messages: Message[];
-    contact: ContactList;
+    messages: Prisma.MessageGetPayload<{}>[];
+    contact: Prisma.ContactListGetPayload<{ include: { contact: true } }>;
     onlineUsers: string[];
 } | null> => {
     if (!userId || !contactId) return null;
@@ -56,5 +55,5 @@ export default async (
 
     const onlineUsers = getOnlineUser([String(contact.contactId)]);
 
-    return { messages, contact: contact as ContactList, onlineUsers };
+    return { messages, contact, onlineUsers };
 };

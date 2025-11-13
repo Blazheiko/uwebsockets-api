@@ -1,6 +1,7 @@
 import { prisma } from '#database/prisma.js';
 import { DateTime } from 'luxon';
 import { serializeModel } from '#vendor/utils/serialization/serialize-model.js';
+import { Prisma } from '@prisma/client';
 import logger from '#logger';
 
 const schema = {
@@ -103,7 +104,7 @@ export default {
         logger.info(`delete note id: ${id} for user: ${userId}`);
 
         // Start transaction to handle photos and note deletion
-        const result = await prisma.$transaction(async (prisma) => {
+        const result = await prisma.$transaction(async (prisma: Prisma.TransactionClient) => {
             // First, delete all photos associated with the note
             await prisma.notesPhoto.deleteMany({
                 where: {
@@ -152,16 +153,16 @@ export default {
 
         const totalNotes = notes.length;
         const totalPhotos = notes.reduce(
-            (sum, note) => sum + note.photos.length,
+            (sum: number, note: Prisma.NotesGetPayload<{ include: { photos: true } }>) => sum + note.photos.length,
             0,
         );
         const notesWithPhotos = notes.filter(
-            (note) => note.photos.length > 0,
+            (note: Prisma.NotesGetPayload<{ include: { photos: true } }>) => note.photos.length > 0,
         ).length;
         const averagePhotosPerNote =
             totalNotes > 0 ? totalPhotos / totalNotes : 0;
 
-        const recentNotes = notes.filter((note) => {
+        const recentNotes = notes.filter((note: Prisma.NotesGetPayload<{ include: { photos: true } }>) => {
             const noteDate = new Date(note.createdAt);
             const weekAgo = new Date();
             weekAgo.setDate(weekAgo.getDate() - 7);

@@ -1,7 +1,7 @@
 import { prisma } from '#database/prisma.js';
 import { DateTime } from 'luxon';
 import { serializeModel } from '#vendor/utils/serialization/serialize-model.js';
-import { MessageType } from '@prisma/client';
+import { MessageType, Prisma } from '@prisma/client';
 
 const schema = {
     created_at: (value: Date) => DateTime.fromJSDate(value).toISO(),
@@ -34,40 +34,42 @@ export default {
         }
 
         // Start transaction to create message and update unread count
-        const result = await prisma.$transaction(async (prisma) => {
-            // Create message
-            const message = await prisma.message.create({
-                data: {
-                    senderId: payload.senderId,
-                    receiverId: payload.receiverId,
-                    type: payload.type,
-                    content: payload.content,
-                    src: payload.src,
-                    isRead: false,
-                },
-                include: {
-                    sender: true,
-                    receiver: true,
-                },
-            });
-
-            // Update unread count in contact list
-            await prisma.contactList.update({
-                where: {
-                    userId_contactId: {
-                        userId: payload.receiverId,
-                        contactId: payload.senderId,
+        const result = await prisma.$transaction(
+            async (prisma: Prisma.TransactionClient) => {
+                // Create message
+                const message = await prisma.message.create({
+                    data: {
+                        senderId: payload.senderId,
+                        receiverId: payload.receiverId,
+                        type: payload.type,
+                        content: payload.content,
+                        src: payload.src,
+                        isRead: false,
                     },
-                },
-                data: {
-                    unreadCount: {
-                        increment: 1,
+                    include: {
+                        sender: true,
+                        receiver: true,
                     },
-                },
-            });
+                });
 
-            return message;
-        });
+                // Update unread count in contact list
+                await prisma.contactList.update({
+                    where: {
+                        userId_contactId: {
+                            userId: payload.receiverId,
+                            contactId: payload.senderId,
+                        },
+                    },
+                    data: {
+                        unreadCount: {
+                            increment: 1,
+                        },
+                    },
+                });
+
+                return message;
+            },
+        );
 
         return serializeModel(result, schema, hidden);
     },
@@ -133,47 +135,49 @@ export default {
 
     async markAsRead(messageId: number, userId: number) {
         // Start transaction to update message and contact list
-        const result = await prisma.$transaction(async (prisma) => {
-            // Get message to find sender
-            const message = await prisma.message.findUnique({
-                where: { id: messageId },
-            });
+        const result = await prisma.$transaction(
+            async (prisma: Prisma.TransactionClient) => {
+                // Get message to find sender
+                const message = await prisma.message.findUnique({
+                    where: { id: messageId },
+                });
 
-            if (!message) {
-                throw new Error(`Message with id ${messageId} not found`);
-            }
+                if (!message) {
+                    throw new Error(`Message with id ${messageId} not found`);
+                }
 
-            if (Number(message.receiverId) !== userId) {
-                throw new Error('User is not the receiver of this message');
-            }
+                if (Number(message.receiverId) !== userId) {
+                    throw new Error('User is not the receiver of this message');
+                }
 
-            // Update message status
-            const updatedMessage = await prisma.message.update({
-                where: { id: messageId },
-                data: { isRead: true },
-                include: {
-                    sender: true,
-                    receiver: true,
-                },
-            });
-
-            // Update unread count in contact list
-            await prisma.contactList.update({
-                where: {
-                    userId_contactId: {
-                        userId: userId,
-                        contactId: message.senderId,
+                // Update message status
+                const updatedMessage = await prisma.message.update({
+                    where: { id: messageId },
+                    data: { isRead: true },
+                    include: {
+                        sender: true,
+                        receiver: true,
                     },
-                },
-                data: {
-                    unreadCount: {
-                        decrement: 1,
-                    },
-                },
-            });
+                });
 
-            return updatedMessage;
-        });
+                // Update unread count in contact list
+                await prisma.contactList.update({
+                    where: {
+                        userId_contactId: {
+                            userId: userId,
+                            contactId: message.senderId,
+                        },
+                    },
+                    data: {
+                        unreadCount: {
+                            decrement: 1,
+                        },
+                    },
+                });
+
+                return updatedMessage;
+            },
+        );
 
         return serializeModel(result, schema, hidden);
     },

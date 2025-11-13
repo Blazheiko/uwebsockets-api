@@ -1,7 +1,7 @@
 import { prisma } from '#database/prisma.js';
 import { DateTime } from 'luxon';
 import { serializeModel } from '#vendor/utils/serialization/serialize-model.js';
-import { ProjectStatus } from '@prisma/client';
+import { ProjectStatus, Prisma } from '@prisma/client';
 import logger from '#logger';
 
 const schema = {
@@ -189,7 +189,7 @@ export default {
         logger.info(`delete project id: ${id} for user: ${userId}`);
 
         // Start transaction to handle tasks and project deletion
-        const result = await prisma.$transaction(async (prisma) => {
+        const result = await prisma.$transaction(async (prisma: Prisma.TransactionClient) => {
             // First, update all tasks to remove project reference
             await prisma.task.updateMany({
                 where: {
@@ -299,34 +299,34 @@ export default {
 
         const tasks = project.tasks;
         const totalTasks = tasks.length;
-        const completedTasks = tasks.filter((task) => task.isCompleted).length;
+        const completedTasks = tasks.filter((task: Prisma.TaskGetPayload<{}>) => task.isCompleted).length;
         const inProgressTasks = tasks.filter(
-            (task) => task.status === 'IN_PROGRESS',
+            (task: Prisma.TaskGetPayload<{}>) => task.status === 'IN_PROGRESS',
         ).length;
-        const todoTasks = tasks.filter((task) => task.status === 'TODO').length;
+        const todoTasks = tasks.filter((task: Prisma.TaskGetPayload<{}>) => task.status === 'TODO').length;
         const onHoldTasks = tasks.filter(
-            (task) => task.status === 'ON_HOLD',
+            (task: Prisma.TaskGetPayload<{}>) => task.status === 'ON_HOLD',
         ).length;
         const cancelledTasks = tasks.filter(
-            (task) => task.status === 'CANCELLED',
+            (task: Prisma.TaskGetPayload<{}>) => task.status === 'CANCELLED',
         ).length;
 
         const totalEstimatedHours = tasks.reduce(
-            (sum, task) => sum + (task.estimatedHours || 0),
+            (sum: number, task: Prisma.TaskGetPayload<{}>) => sum + (task.estimatedHours || 0),
             0,
         );
         const totalActualHours = tasks.reduce(
-            (sum, task) => sum + (task.actualHours || 0),
+            (sum: number, task: Prisma.TaskGetPayload<{}>) => sum + (task.actualHours || 0),
             0,
         );
         const averageProgress =
             totalTasks > 0
-                ? tasks.reduce((sum, task) => sum + task.progress, 0) /
+                ? tasks.reduce((sum: number, task: Prisma.TaskGetPayload<{}>) => sum + task.progress, 0) /
                   totalTasks
                 : 0;
 
         const overdueTasks = tasks.filter(
-            (task) =>
+            (task: Prisma.TaskGetPayload<{}>) =>
                 task.dueDate &&
                 new Date(task.dueDate) < new Date() &&
                 !task.isCompleted,
