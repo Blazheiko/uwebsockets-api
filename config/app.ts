@@ -20,8 +20,8 @@ const config = Object.freeze({
     key: env.APP_KEY,
     env: env.APP_ENV,
     url: env.APP_URL,
-    host: env.APP_HOST || '0.0.0.0',
-    port: Number(env.APP_PORT),
+    host: env.HOST || '0.0.0.0',
+    port: Number(env.PORT),
     pathPrefix: normalizePath(env.API_PATH_PREFIX || 'api'),
     unixPath: env.APP_UNIX_PATH,
     // Примеры использования логических значений:
