@@ -21,6 +21,7 @@
         "dev": "nodemon",
         "manual:test": "APP_ENV=manual-test nodemon",
         "build": "NODE_ENV=production tsc && npm run copy:static",
+        "build:docker": "npx prisma generate && NODE_ENV=production tsc && npm run copy:static",
         "copy:static": "node scripts/copy-static.js",
         "test": "echo \"Error: no test specified\" && exit 1",
         "prisma:generate": "prisma generate",

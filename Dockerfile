@@ -9,8 +9,8 @@
     # Копируем весь проект
     COPY . .
     
-    # Сборка проекта (если TypeScript) и генерация Prisma Client
-    RUN npm run build && npx prisma generate
+    # Генерация Prisma Client и сборка проекта
+    RUN npm run build:docker
     
     
     # --- Этап 2: продакшн ---
