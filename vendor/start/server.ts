@@ -89,7 +89,7 @@ const broadcastToChannel = (channel: string, event: string, payload: any) => {
 // };
 
 const configureWebsockets = (server: TemplatedApp) => {
-    return server.ws('/websocket/:token', {
+    return server.ws(`/${appConfig.pathPrefix}/websocket/:token`, {
         compression: 0,
         idleTimeout: 120, // According to protocol
         maxPayloadLength: 1 * 1024 * 1024,
