@@ -42,11 +42,11 @@ import {
 } from '../types/types.js';
 import contextHandler from '../utils/context/http-context.js';
 import {
-    startStaticServer,
+    cacheStaticSource,
     staticHandler,
     staticIndexHandler,
     staticCacheHandler,
-} from './static-server.js';
+} from '#vendor/start/static-server.js';
 import configApp from '#config/app.js';
 import httpRoutes from '#app/routes/http-routes.js';
 import wsRoutes from '#app/routes/ws-routes.js';
@@ -55,7 +55,7 @@ import getIP from '#vendor/utils/network/get-ip.js';
 import { getApiTypesForDocumentation } from '#vendor/utils/tooling/parse-types-from-dts.js';
 import { serializeRoutes } from '#vendor/utils/routing/serialize-routes.js';
 import path from 'path';
-import { makeBroadcastJson } from '#vendor/utils/helpers/json-handlers.js';
+import { makeBroadcastJson, makeJson } from '#vendor/utils/helpers/json-handlers.js';
 
 const server: TemplatedApp = uWS.App();
 
@@ -267,28 +267,6 @@ const getHttpData = async (
     });
 };
 
-// const transformBigInts = (obj: any): any => {
-//     if (obj === null || obj === undefined) return obj;
-//
-//     if (typeof obj === 'bigint') {
-//         return obj.toString();
-//     }
-//
-//     if (Array.isArray(obj)) {
-//         return obj.map(transformBigInts);
-//     }
-//
-//     if (typeof obj === 'object') {
-//         const transformed: any = {};
-//         for (const [key, value] of Object.entries(obj)) {
-//             transformed[key] = transformBigInts(value);
-//         }
-//         return transformed;
-//     }
-//
-//     return obj;
-// }
-
 const sendResponse = (
     res: HttpResponse,
     httpData: HttpData,
@@ -304,11 +282,7 @@ const sendResponse = (
     if (responseData.payload) {
         // const transformedData = transformBigInts(responseData.payload);
         // res.end(JSON.stringify(transformedData));
-        res.end(
-            JSON.stringify(responseData.payload, (_, v) =>
-                typeof v === 'bigint' ? v.toString() : v,
-            ),
-        );
+        res.end( makeJson(responseData.payload) );
     } else res.end(`${responseData.status}`);
 };
 
@@ -340,7 +314,7 @@ const handleError = (res: HttpResponse, error: unknown) => {
                 ? 'Internal server error'
                 : String(error);
         res.writeStatus('500');
-        res.end(JSON.stringify(errorMessage));
+        res.end( makeJson(errorMessage) );
     }
 };
 
@@ -375,7 +349,7 @@ const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
                 res.writeStatus(`200`);
                 res.writeHeader('content-type', 'application/json');
                 res.end(
-                    JSON.stringify({
+                    makeJson({
                         httpRoutes: serializedHttpRoutes,
                         wsRoutes: serializedWsRoutes,
                         validationSchemas,
@@ -394,9 +368,7 @@ const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
         logger.warn('We just refuse if already shutting down');
         res.cork(() => {
             res.writeStatus('404').end(
-                JSON.stringify({
-                    message: 'Not found',
-                }),
+                makeJson({ message: 'Not found' }),
             );
         });
     }
@@ -455,7 +427,7 @@ const configureHttp = async (server: TemplatedApp) => {
     logger.info('configureHttp get');
     // console.log(getGetRoutes());
     if (appConfig.serveStatic) {
-        const staticCache = await startStaticServer();
+        const staticCache = await cacheStaticSource();
         if (staticCache) {
             staticCache.forEach((value, key) => {
                 server.get(key, (res, req) => {
