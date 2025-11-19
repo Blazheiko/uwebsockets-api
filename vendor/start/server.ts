@@ -45,6 +45,7 @@ import {
     startStaticServer,
     staticHandler,
     staticIndexHandler,
+    staticCacheHandler,
 } from './static-server.js';
 import configApp from '#config/app.js';
 import httpRoutes from '#app/routes/http-routes.js';
@@ -71,9 +72,7 @@ const broadcastMessage = (userId: number, event: string, payload: any) => {
 };
 
 const broadcastToChannel = (channel: string, event: string, payload: any) => {
-    server.publish(
-        channel, makeBroadcastJson(event, 200, payload)
-    );
+    server.publish(channel, makeBroadcastJson(event, 200, payload));
 };
 
 // const broadcastOnline = (userId: string, status: string) => {
@@ -112,7 +111,7 @@ const checkCookie = (key: string, value: string): boolean =>
     Boolean(value) &&
     value.length < appConfig.reasonableCookieLimit &&
     /^[a-zA-Z0-9_-]+$/.test(key) &&
-    key.length < 255;
+    key.length < appConfig.reasonableCookieKeyLimit;
 
 const parseCookies = (cookieHeader: string): Map<string, string> => {
     const list = new Map<string, string>();
@@ -302,9 +301,7 @@ const sendResponse = (
     if (responseData.cookies) setCookies(res, responseData.cookies);
     if (corsConfig.enabled) setCorsHeader(res);
     // && responseData.status >= 200 && responseData.status < 300
-    if (
-        responseData.payload 
-    ) {
+    if (responseData.payload) {
         // const transformedData = transformBigInts(responseData.payload);
         // res.end(JSON.stringify(transformedData));
         res.end(
@@ -326,43 +323,26 @@ interface State {
 
 const handleError = (res: HttpResponse, error: unknown) => {
     logger.error({ err: error }, 'Handle Error');
-    
+
     if ((error as ValidationError).code === 'E_VALIDATION_ERROR') {
         const validationError = error as ValidationError;
         // res.writeHeader('content-type', 'application/json');
-        res.writeStatus('422')
+        res.writeStatus('422');
         res.end(
-                JSON.stringify({
-                    message: 'Validation failure',
-                    messages: validationError.messages,
-                }),
-            ); 
-        
+            JSON.stringify({
+                message: 'Validation failure',
+                messages: validationError.messages,
+            }),
+        );
     } else {
         const errorMessage =
             configApp.env === 'prod' || configApp.env === 'production'
                 ? 'Internal server error'
                 : String(error);
-        res.writeStatus('500')
+        res.writeStatus('500');
         res.end(JSON.stringify(errorMessage));
     }
 };
-
-const staticRoutes = [
-    '/',
-    '/chat',
-    '/login',
-    '/register',
-    '/chat',
-    '/account',
-    '/news',
-    '/news/create',
-    '/news/edit',
-    '/news/:id',
-    '/manifesto',
-    '/invitations',
-    '/join-chat',
-];
 
 // Always point to source types directory, not dist
 const projectRoot = process.cwd();
@@ -372,9 +352,7 @@ const typesDirectory = path.join(projectRoot, 'app/controllers/types');
 let types: any = {};
 // let mapping: Record<string, string> = {};
 if (configApp.docPage) {
-    ({ types } = getApiTypesForDocumentation(
-        typesDirectory,
-    ));
+    ({ types } = getApiTypesForDocumentation(typesDirectory));
 }
 
 const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
@@ -464,7 +442,7 @@ const setHttpHandler = async (
         } catch (err: unknown) {
             logger.error({ err }, 'Set Http Handler Error');
             res.cork(() => {
-                handleError(res, err); 
+                handleError(res, err);
             });
         }
     } else {
@@ -473,11 +451,18 @@ const setHttpHandler = async (
     }
 };
 
-const configureHttp = (server: TemplatedApp) => {
+const configureHttp = async (server: TemplatedApp) => {
     logger.info('configureHttp get');
     // console.log(getGetRoutes());
     if (appConfig.serveStatic) {
-        startStaticServer();
+        const staticCache = await startStaticServer();
+        if (staticCache) {
+            staticCache.forEach((value, key) => {
+                server.get(key, (res, req) => {
+                    staticCacheHandler(res, req, value);
+                });
+            });
+        }
         // staticRoutes.forEach((route) => {
         //     server.get(route, (res, req) => {
         //         staticIndexHandler(res, req);
@@ -503,10 +488,7 @@ const configureHttp = (server: TemplatedApp) => {
     server.any('/*', (res, req) => {
         const url = req.getUrl();
 
-        if (
-            appConfig.serveStatic &&
-            req.getMethod() === 'get'
-        ) {
+        if (appConfig.serveStatic && req.getMethod() === 'get') {
             staticHandler(res, req);
         } else if (corsConfig.enabled && req.getMethod() === 'options') {
             //'OPTIONS' method === 'OPTIONS'
@@ -544,9 +526,9 @@ const setCorsHeader = (res: HttpResponse) => {
     }
 };
 // let server = null;
-const initServer = () => {
+const initServer = async () => {
     configureWebsockets(server);
-    configureHttp(server);
+    await configureHttp(server);
     if (appConfig.unixPath) {
         server.listen_unix((token) => {
             if (token) {

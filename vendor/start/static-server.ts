@@ -6,9 +6,10 @@ import appConfig from '#config/app.js';
 import cspConfig from '#config/csp.js';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
 
-const STATIC_PATH = appConfig.env === 'manual-test' ? 
-    path.join(process.cwd(), './public-test') : 
-    path.join(process.cwd(), './public');
+const STATIC_PATH =
+    appConfig.env === 'manual-test'
+        ? path.join(process.cwd(), './public-test')
+        : path.join(process.cwd(), './public');
 
 const cache = new Map();
 
@@ -61,32 +62,24 @@ const cacheDirectory = async (directoryPath: string) => {
     const files = await fs.readdir(directoryPath, { withFileTypes: true });
     for (const file of files) {
         const filePath = path.join(directoryPath, file.name);
-        if (file.isDirectory()) cacheDirectory(filePath);
-        else cacheFile(filePath);
+        if (file.isDirectory()) await cacheDirectory(filePath);
+        else await cacheFile(filePath);
     }
 };
 
-const startStaticServer = () => {
+const startStaticServer = async () => {
     if (appConfig.serveStatic) {
         logger.info('cache Directory ' + STATIC_PATH);
-        cacheDirectory(STATIC_PATH).then(() => {
-            logger.info('Success cache Directory ' + STATIC_PATH);
-        });
+        await cacheDirectory(STATIC_PATH);
+        logger.info('Success cache Directory ' + STATIC_PATH);
+        const indexHtml = cache.get('/index.html');
+        if (indexHtml) {
+            cache.set('/', indexHtml);
+        }
+        return cache;
     }
+    return null;
 };
-const staticRoutes = [
-    '/',
-    '/chat',
-    '/login',
-    '/register',
-    '/chat',
-    '/account',
-    '/news',
-    '/news/create',
-    '/news/edit',
-    '/news/:id',
-    '/manifesto',
-];
 
 const buildCspValue = (): string => {
     // Prefer full policy string if provided
@@ -136,25 +129,108 @@ const staticIndexHandler = (res: HttpResponse, req: HttpRequest) => {
         res.end(data || '');
     });
 };
+
+const staticCacheHandler = (
+    res: HttpResponse,
+    req: HttpRequest,
+    cachedData: string | Buffer,
+) => {
+    const url = req.getUrl();
+    const ext =
+        url.indexOf('.') !== -1
+            ? path.extname(url).substring(1).toLowerCase()
+            : '';
+
+    const mimeType = ext
+        ? MIME_TYPES[ext] || MIME_TYPES.default
+        : MIME_TYPES.html;
+
+    // Add cache headers for better performance
+    const maxAge = 31536000; // 1 year in seconds
+    const isHtml = mimeType === MIME_TYPES.html;
+
+    // Generate ETag based on content hash for better caching
+    const dataLength = Buffer.isBuffer(cachedData)
+        ? cachedData.length
+        : Buffer.byteLength(cachedData, 'utf8');
+    const etag = `"${dataLength}-${url.replace(/[^a-zA-Z0-9]/g, '')}"`;
+
+    // Check if client has cached version
+    const ifNoneMatch = req.getHeader('if-none-match');
+    if (!isHtml && ifNoneMatch === etag) {
+        // Cache hit - file not modified
+        logger.info(`Cache hit for ${url} - returning 304`);
+        res.cork(() => {
+            res.writeStatus('304'); // Not Modified
+            res.writeHeader(
+                'Cache-Control',
+                `public, max-age=${maxAge}, immutable`,
+            );
+            res.writeHeader('ETag', etag);
+            res.end();
+        });
+        return;
+    }
+
+    res.cork(() => {
+        res.writeStatus('200');
+
+        // Set appropriate headers
+        res.writeHeader('Content-Type', mimeType);
+        res.writeHeader('Content-Length', dataLength.toString());
+
+        // Set CSP header for HTML files
+        if (isHtml) {
+            setCspHeader(res);
+            // For HTML files, use shorter cache time
+            res.writeHeader('Cache-Control', 'public, max-age=3600'); // 1 hour
+        } else {
+            // For static assets, use longer cache time
+            res.writeHeader(
+                'Cache-Control',
+                `public, max-age=${maxAge}, immutable`,
+            );
+            res.writeHeader('ETag', etag);
+        }
+
+        // Add security headers
+        res.writeHeader('X-Content-Type-Options', 'nosniff');
+
+        // Note: Compression not implemented yet
+        // When adding compression support, add: res.writeHeader('Vary', 'Accept-Encoding');
+
+        res.end(cachedData);
+    });
+};
+
 const staticHandler = (res: HttpResponse, req: HttpRequest) => {
     let data: string | Buffer | null = null;
     let statusCode = '404';
     let mimeType = '';
     const url = req.getUrl();
-    const ext = url.indexOf('.') !== -1 ? path.extname(url).substring(1).toLowerCase() : '';
-    // logger.info(`Static handler request: ${url}, ext: ${ext}`);
-    if (ext) {
-        mimeType = MIME_TYPES[ext] || MIME_TYPES.html;
-        data = cache.get(url);
-        statusCode = '200';
-        if (!data) {
-            statusCode = '404';
-            data = cache.get('/404.html');
-            logger.warn(`File not found in cache: ${url}`);
-        } else {
-            // logger.info(`Serving file from cache: ${url}`);
-        }
-    }else{
+    // const ext =
+    //     url.indexOf('.') !== -1
+    //         ? path.extname(url).substring(1).toLowerCase()
+    //         : '';
+    // // logger.info(`Static handler request: ${url}, ext: ${ext}`);
+    // if (ext) {
+    //     mimeType = MIME_TYPES[ext] || MIME_TYPES.html;
+    //     data = cache.get(url);
+    //     statusCode = '200';
+    //     if (!data) {
+    //         statusCode = '404';
+    //         data = cache.get('/404.html');
+    //         logger.warn(`File not found in cache: ${url}`);
+    //     } else {
+    //         // logger.info(`Serving file from cache: ${url}`);
+    //     }
+    // } else {
+    //     data = cache.get('/index.html');
+    //     statusCode = data ? '200' : '404';
+    //     mimeType = MIME_TYPES.html;
+    // }
+
+    if(url.indexOf('.') === -1){
         data = cache.get('/index.html');
         statusCode = data ? '200' : '404';
         mimeType = MIME_TYPES.html;
@@ -174,4 +250,5 @@ export {
     startStaticServer,
     staticHandler,
     staticIndexHandler,
+    staticCacheHandler,
 };

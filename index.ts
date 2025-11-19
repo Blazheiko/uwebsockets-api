@@ -57,7 +57,7 @@ const start = async () => {
         routesHandler(wsRoutes, true);
         // console.log(getWsRoutes());
 
-        initServer();
+        await initServer();
         process.on('SIGINT', stopSIGINT);
         process.on('SIGHUP', stopSIGHUP);
         process.on('SIGTERM', stopSIGTERM);

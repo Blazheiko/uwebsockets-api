@@ -35,7 +35,7 @@ const config = Object.freeze({
     env: env.APP_ENV,
     url: env.APP_URL,
     domain: env.DOMAIN || '127.0.0.1',
-    host: '0.0.0.0',
+    host: env.HOST || '0.0.0.0',
     port: parsePort(process.env.PORT, 3000),
     pathPrefix: normalizePath(env.API_PATH_PREFIX || 'api'),
     unixPath: env.APP_UNIX_PATH,
@@ -47,6 +47,7 @@ const config = Object.freeze({
     characters:
         'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
     reasonableCookieLimit: 10000, // Reasonable limit for cookie value
+    reasonableCookieKeyLimit: 255, // Reasonable limit for cookie key length
     maxUrlLength: 2048, // Reasonable limit for url length
 });
 export default config;
