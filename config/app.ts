@@ -49,5 +49,6 @@ const config = Object.freeze({
     reasonableCookieLimit: 10000, // Reasonable limit for cookie value
     reasonableCookieKeyLimit: 255, // Reasonable limit for cookie key length
     maxUrlLength: 2048, // Reasonable limit for url length
+    accessTokenLength: 16, // Reasonable limit for access token length
 });
 export default config;

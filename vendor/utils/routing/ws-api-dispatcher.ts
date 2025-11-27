@@ -31,7 +31,9 @@ export default async (
         error: null,
     };
     try {
-        const route = wsRoutes[message.event];
+        const event = message.event;
+        const nameRoute = event.split(':')[0];
+        const route = wsRoutes[nameRoute];
         if (route) {
             // Check rate limit before processing
             const rateLimitResult = await checkRateLimitWs(

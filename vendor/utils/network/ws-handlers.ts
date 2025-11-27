@@ -9,6 +9,7 @@ import { wsSessionHandler } from '../session/session-handler.js';
 import getIP from './get-ip.js';
 import { wsEventEmitter } from '#vendor/utils/events/ws-event-manager.js';
 import { makeJson } from '#vendor/utils/helpers/json-handlers.js';
+import configApp from '#config/app.js';
 const wsStorage: Set<MyWebSocket> = new Set();
 const userStorage: Map<
     string,
@@ -17,6 +18,31 @@ const userStorage: Map<
 
 const getUserConnections = (userId: string) => {
     return userStorage.get(String(userId));
+};
+
+
+const sendJson = (ws: MyWebSocket, data: any) => {
+    if (!ws || typeof ws.cork !== 'function') {
+        logger.warn('Attempted to send message to closed or invalid WebSocket');
+        return;
+    }
+    try {
+        ws.cork(() => {
+            ws.send(
+                makeJson(data)
+            );
+        });
+    } catch (e) {
+        logger.error({ err: e }, 'Error in sendJson:');
+        try {
+            ws.close();
+        } catch (closeError) {
+            logger.error(
+                { err: closeError },
+                'Error closing WebSocket after send failure:',
+            );
+        }
+    }
 };
 
 const setUserConnections = (
@@ -52,7 +78,7 @@ const closeAllWs = async () => {
 };
 
 const handlePong = (ws: MyWebSocket) => {
-    const { sessionId, userId } = ws.getUserData();
+    // const { sessionId, userId } = ws.getUserData();
     // if (sessionId && userId)  {
     //     // updateExpiration(token)
     //     sendJson(ws, {
@@ -77,6 +103,11 @@ const unAuthorizedMessage = () => ({
     },
 });
 
+const ab2str = (
+    buffer: ArrayBuffer,
+    encoding: BufferEncoding | undefined = 'utf8',
+) => Buffer.from(buffer).toString(encoding);
+
 const onMessage = async (
     ws: MyWebSocket,
     wsMessage: ArrayBuffer,
@@ -84,7 +115,20 @@ const onMessage = async (
 ) => {
     // logger.info('new onMessage');
     const userData = ws.getUserData();
-    const message = JSON.parse(ab2str(wsMessage));
+    const jsonMessage = ab2str(wsMessage);
+    if (jsonMessage === 'ping'){
+        try {
+            ws.send('pong');
+        } catch (e) {
+            logger.error(
+                { err: e },
+                'Error ws send pong',
+            );
+        }
+        return;
+    }
+
+    const message = JSON.parse(jsonMessage);
     // logger.info(message);
 
     // let tokenData = null;
@@ -122,10 +166,9 @@ const onMessage = async (
             if (!message.event) {
                 logger.error('onMessage message.event is null');
                 sendJson(ws, {
-                    status: '404',
-                    message: 'Event not found',
-                });
-
+                        status: '404',
+                        message: 'Event not found',
+                    });
             } else if (message.event === 'service:ping') {
                 handlePong(ws);
             } else {
@@ -213,30 +256,6 @@ const updateExpiration = (token: string) => {
 //         }
 //     }, 120_000);
 // };
-
-const sendJson = (ws: MyWebSocket, data: any) => {
-    if (!ws || typeof ws.cork !== 'function') {
-        logger.warn('Attempted to send message to closed or invalid WebSocket');
-        return;
-    }
-    try {
-        ws.cork(() => {
-            ws.send(
-                makeJson(data)
-            );
-        });
-    } catch (e) {
-        logger.error({ err: e }, 'Error in sendJson:');
-        try {
-            ws.close();
-        } catch (closeError) {
-            logger.error(
-                { err: closeError },
-                'Error closing WebSocket after send failure:',
-            );
-        }
-    }
-};
 
 const onOpen = async (ws: MyWebSocket) => {
     try {
@@ -328,11 +347,6 @@ const onOpen = async (ws: MyWebSocket) => {
     }
 };
 
-const ab2str = (
-    buffer: ArrayBuffer,
-    encoding: BufferEncoding | undefined = 'utf8',
-) => Buffer.from(buffer).toString(encoding);
-
 const checkUserAccess = async (
     token: string,
 ): Promise<{ sessionId: string; userId: number } | null> => {
@@ -365,7 +379,7 @@ const checkUserAccess = async (
 };
 
 const checkToken = (token: string): boolean =>
-    Boolean(token && token.length === 16 && /^[a-zA-Z0-9]+$/.test(token));
+    Boolean(token && token.length === configApp.accessTokenLength && /^[a-zA-Z0-9]+$/.test(token));
 
 const handleUpgrade = async (
     res: HttpResponse,
