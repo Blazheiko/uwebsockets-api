@@ -169,8 +169,6 @@ const onMessage = async (
                         status: '404',
                         message: 'Event not found',
                     });
-            } else if (message.event === 'service:ping') {
-                handlePong(ws);
             } else {
                 const result = await wsApiHandler(
                     message,
