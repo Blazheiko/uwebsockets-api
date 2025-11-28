@@ -108,13 +108,27 @@ const ab2str = (
     encoding: BufferEncoding | undefined = 'utf8',
 ) => Buffer.from(buffer).toString(encoding);
 
+const closeExpiredSession = (ws: MyWebSocket) => {
+    ws.cork(() => {
+        try {
+            ws.send(makeJson(unAuthorizedMessage()));
+            ws.end(4001);
+        } catch (e) {
+            logger.error(
+                { err: e },
+                'Error ws send unAuthorizedMessage',
+            );
+        }
+    });
+};
+
 const onMessage = async (
     ws: MyWebSocket,
     wsMessage: ArrayBuffer,
     isBinary: boolean,
 ) => {
     // logger.info('new onMessage');
-    const userData = ws.getUserData();
+    
     const jsonMessage = ab2str(wsMessage);
     if (jsonMessage === 'ping'){
         try {
@@ -128,15 +142,11 @@ const onMessage = async (
         return;
     }
 
-    const message = JSON.parse(jsonMessage);
-    // logger.info(message);
-
-    // let tokenData = null;
-    // if (isBinary) logger.info('isBinary', isBinary);
-
     try {
+        const message = JSON.parse(jsonMessage);
         // if (token) tokenData = await redis.getex(`auth:ws:${token}`, 'EX', 120);
         // let message = null;
+        const userData = ws.getUserData();
         let session = null;
         if (userData.sessionId && userData.userId) {
             // logger.info(`onMessage userData.sessionId: ${userData.sessionId}`);
@@ -147,49 +157,27 @@ const onMessage = async (
             );
         }
         if (!session) {
-            ws.cork(() => {
-                try {
-                    ws.send(makeJson(unAuthorizedMessage()));
-                    ws.end(4001);
-                } catch (e) {
-                    logger.error(
-                        { err: e },
-                        'Error ws send unAuthorizedMessage',
-                    );
-                }
-            });
-
-            return;
-        }
-
-        if (message) {
-            if (!message.event) {
-                logger.error('onMessage message.event is null');
+            closeExpiredSession(ws);           
+        } else if (message && message.event) {
+            const result = await wsApiHandler(
+                message,
+                ws,
+                userData,
+                session,
+            );
+            if (result) sendJson(ws, result);
+            else {
+                logger.error('onMessage result is null');
                 sendJson(ws, {
-                        status: '404',
-                        message: 'Event not found',
-                    });
-            } else {
-                const result = await wsApiHandler(
-                    message,
-                    ws,
-                    userData,
-                    session,
-                );
-                if (result) sendJson(ws, result);
-                else {
-                    logger.error('onMessage result is null');
-                    sendJson(ws, {
-                        status: '404',
-                        message: 'Event not found',
-                    });
-                }
+                    status: '404',
+                    message: 'Event not found',
+                });
             }
         }else{
-            logger.error('onMessage message is null');
+            logger.error('onMessage message is null or message.event is null');
             sendJson(ws, {
                 status: '404',
-                message: 'Message is null',
+                message: 'Message is null or message.event is null',
             });
         }
     } catch (err: any) {
