@@ -69,6 +69,21 @@ export default {
         return serializeModel(user[0], schema, hidden);
     },
 
+    async findByEmail(email: string) {
+        logger.info(`find user by email: ${email}`);
+        const user = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, email))
+            .limit(1);
+
+        if (user.length === 0) {
+            return null;
+        }
+
+        return user[0];
+    },
+
     async update(id: bigint, payload: any) {
         const updateData: any = {
             ...payload,

@@ -1,8 +1,6 @@
 import Project from '#app/models/Project.js';
 import { HttpContext } from '../../../vendor/types/types.js';
 import Task from '#app/models/Task.js';
-import { db } from '#database/db.js';
-import { tasks } from '#database/schema.js';
 import type {
     GetTasksResponse,
     CreateTaskResponse,
@@ -18,8 +16,8 @@ import type {
 
 export default {
     async testTasks(context: HttpContext): Promise<TestTasksResponse> {
-        
-        return { status: 'ok', tasks: await db.select().from(tasks) };
+        const allTasks = await Task.query();
+        return { status: 'ok', tasks: allTasks };
     },
     async getTasks(context: HttpContext): Promise<GetTasksResponse> {
         const { auth, logger } = context;

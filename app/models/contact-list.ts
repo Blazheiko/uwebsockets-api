@@ -1,6 +1,6 @@
 import { db } from '#database/db.js';
-import { contactList, users } from '#database/schema.js';
-import { eq, and } from 'drizzle-orm';
+import { contactList, users, messages } from '#database/schema.js';
+import { eq, and, or, desc } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import { serializeModel } from '#vendor/utils/serialization/serialize-model.js';
 import logger from '#logger';
@@ -114,6 +114,95 @@ export default {
             .from(contactList)
             .where(eq(contactList.userId, userId));
         return this.serializeArray(contacts);
+    },
+
+    async findByUserIdWithDetails(userId: bigint) {
+        logger.info(`find contact list with details for user: ${userId}`);
+
+        const contactListData = await db.select({
+            id: contactList.id,
+            userId: contactList.userId,
+            contactId: contactList.contactId,
+            status: contactList.status,
+            unreadCount: contactList.unreadCount,
+            createdAt: contactList.createdAt,
+            updatedAt: contactList.updatedAt,
+            rename: contactList.rename,
+            lastMessageId: contactList.lastMessageId,
+            contact: {
+                id: users.id,
+                name: users.name,
+            },
+            lastMessage: messages,
+        })
+            .from(contactList)
+            .leftJoin(users, eq(contactList.contactId, users.id))
+            .leftJoin(messages, eq(contactList.lastMessageId, messages.id))
+            .where(eq(contactList.userId, userId))
+            .orderBy(desc(contactList.updatedAt));
+
+        return contactListData;
+    },
+
+    async findExistingChat(userId: bigint, participantId: bigint) {
+        logger.info(`find existing chat between users: ${userId} and ${participantId}`);
+
+        const existingChat = await db.select()
+            .from(contactList)
+            .leftJoin(users, eq(contactList.contactId, users.id))
+            .where(or(
+                and(eq(contactList.userId, userId), eq(contactList.contactId, participantId)),
+                and(eq(contactList.userId, participantId), eq(contactList.contactId, userId))
+            ))
+            .limit(1);
+
+        if (existingChat.length === 0) {
+            return null;
+        }
+
+        return existingChat[0]?.contact_list;
+    },
+
+    async findByIdAndUserId(chatId: bigint, userId: bigint) {
+        logger.info(`find chat by id: ${chatId} for user: ${userId}`);
+
+        const chat = await db.select()
+            .from(contactList)
+            .where(and(
+                eq(contactList.id, chatId),
+                or(
+                    eq(contactList.userId, userId),
+                    eq(contactList.contactId, userId)
+                )
+            ))
+            .limit(1);
+
+        if (chat.length === 0) {
+            return null;
+        }
+
+        return chat[0];
+    },
+
+    async createWithUserInfo(userId: bigint, participantId: bigint, status: string = 'accepted') {
+        logger.info(`create chat for user: ${userId} with participant: ${participantId}`);
+
+        const now = new Date();
+        const [chat] = await db.insert(contactList).values({
+            userId: userId,
+            contactId: participantId,
+            status: status,
+            createdAt: now,
+            updatedAt: now,
+        });
+
+        const createdChat = await db.select()
+            .from(contactList)
+            .leftJoin(users, eq(contactList.contactId, users.id))
+            .where(eq(contactList.id, BigInt(chat.insertId)))
+            .limit(1);
+
+        return createdChat[0]?.contact_list;
     },
 
     query() {

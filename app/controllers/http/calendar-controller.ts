@@ -1,7 +1,5 @@
 import { HttpContext } from '../../../vendor/types/types.js';
-import { db } from '#database/db.js';
-import { calendar } from '#database/schema.js';
-import { eq, and, or, gte, lte, asc, sql } from 'drizzle-orm';
+import Calendar from '#app/models/Calendar.js';
 import type {
     GetEventsResponse,
     CreateEventResponse,
@@ -22,10 +20,7 @@ export default {
         }
 
         try {
-            const events = await db.select()
-                .from(calendar)
-                .where(eq(calendar.userId, auth.user.id))
-                .orderBy(asc(calendar.startTime));
+            const events = await Calendar.findByUserId(auth.user.id);
             return { status: 'success', data: events };
         } catch (error) {
             logger.error({ err: error }, 'Error getting events:');
@@ -44,23 +39,15 @@ export default {
         const { title, description, startTime, endTime } = httpData.payload;
 
         try {
-            const now = new Date();
-            const [eventResult] = await db.insert(calendar).values({
+            const createdEvent = await Calendar.create({
                 title,
                 description,
-                startTime: new Date(startTime),
-                endTime: new Date(endTime),
+                startTime,
+                endTime,
                 userId: auth.user.id,
-                createdAt: now,
-                updatedAt: now,
             });
 
-            const createdEvent = await db.select()
-                .from(calendar)
-                .where(eq(calendar.id, BigInt(eventResult.insertId)))
-                .limit(1);
-
-            return { status: 'success', data: createdEvent[0] };
+            return { status: 'success', data: createdEvent };
         } catch (error) {
             logger.error({ err: error }, 'Error creating event:');
             return { status: 'error', message: 'Failed to create event' };
@@ -78,19 +65,11 @@ export default {
         const { eventId } = httpData.params as { eventId: string };
 
         try {
-            const event = await db.select()
-                .from(calendar)
-                .where(and(
-                    eq(calendar.id, BigInt(eventId)),
-                    eq(calendar.userId, auth.user.id)
-                ))
-                .limit(1);
-
-            if (event.length === 0) {
-                return { status: 'error', message: 'Event not found' };
-            }
-
-            return { status: 'success', data: event[0] };
+            const event = await Calendar.findById(
+                BigInt(eventId),
+                auth.user.id,
+            );
+            return { status: 'success', data: event };
         } catch (error) {
             logger.error({ err: error }, 'Error getting event:');
             return { status: 'error', message: 'Failed to get event' };
@@ -109,29 +88,18 @@ export default {
         const { title, description, startTime, endTime } = httpData.payload;
 
         try {
-            const updateData: any = {};
-            if (title !== undefined) updateData.title = title;
-            if (description !== undefined) updateData.description = description;
-            if (startTime !== undefined) updateData.startTime = new Date(startTime);
-            if (endTime !== undefined) updateData.endTime = new Date(endTime);
+            const updatedEvent = await Calendar.update(
+                BigInt(eventId),
+                auth.user.id,
+                {
+                    title,
+                    description,
+                    startTime,
+                    endTime,
+                },
+            );
 
-            await db.update(calendar)
-                .set(updateData)
-                .where(and(
-                    eq(calendar.id, BigInt(eventId)),
-                    eq(calendar.userId, auth.user.id)
-                ));
-
-            const updatedEvent = await db.select()
-                .from(calendar)
-                .where(eq(calendar.id, BigInt(eventId)))
-                .limit(1);
-
-            if (updatedEvent.length === 0) {
-                return { status: 'error', message: 'Event not found' };
-            }
-
-            return { status: 'success', data: updatedEvent[0] };
+            return { status: 'success', data: updatedEvent };
         } catch (error) {
             logger.error({ err: error }, 'Error updating event:');
             return { status: 'error', message: 'Failed to update event' };
@@ -149,21 +117,7 @@ export default {
         const { eventId } = httpData.params as { eventId: string };
 
         try {
-            await db.delete(calendar)
-                .where(and(
-                    eq(calendar.id, BigInt(eventId)),
-                    eq(calendar.userId, auth.user.id)
-                ));
-
-            // Verify deletion
-            const checkDeleted = await db.select({ count: sql<number>`count(*)` })
-                .from(calendar)
-                .where(eq(calendar.id, BigInt(eventId)));
-
-            if (checkDeleted[0]?.count > 0) {
-                return { status: 'error', message: 'Event not found' };
-            }
-
+            await Calendar.delete(BigInt(eventId), auth.user.id);
             return { status: 'success', message: 'Event deleted successfully' };
         } catch (error) {
             logger.error({ err: error }, 'Error deleting event:');
@@ -184,33 +138,10 @@ export default {
         const { date } = httpData.params as { date: string };
 
         try {
-            const startOfDay = new Date(date);
-            startOfDay.setHours(0, 0, 0, 0);
-
-            const endOfDay = new Date(date);
-            endOfDay.setHours(23, 59, 59, 999);
-
-            const events = await db.select()
-                .from(calendar)
-                .where(and(
-                    eq(calendar.userId, auth.user.id),
-                    or(
-                        and(
-                            gte(calendar.startTime, startOfDay),
-                            lte(calendar.startTime, endOfDay)
-                        ),
-                        and(
-                            gte(calendar.endTime, startOfDay),
-                            lte(calendar.endTime, endOfDay)
-                        ),
-                        and(
-                            lte(calendar.startTime, startOfDay),
-                            gte(calendar.endTime, endOfDay)
-                        )
-                    )
-                ))
-                .orderBy(asc(calendar.startTime));
-
+            const events = await Calendar.findByDate(
+                auth.user.id,
+                new Date(date),
+            );
             return { status: 'success', data: events };
         } catch (error) {
             logger.error({ err: error }, 'Error getting events by date:');
@@ -231,27 +162,11 @@ export default {
         const { startDate, endDate } = httpData.payload;
 
         try {
-            const events = await db.select()
-                .from(calendar)
-                .where(and(
-                    eq(calendar.userId, auth.user.id),
-                    or(
-                        and(
-                            gte(calendar.startTime, new Date(startDate)),
-                            lte(calendar.startTime, new Date(endDate))
-                        ),
-                        and(
-                            gte(calendar.endTime, new Date(startDate)),
-                            lte(calendar.endTime, new Date(endDate))
-                        ),
-                        and(
-                            lte(calendar.startTime, new Date(startDate)),
-                            gte(calendar.endTime, new Date(endDate))
-                        )
-                    )
-                ))
-                .orderBy(asc(calendar.startTime));
-
+            const events = await Calendar.findByRange(
+                auth.user.id,
+                new Date(startDate),
+                new Date(endDate),
+            );
             return { status: 'success', data: events };
         } catch (error) {
             logger.error({ err: error }, 'Error getting events by range:');

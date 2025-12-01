@@ -1,9 +1,7 @@
 import { randomUUID } from 'crypto';
-import { db } from '#database/db.js';
-import { invitations, users } from '#database/schema.js';
-import { eq } from 'drizzle-orm';
 import { HttpContext } from '../../../vendor/types/types.js';
 import inventionAccept from '#app/servises/invention-accept.js';
+import Invitation from '#app/models/Invitation.js';
 import type {
     CreateInvitationResponse,
     GetUserInvitationsResponse,
@@ -36,25 +34,17 @@ export default {
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + expiresIn);
 
-        const now = new Date();
-        const [invitation] = await db.insert(invitations).values({
+        const createdInvitation = await Invitation.create({
             name: name,
             token: Buffer.from(randomUUID()).toString('base64'),
-            userId: BigInt(userId),
+            userId: userId,
             expiresAt,
-            createdAt: now,
-            updatedAt: now,
         });
-
-        const createdInvitation = await db.select()
-            .from(invitations)
-            .where(eq(invitations.id, BigInt(invitation.insertId)))
-            .limit(1);
 
         return {
             status: 'success',
             message: 'Invitation created successfully',
-            token: createdInvitation[0].token,
+            token: createdInvitation.token,
         };
     },
 
@@ -73,25 +63,7 @@ export default {
             return { status: 'error', message: 'User ID is required' };
         }
 
-        const invitationsData = await db.select({
-            id: invitations.id,
-            token: invitations.token,
-            userId: invitations.userId,
-            invitedId: invitations.invitedId,
-            isUsed: invitations.isUsed,
-            expiresAt: invitations.expiresAt,
-            createdAt: invitations.createdAt,
-            updatedAt: invitations.updatedAt,
-            name: invitations.name,
-            invited: {
-                id: users.id,
-                name: users.name,
-                email: users.email,
-            },
-        })
-            .from(invitations)
-            .leftJoin(users, eq(invitations.invitedId, users.id))
-            .where(eq(invitations.userId, BigInt(userId)));
+        const invitationsData = await Invitation.findByUserId(BigInt(userId));
 
         return { status: 'success', invitations: invitationsData };
     },
