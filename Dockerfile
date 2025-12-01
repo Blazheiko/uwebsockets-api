@@ -8,7 +8,7 @@ RUN npm ci
 # Копируем весь проект
 COPY . .
 
-# Генерация Prisma Client и сборка проекта
+# Сборка проекта
 RUN npm run build:docker
 
 
@@ -22,15 +22,6 @@ ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-# Копируем Prisma схему
-COPY --from=builder /app/prisma ./prisma
-
-# Копируем сгенерированный Prisma Client (важно: .prisma с точкой!)
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-
-# Копируем @prisma/client пакет
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-
 # Копируем собранный код
 COPY --from=builder /app/dist ./dist
 
@@ -38,5 +29,8 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/public-test ./public-test
 
-# Запуск миграций и старта
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+# Копируем конфигурационные файлы
+COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
+
+# Запуск приложения
+CMD ["node", "dist/index.js"]

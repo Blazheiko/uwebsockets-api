@@ -1,4 +1,6 @@
-import { prisma } from "#database/prisma.js";
+import { db } from "#database/db.js";
+import { contactList, messages } from "#database/schema.js";
+import { eq, and, sql } from "drizzle-orm";
 import logger from "#logger";
 import broadcastig from "#app/servises/broadcastig.js";
 
@@ -6,37 +8,53 @@ export default async (content: string, userId: string, contactId: string) => {
    if (!contactId || !content || !userId) return null;
                
    // Verify contact exists              
-   const contact = await prisma.contactList.findFirst({where: { userId: Number(userId), contactId: Number(contactId) }});
-   if (!contact) return null;
+   const contact = await db.select()
+       .from(contactList)
+       .where(and(
+           eq(contactList.userId, BigInt(userId)),
+           eq(contactList.contactId, BigInt(contactId))
+       ))
+       .limit(1);
+
+   if (contact.length === 0) return null;
    
-   const message = await prisma.message.create({
-               data: {
-                senderId: Number(userId),
-                receiverId: Number(contactId),
-                content,
-                type: 'TEXT'
-            },
-        });
+   const now = new Date();
+   const [message] = await db.insert(messages).values({
+       senderId: BigInt(userId),
+       receiverId: BigInt(contactId),
+       content,
+       type: 'TEXT',
+       createdAt: now,
+       updatedAt: now,
+   });
 
-        // Update contact's unread count
-    await prisma.contactList.update({
-        where: { id: contact.id },
-        data: {
-            unreadCount: { increment: 1 },
-            lastMessageId: message.id
-        }
-    });
-    const updated = await prisma.contactList.update({
-        where: { userId_contactId: { userId: Number(userId), contactId: Number(contactId) } },
-        data: {
-            updatedAt: new Date(),
-            lastMessageId: message.id
-        }
-    });
-    logger.info(`updated: ${updated}`);
+   const createdMessage = await db.select()
+       .from(messages)
+       .where(eq(messages.id, BigInt(message.insertId)))
+       .limit(1);
 
-    // broadcastMessage(contactId, 'new_message', { message });
-    broadcastig.broadcastMessageToUser(contactId, 'new_message', { message });
+   // Update contact's unread count and last message
+   await db.update(contactList)
+       .set({
+           unreadCount: sql`${contactList.unreadCount} + 1`,
+           lastMessageId: BigInt(message.insertId)
+       })
+       .where(eq(contactList.id, contact[0].id));
 
-    return message;
+   const updated = await db.update(contactList)
+       .set({
+           updatedAt: new Date(),
+           lastMessageId: BigInt(message.insertId)
+       })
+       .where(and(
+           eq(contactList.userId, BigInt(userId)),
+           eq(contactList.contactId, BigInt(contactId))
+       ));
+
+   logger.info(`updated: ${updated}`);
+
+   // broadcastMessage(contactId, 'new_message', { message });
+   broadcastig.broadcastMessageToUser(contactId, 'new_message', { message: createdMessage[0] });
+
+   return createdMessage[0];
 }

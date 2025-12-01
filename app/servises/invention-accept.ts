@@ -1,50 +1,63 @@
-import { prisma } from '#database/prisma.js';
+import { db } from '#database/db.js';
+import { invitations, contactList } from '#database/schema.js';
+import { eq, and } from 'drizzle-orm';
 import ContactList from '../models/contact-list.js';
 import logger from '../../logger.js';
 
 export default async (token: string, userId: number) => {
     console.log('inventionAccept');
-    if(!token || !userId) return;
+    if (!token || !userId) return;
 
-    const invention = await prisma.invitation.findFirst({ where: { token , isUsed: false} });
-    if(!invention || Number(invention.invitedId) === userId) return;
+    const invention = await db.select()
+        .from(invitations)
+        .where(and(eq(invitations.token, token), eq(invitations.isUsed, false)))
+        .limit(1);
 
-    await prisma.invitation.update({
-        where: { id: invention.id },
-        data: {
+    if (invention.length === 0 || Number(invention[0].invitedId) === userId) return;
+
+    await db.update(invitations)
+        .set({
             isUsed: true,
-            invitedId: Number(userId)
-        }
-    });
+            invitedId: BigInt(userId)
+        })
+        .where(eq(invitations.id, invention[0].id));
 
-    const contact = await prisma.contactList.findFirst({
-            where: {userId, contactId: invention.userId},
-            select: {id: true}
-        })
-    if(!contact) {
-        await prisma.contactList.create({
-            data: {
-                userId: Number(userId),
-                contactId: Number(invention.userId),
-                status: 'accepted',
-                rename: null
-            }
-        })
+    const contact = await db.select({ id: contactList.id })
+        .from(contactList)
+        .where(and(
+            eq(contactList.userId, BigInt(userId)),
+            eq(contactList.contactId, invention[0].userId)
+        ))
+        .limit(1);
+
+    const now = new Date();
+    if (contact.length === 0) {
+        await db.insert(contactList).values({
+            userId: BigInt(userId),
+            contactId: invention[0].userId,
+            status: 'accepted',
+            rename: null,
+            createdAt: now,
+            updatedAt: now,
+        });
     }
 
-    const contactOwner = await prisma.contactList.findFirst({
-        where: {userId: invention.userId, contactId: userId,},
-        select: {id: true}
-    })
+    const contactOwner = await db.select({ id: contactList.id })
+        .from(contactList)
+        .where(and(
+            eq(contactList.userId, invention[0].userId),
+            eq(contactList.contactId, BigInt(userId))
+        ))
+        .limit(1);
 
-    if(!contactOwner) {
-        await prisma.contactList.create({
-            data: {
-                userId: Number(invention.userId),
-                contactId: Number(userId),
-                status: 'accepted',
-                rename: invention.name
-            }
-        })
+    if (contactOwner.length === 0) {
+        await db.insert(contactList).values({
+            userId: invention[0].userId,
+            contactId: BigInt(userId),
+            status: 'accepted',
+            rename: invention[0].name,
+            createdAt: now,
+            updatedAt: now,
+        });
     }
 }

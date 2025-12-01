@@ -1,7 +1,8 @@
 import Project from '#app/models/Project.js';
 import { HttpContext } from '../../../vendor/types/types.js';
 import Task from '#app/models/Task.js';
-import { prisma } from '#database/prisma.js';
+import { db } from '#database/db.js';
+import { tasks } from '#database/schema.js';
 import type {
     GetTasksResponse,
     CreateTaskResponse,
@@ -18,7 +19,7 @@ import type {
 export default {
     async testTasks(context: HttpContext): Promise<TestTasksResponse> {
         
-        return { status: 'ok', tasks: await prisma.task.findMany() };
+        return { status: 'ok', tasks: await db.select().from(tasks) };
     },
     async getTasks(context: HttpContext): Promise<GetTasksResponse> {
         const { auth, logger } = context;
@@ -105,7 +106,7 @@ export default {
 
         try {
             const task = await Task.findById(
-                parseInt(taskId),
+                BigInt(taskId),
                 auth.getUserId(),
             );
             return { status: 'success', task };
@@ -145,7 +146,7 @@ export default {
         } = httpData.payload;
 
         try {
-            const task = await Task.update(parseInt(taskId), auth.getUserId(), {
+            const task = await Task.update(BigInt(taskId), auth.getUserId(), {
                 title,
                 description,
                 projectId,
@@ -183,7 +184,7 @@ export default {
         const { taskId } = httpData.params as { taskId: string };
 
         try {
-            await Task.delete(parseInt(taskId), auth.getUserId());
+            await Task.delete(BigInt(taskId), auth.getUserId());
             return { status: 'success', message: 'Task deleted successfully' };
         } catch (error) {
             logger.error({ err: error }, 'Error deleting task:');
@@ -212,7 +213,7 @@ export default {
 
         try {
             const task = await Task.updateStatus(
-                parseInt(taskId),
+                BigInt(taskId),
                 auth.getUserId(),
                 status,
             );
@@ -244,7 +245,7 @@ export default {
 
         try {
             const task = await Task.updateProgress(
-                parseInt(taskId),
+                BigInt(taskId),
                 auth.getUserId(),
                 parseInt(progress),
             );
@@ -275,7 +276,7 @@ export default {
 
         try {
             const tasks = await Task.findByProjectId(
-                parseInt(projectId),
+                BigInt(projectId),
                 auth.getUserId(),
             );
             return { status: 'success', tasks };
@@ -303,7 +304,7 @@ export default {
 
         try {
             const subTasks = await Task.findSubTasks(
-                parseInt(parentTaskId),
+                BigInt(parentTaskId),
                 auth.getUserId(),
             );
             return { status: 'success', tasks: subTasks };

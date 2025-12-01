@@ -119,9 +119,7 @@ export default {
             responseData.status = 401;
             return { status: 'unauthorized', message: 'Session expired' };
         }
-        const user = await User.query().findUnique({
-            where: { id: Number(userId) },
-        });
+        const user = await User.findById(BigInt(userId));
         if (!user) {
             return { status: 'unauthorized', message: 'Session expired' };
         }

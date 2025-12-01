@@ -1,7 +1,7 @@
 import { HttpContext } from '../../../vendor/types/types.js';
-import { prisma } from '#database/prisma.js';
-import pkg from '@prisma/client';
-const { Prisma, PushNotificationStatus } = pkg;
+import { db } from '#database/db.js';
+import { pushSubscriptions, pushNotificationLogs } from '#database/schema.js';
+import { eq, and, gte, desc, sql } from 'drizzle-orm';
 import type {
     GetSubscriptionsResponse,
     CreateSubscriptionResponse,
@@ -27,23 +27,29 @@ export default {
 
         try {
             const userId = auth.getUserId();
-            const subscriptions = await prisma.pushSubscription.findMany({
-                where: { userId },
-                include: {
-                    notificationLogs: {
-                        select: {
-                            id: true,
-                            messageTitle: true,
-                            status: true,
-                            sentAt: true,
-                        },
-                        orderBy: { sentAt: 'desc' },
-                        take: 5,
-                    },
-                },
-                orderBy: { createdAt: 'desc' },
-            });
-            return { status: 'success', subscriptions };
+            const subscriptionsData = await db.select()
+                .from(pushSubscriptions)
+                .where(eq(pushSubscriptions.userId, userId))
+                .orderBy(desc(pushSubscriptions.createdAt));
+
+            // Get recent logs for each subscription
+            const subscriptionsWithLogs = await Promise.all(
+                subscriptionsData.map(async (sub) => {
+                    const logs = await db.select({
+                        id: pushNotificationLogs.id,
+                        messageTitle: pushNotificationLogs.messageTitle,
+                        status: pushNotificationLogs.status,
+                        sentAt: pushNotificationLogs.sentAt,
+                    })
+                        .from(pushNotificationLogs)
+                        .where(eq(pushNotificationLogs.subscriptionId, sub.id))
+                        .orderBy(desc(pushNotificationLogs.sentAt))
+                        .limit(5);
+                    return { ...sub, notificationLogs: logs };
+                })
+            );
+
+            return { status: 'success', subscriptions: subscriptionsWithLogs };
         } catch (error) {
             logger.error({ err: error }, 'Error getting subscriptions:');
             return { status: 'error', message: 'Failed to get subscriptions' };
@@ -78,55 +84,66 @@ export default {
 
         try {
             // Check if subscription already exists for this endpoint
-            const existingSubscription =
-                await prisma.pushSubscription.findUnique({
-                    where: { endpoint },
-                });
+            const existingSubscription = await db.select()
+                .from(pushSubscriptions)
+                .where(eq(pushSubscriptions.endpoint, endpoint))
+                .limit(1);
 
-            if (existingSubscription) {
+            if (existingSubscription.length > 0) {
                 // Update existing subscription
-                const updatedSubscription =
-                    await prisma.pushSubscription.update({
-                        where: { endpoint },
-                        data: {
-                            p256dhKey,
-                            authKey,
-                            userAgent,
-                            ipAddress,
-                            deviceType,
-                            browserName,
-                            browserVersion,
-                            osName,
-                            osVersion,
-                            notificationTypes,
-                            timezone,
-                            isActive: true,
-                            lastUsedAt: new Date(),
-                            userId: auth.getUserId(),
-                        },
-                    });
-                return { status: 'success', subscription: updatedSubscription };
+                await db.update(pushSubscriptions)
+                    .set({
+                        p256dhKey,
+                        authKey,
+                        userAgent,
+                        ipAddress,
+                        deviceType,
+                        browserName,
+                        browserVersion,
+                        osName,
+                        osVersion,
+                        notificationTypes,
+                        timezone,
+                        isActive: true,
+                        lastUsedAt: new Date(),
+                        userId: auth.getUserId(),
+                    })
+                    .where(eq(pushSubscriptions.endpoint, endpoint));
+
+                const updatedSubscription = await db.select()
+                    .from(pushSubscriptions)
+                    .where(eq(pushSubscriptions.endpoint, endpoint))
+                    .limit(1);
+
+                return { status: 'success', subscription: updatedSubscription[0] };
             }
 
-            const subscription = await prisma.pushSubscription.create({
-                data: {
-                    endpoint,
-                    p256dhKey,
-                    authKey,
-                    userAgent,
-                    ipAddress,
-                    deviceType,
-                    browserName,
-                    browserVersion,
-                    osName,
-                    osVersion,
-                    notificationTypes,
-                    timezone,
-                    userId: auth.getUserId(),
-                    lastUsedAt: new Date(),
-                },
+            const now = new Date();
+            const [subscription] = await db.insert(pushSubscriptions).values({
+                endpoint,
+                p256dhKey,
+                authKey,
+                userAgent,
+                ipAddress,
+                deviceType,
+                browserName,
+                browserVersion,
+                osName,
+                osVersion,
+                notificationTypes,
+                timezone,
+                userId: auth.getUserId(),
+                lastUsedAt: now,
+                createdAt: now,
+                updatedAt: now,
             });
-            return { status: 'success', subscription };
+
+            const createdSubscription = await db.select()
+                .from(pushSubscriptions)
+                .where(eq(pushSubscriptions.id, BigInt(subscription.insertId)))
+                .limit(1);
+
+            return { status: 'success', subscription: createdSubscription[0] };
         } catch (error) {
             logger.error({ err: error }, 'Error creating subscription:');
             return {
@@ -152,24 +169,25 @@ export default {
         };
 
         try {
-            const subscription = await prisma.pushSubscription.findFirst({
-                where: {
-                    id: parseInt(subscriptionId),
-                    userId: auth.getUserId(),
-                },
-                include: {
-                    notificationLogs: {
-                        orderBy: { sentAt: 'desc' },
-                        take: 10,
-                    },
-                },
-            });
+            const subscription = await db.select()
+                .from(pushSubscriptions)
+                .where(and(
+                    eq(pushSubscriptions.id, BigInt(subscriptionId)),
+                    eq(pushSubscriptions.userId, auth.getUserId())
+                ))
+                .limit(1);
 
-            if (!subscription) {
+            if (subscription.length === 0) {
                 return { status: 'error', message: 'Subscription not found' };
             }
 
-            return { status: 'success', data: subscription };
+            const logs = await db.select()
+                .from(pushNotificationLogs)
+                .where(eq(pushNotificationLogs.subscriptionId, BigInt(subscriptionId)))
+                .orderBy(desc(pushNotificationLogs.sentAt))
+                .limit(10);
+
+            return { status: 'success', data: { ...subscription[0], notificationLogs: logs } };
         } catch (error) {
             logger.error({ err: error }, 'Error getting subscription:');
             return { status: 'error', message: 'Failed to get subscription' };
@@ -202,37 +220,29 @@ export default {
         } = httpData.payload;
 
         try {
-            const updateData: any = {};
+            const updateData: any = { lastUsedAt: new Date() };
             if (isActive !== undefined) updateData.isActive = isActive;
-            if (notificationTypes !== undefined)
-                updateData.notificationTypes = notificationTypes;
+            if (notificationTypes !== undefined) updateData.notificationTypes = notificationTypes;
             if (timezone !== undefined) updateData.timezone = timezone;
             if (deviceType !== undefined) updateData.deviceType = deviceType;
             if (browserName !== undefined) updateData.browserName = browserName;
-            if (browserVersion !== undefined)
-                updateData.browserVersion = browserVersion;
+            if (browserVersion !== undefined) updateData.browserVersion = browserVersion;
             if (osName !== undefined) updateData.osName = osName;
             if (osVersion !== undefined) updateData.osVersion = osVersion;
-            updateData.lastUsedAt = new Date();
 
-            const subscription = await prisma.pushSubscription.updateMany({
-                where: {
-                    id: parseInt(subscriptionId),
-                    userId: auth.getUserId(),
-                },
-                data: updateData,
-            });
+            await db.update(pushSubscriptions)
+                .set(updateData)
+                .where(and(
+                    eq(pushSubscriptions.id, BigInt(subscriptionId)),
+                    eq(pushSubscriptions.userId, auth.getUserId())
+                ));
 
-            if (subscription.count === 0) {
-                return { status: 'error', message: 'Subscription not found' };
-            }
+            const updatedSubscription = await db.select()
+                .from(pushSubscriptions)
+                .where(eq(pushSubscriptions.id, BigInt(subscriptionId)))
+                .limit(1);
 
-            const updatedSubscription =
-                await prisma.pushSubscription.findUnique({
-                    where: { id: parseInt(subscriptionId) },
-                });
-
-            return { status: 'success', subscription: updatedSubscription };
+            return { status: 'success', subscription: updatedSubscription[0] };
         } catch (error) {
             logger.error({ err: error }, 'Error updating subscription:');
             return {
@@ -258,14 +268,19 @@ export default {
         };
 
         try {
-            const deleted = await prisma.pushSubscription.deleteMany({
-                where: {
-                    id: parseInt(subscriptionId),
-                    userId: auth.getUserId(),
-                },
-            });
+            const deleted = await db.delete(pushSubscriptions)
+                .where(and(
+                    eq(pushSubscriptions.id, BigInt(subscriptionId)),
+                    eq(pushSubscriptions.userId, auth.getUserId())
+                ));
 
-            if (deleted.count === 0) {
+            // For MySQL, check if deletion was successful differently
+            // deleted is the result, but we need to check the actual deletion
+            const checkDeleted = await db.select({ count: sql<number>`count(*)` })
+                .from(pushSubscriptions)
+                .where(eq(pushSubscriptions.id, BigInt(subscriptionId)));
+            
+            if (checkDeleted[0]?.count > 0) {
                 return { status: 'error', message: 'Subscription not found' };
             }
 
@@ -298,14 +313,14 @@ export default {
         };
 
         try {
-            const logs = await prisma.pushNotificationLog.findMany({
-                where: {
-                    subscriptionId: parseInt(subscriptionId),
-                    userId: auth.getUserId(),
-                },
-                orderBy: { sentAt: 'desc' },
-                take: 50,
-            });
+            const logs = await db.select()
+                .from(pushNotificationLogs)
+                .where(and(
+                    eq(pushNotificationLogs.subscriptionId, BigInt(subscriptionId)),
+                    eq(pushNotificationLogs.userId, auth.getUserId())
+                ))
+                .orderBy(desc(pushNotificationLogs.sentAt))
+                .limit(50);
 
             return { status: 'success', data: logs };
         } catch (error) {
@@ -333,36 +348,36 @@ export default {
         };
 
         try {
-            const subscription = await prisma.pushSubscription.findFirst({
-                where: {
-                    id: parseInt(subscriptionId),
-                    userId: auth.getUserId(),
-                },
-                include: {
-                    notificationLogs: true,
-                },
-            });
+            const subscription = await db.select()
+                .from(pushSubscriptions)
+                .where(and(
+                    eq(pushSubscriptions.id, BigInt(subscriptionId)),
+                    eq(pushSubscriptions.userId, auth.getUserId())
+                ))
+                .limit(1);
 
-            if (!subscription) {
+            if (subscription.length === 0) {
                 return { status: 'error', message: 'Subscription not found' };
             }
 
-            const logs = subscription.notificationLogs;
+            const logs = await db.select()
+                .from(pushNotificationLogs)
+                .where(eq(pushNotificationLogs.subscriptionId, BigInt(subscriptionId)));
+
             const totalNotifications = logs.length;
             const sentNotifications = logs.filter(
-                (log: any) => log.status === PushNotificationStatus.SENT,
+                (log: any) => log.status === 'SENT',
             ).length;
             const failedNotifications = logs.filter(
-                (log: any) => log.status === PushNotificationStatus.FAILED,
+                (log: any) => log.status === 'FAILED',
             ).length;
             const pendingNotifications = logs.filter(
-                (log: any) => log.status === PushNotificationStatus.PENDING,
+                (log: any) => log.status === 'PENDING',
             ).length;
 
+            const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
             const last7DaysLogs = logs.filter(
-                (log: any) =>
-                    new Date(log.sentAt) >=
-                    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+                (log: any) => new Date(log.sentAt) >= sevenDaysAgo,
             );
 
             const statistics = {
@@ -375,12 +390,12 @@ export default {
                         ? (sentNotifications / totalNotifications) * 100
                         : 0,
                 last7DaysCount: last7DaysLogs.length,
-                lastUsed: subscription.lastUsedAt,
-                isActive: subscription.isActive,
-                createdAt: subscription.createdAt,
+                lastUsed: subscription[0].lastUsedAt,
+                isActive: subscription[0].isActive,
+                createdAt: subscription[0].createdAt,
             };
 
-            return { status: 'success', data: { subscription, statistics } };
+            return { status: 'success', data: { subscription: subscription[0], statistics } };
         } catch (error) {
             logger.error(
                 { err: error },
@@ -409,26 +424,31 @@ export default {
         };
 
         try {
-            const subscription = await prisma.pushSubscription.updateMany({
-                where: {
-                    id: parseInt(subscriptionId),
-                    userId: auth.getUserId(),
-                },
-                data: {
-                    isActive: false,
-                },
-            });
+            await db.update(pushSubscriptions)
+                .set({ isActive: false })
+                .where(and(
+                    eq(pushSubscriptions.id, BigInt(subscriptionId)),
+                    eq(pushSubscriptions.userId, auth.getUserId())
+                ));
 
-            if (subscription.count === 0) {
+            // Verify update was successful
+            const checkResult = await db.select({ count: sql<number>`count(*)` })
+                .from(pushSubscriptions)
+                .where(and(
+                    eq(pushSubscriptions.id, BigInt(subscriptionId)),
+                    eq(pushSubscriptions.userId, auth.getUserId())
+                ));
+
+            if (checkResult[0]?.count === 0) {
                 return { status: 'error', message: 'Subscription not found' };
             }
 
-            const deactivatedSubscription =
-                await prisma.pushSubscription.findUnique({
-                    where: { id: parseInt(subscriptionId) },
-                });
+            const deactivatedSubscription = await db.select()
+                .from(pushSubscriptions)
+                .where(eq(pushSubscriptions.id, BigInt(subscriptionId)))
+                .limit(1);
 
-            return { status: 'success', data: deactivatedSubscription };
+            return { status: 'success', data: deactivatedSubscription[0] };
         } catch (error) {
             logger.error({ err: error }, 'Error deactivating subscription:');
             return {

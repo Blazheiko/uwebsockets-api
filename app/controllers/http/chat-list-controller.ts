@@ -1,5 +1,7 @@
 import { HttpContext } from './../../../vendor/types/types.js';
-import { prisma } from '#database/prisma.js';
+import { db } from '#database/db.js';
+import { contactList, users, messages } from '#database/schema.js';
+import { eq, and, or, desc } from 'drizzle-orm';
 import { getOnlineUser } from '#vendor/utils/network/ws-handlers.js';
 import type {
     GetContactListResponse,
@@ -7,6 +9,7 @@ import type {
     DeleteChatResponse,
     Contact,
 } from '../types/ChatListController.js';
+
 export default {
     async getContactList({
         session,
@@ -32,21 +35,33 @@ export default {
         }
 
         // Get chat list with contacts
-        const contactList = await prisma.contactList.findMany({
-            where: { userId },
-            include: {
-                contact: {
-                    select: { id: true, name: true },
-                },
-                lastMessage: true,
+        const contactListData = await db.select({
+            id: contactList.id,
+            userId: contactList.userId,
+            contactId: contactList.contactId,
+            status: contactList.status,
+            unreadCount: contactList.unreadCount,
+            createdAt: contactList.createdAt,
+            updatedAt: contactList.updatedAt,
+            rename: contactList.rename,
+            lastMessageId: contactList.lastMessageId,
+            contact: {
+                id: users.id,
+                name: users.name,
             },
-            orderBy: { updatedAt: 'desc' },
-        });
+            lastMessage: messages,
+        })
+            .from(contactList)
+            .leftJoin(users, eq(contactList.contactId, users.id))
+            .leftJoin(messages, eq(contactList.lastMessageId, messages.id))
+            .where(eq(contactList.userId, BigInt(userId)))
+            .orderBy(desc(contactList.updatedAt));
+
         const onlineUsers = getOnlineUser(
-            contactList.map((contact: Contact) => String(contact.contactId)),
+            contactListData.map((contact: any) => String(contact.contactId)),
         );
 
-        return { status: 'ok', contactList, onlineUsers };
+        return { status: 'ok', contactList: contactListData as any, onlineUsers };
     },
 
     async createChat({
@@ -70,49 +85,45 @@ export default {
         }
 
         // Check if participant exists
-        const participant = await prisma.user.findUnique({
-            where: { id: participantId },
-        });
+        const participant = await db.select()
+            .from(users)
+            .where(eq(users.id, BigInt(participantId)))
+            .limit(1);
 
-        if (!participant) {
+        if (participant.length === 0) {
             return { status: 'error', message: 'Participant not found' };
         }
 
         // Check if chat already exists
-        const existingChat = await prisma.contactList.findFirst({
-            where: {
-                OR: [
-                    {
-                        AND: [{ userId }, { contactId: participantId }],
-                    },
-                    {
-                        AND: [{ userId: participantId }, { contactId: userId }],
-                    },
-                ],
-            },
-            include: {
-                user: true,
-                contact: true,
-            },
-        });
+        const existingChat = await db.select()
+            .from(contactList)
+            .leftJoin(users, eq(contactList.contactId, users.id))
+            .where(or(
+                and(eq(contactList.userId, BigInt(userId)), eq(contactList.contactId, BigInt(participantId))),
+                and(eq(contactList.userId, BigInt(participantId)), eq(contactList.contactId, BigInt(userId)))
+            ))
+            .limit(1);
 
-        if (existingChat) {
-            return { status: 'ok', chat: existingChat };
+        if (existingChat.length > 0) {
+            return { status: 'ok', chat: existingChat[0]?.contact_list as any };
         }
 
-        const chat = await prisma.contactList.create({
-            data: {
-                userId,
-                contactId: participantId,
-                status: 'accepted',
-            },
-            include: {
-                user: true,
-                contact: true,
-            },
+        const now = new Date();
+        const [chat] = await db.insert(contactList).values({
+            userId: BigInt(userId),
+            contactId: BigInt(participantId),
+            status: 'accepted',
+            createdAt: now,
+            updatedAt: now,
         });
 
-        return { status: 'ok', chat };
+        const createdChat = await db.select()
+            .from(contactList)
+            .leftJoin(users, eq(contactList.contactId, users.id))
+            .where(eq(contactList.id, BigInt(chat.insertId)))
+            .limit(1);
+
+        return { status: 'ok', chat: createdChat[0]?.contact_list as any };
     },
 
     async deleteChat({
@@ -135,23 +146,25 @@ export default {
             return { status: 'error', message: 'Chat ID is required' };
         }
 
-        const chat = await prisma.contactList.findFirst({
-            where: {
-                id: chatId,
-                OR: [{ userId }, { contactId: userId }],
-            },
-        });
+        const chat = await db.select()
+            .from(contactList)
+            .where(and(
+                eq(contactList.id, BigInt(chatId)),
+                or(
+                    eq(contactList.userId, BigInt(userId)),
+                    eq(contactList.contactId, BigInt(userId))
+                )
+            ))
+            .limit(1);
 
-        if (!chat) {
+        if (chat.length === 0) {
             return {
                 status: 'error',
                 message: 'Chat not found or access denied',
             };
         }
 
-        await prisma.contactList.delete({
-            where: { id: chatId },
-        });
+        await db.delete(contactList).where(eq(contactList.id, BigInt(chatId)));
 
         return { status: 'ok', message: 'Chat deleted successfully' };
     },

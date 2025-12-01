@@ -1,8 +1,8 @@
-import { prisma } from '#database/prisma.js';
+import { db } from '#database/db.js';
+import { projects, tasks } from '#database/schema.js';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import { serializeModel } from '#vendor/utils/serialization/serialize-model.js';
-import pkg from '@prisma/client';
-const { Prisma, ProjectStatus } = pkg;
 import logger from '#logger';
 
 const schema = {
@@ -19,6 +19,8 @@ const schema = {
 const required = ['title', 'userId'];
 const hidden: string[] = [];
 
+const projectStatuses = ['planning', 'in_progress', 'on_hold', 'completed', 'archived'] as const;
+
 export default {
     async create(payload: any) {
         logger.info('create project');
@@ -34,305 +36,257 @@ export default {
             }
         }
 
-        const project = await prisma.project.create({
-            data: {
-                title: payload.title,
-                description: payload.description,
-                color: payload.color,
-                userId: payload.userId,
-                status: payload.status || ProjectStatus.planning,
-                dueDate: payload.dueDate ? new Date(payload.dueDate) : null,
-                startDate: payload.startDate
-                    ? new Date(payload.startDate)
-                    : null,
-                endDate: payload.endDate ? new Date(payload.endDate) : null,
-                progress: payload.progress || 0,
-                isActive:
-                    payload.isActive !== undefined ? payload.isActive : true,
-            },
-            include: {
-                tasks: {
-                    select: {
-                        id: true,
-                        title: true,
-                        status: true,
-                        progress: true,
-                        isCompleted: true,
-                    },
-                },
-            },
+        const now = new Date();
+        const [project] = await db.insert(projects).values({
+            title: payload.title,
+            description: payload.description || null,
+            color: payload.color || null,
+            userId: BigInt(payload.userId),
+            status: payload.status || 'planning',
+            dueDate: payload.dueDate ? new Date(payload.dueDate) : null,
+            startDate: payload.startDate ? new Date(payload.startDate) : null,
+            endDate: payload.endDate ? new Date(payload.endDate) : null,
+            progress: payload.progress || 0,
+            isActive: payload.isActive !== undefined ? payload.isActive : true,
+            createdAt: now,
+            updatedAt: now,
         });
 
-        return serializeModel(project, schema, hidden);
+        const createdProject = await db.select()
+            .from(projects)
+            .where(eq(projects.id, BigInt(project.insertId)))
+            .limit(1);
+
+        return serializeModel(createdProject[0], schema, hidden);
     },
 
-    async findById(id: number, userId: number) {
+    async findById(id: bigint, userId: bigint) {
         logger.info(`find project by id: ${id} for user: ${userId}`);
 
-        const project = await prisma.project.findFirst({
-            where: {
-                id,
-                userId,
-            },
-            include: {
-                tasks: {
-                    include: {
-                        subTasks: true,
-                    },
-                },
-            },
-        });
+        const project = await db.select()
+            .from(projects)
+            .where(and(eq(projects.id, id), eq(projects.userId, userId)))
+            .limit(1);
 
-        if (!project) {
+        if (project.length === 0) {
             throw new Error(`Project with id ${id} not found`);
         }
 
-        return serializeModel(project, schema, hidden);
+        // Get tasks for the project
+        const projectTasks = await db.select()
+            .from(tasks)
+            .where(eq(tasks.projectId, id));
+
+        return serializeModel({ ...project[0], tasks: projectTasks }, schema, hidden);
     },
 
-    async getShortProjects(userId: number) {
+    async getShortProjects(userId: bigint) {
         logger.info(`get projects for user: ${userId}`);
 
-        const projects = await prisma.project.findMany({
-            where: { userId, isActive: true },
-            select: {
-                id: true,
-                title: true,
-                isActive: true,
-            },
-        });
+        const projectsData = await db.select({
+            id: projects.id,
+            title: projects.title,
+            isActive: projects.isActive,
+        })
+            .from(projects)
+            .where(and(eq(projects.userId, userId), eq(projects.isActive, true)));
 
-        return projects;
+        return projectsData;
     },
 
-    async findByUserId(userId: number) {
+    async findByUserId(userId: bigint) {
         logger.info(`find all projects for user: ${userId}`);
 
-        const projects = await prisma.project.findMany({
-            where: { userId },
-            include: {
-                tasks: {
-                    select: {
-                        id: true,
-                        title: true,
-                        status: true,
-                        progress: true,
-                        isCompleted: true,
-                    },
-                },
-            },
-            orderBy: { createdAt: 'desc' },
-        });
+        const projectsData = await db.select()
+            .from(projects)
+            .where(eq(projects.userId, userId))
+            .orderBy(desc(projects.createdAt));
 
-        return this.serializeArray(projects);
+        // Get tasks for each project
+        const projectsWithTasks = await Promise.all(
+            projectsData.map(async (project) => {
+                const projectTasks = await db.select({
+                    id: tasks.id,
+                    title: tasks.title,
+                    status: tasks.status,
+                    progress: tasks.progress,
+                    isCompleted: tasks.isCompleted,
+                })
+                    .from(tasks)
+                    .where(eq(tasks.projectId, project.id));
+                return { ...project, tasks: projectTasks };
+            })
+        );
+
+        return this.serializeArray(projectsWithTasks);
     },
 
-    async update(id: number, userId: number, payload: any) {
+    async update(id: bigint, userId: bigint, payload: any) {
         logger.info(`update project id: ${id} for user: ${userId}`);
 
         const updateData: any = {
-            updatedAt: DateTime.now().toISO(),
+            updatedAt: new Date(),
         };
 
         if (payload.title !== undefined) updateData.title = payload.title;
-        if (payload.description !== undefined)
-            updateData.description = payload.description;
+        if (payload.description !== undefined) updateData.description = payload.description;
         if (payload.color !== undefined) updateData.color = payload.color;
-        if (payload.progress !== undefined)
-            updateData.progress = payload.progress;
-        if (payload.isActive !== undefined)
-            updateData.isActive = payload.isActive;
+        if (payload.progress !== undefined) updateData.progress = payload.progress;
+        if (payload.isActive !== undefined) updateData.isActive = payload.isActive;
         if (payload.status !== undefined) updateData.status = payload.status;
-        if (payload.startDate !== undefined)
-            updateData.startDate = payload.startDate
-                ? new Date(payload.startDate)
-                : null;
-        if (payload.endDate !== undefined)
-            updateData.endDate = payload.endDate
-                ? new Date(payload.endDate)
-                : null;
-        if (payload.dueDate !== undefined)
-            updateData.dueDate = payload.dueDate
-                ? new Date(payload.dueDate)
-                : null;
+        if (payload.startDate !== undefined) {
+            updateData.startDate = payload.startDate ? new Date(payload.startDate) : null;
+        }
+        if (payload.endDate !== undefined) {
+            updateData.endDate = payload.endDate ? new Date(payload.endDate) : null;
+        }
+        if (payload.dueDate !== undefined) {
+            updateData.dueDate = payload.dueDate ? new Date(payload.dueDate) : null;
+        }
 
-        const result = await prisma.project.updateMany({
-            where: {
-                id,
-                userId,
-            },
-            data: updateData,
-        });
+        await db.update(projects)
+            .set(updateData)
+            .where(and(eq(projects.id, id), eq(projects.userId, userId)));
 
-        if (result.count === 0) {
+        const updatedProject = await db.select()
+            .from(projects)
+            .where(eq(projects.id, id))
+            .limit(1);
+
+        if (updatedProject.length === 0) {
             throw new Error('Project not found or access denied');
         }
 
-        const updatedProject = await prisma.project.findUnique({
-            where: { id },
-            include: {
-                tasks: {
-                    select: {
-                        id: true,
-                        title: true,
-                        status: true,
-                        progress: true,
-                        isCompleted: true,
-                    },
-                },
-            },
-        });
+        // Get tasks for the project
+        const projectTasks = await db.select({
+            id: tasks.id,
+            title: tasks.title,
+            status: tasks.status,
+            progress: tasks.progress,
+            isCompleted: tasks.isCompleted,
+        })
+            .from(tasks)
+            .where(eq(tasks.projectId, id));
 
-        return serializeModel(updatedProject, schema, hidden);
+        return serializeModel({ ...updatedProject[0], tasks: projectTasks }, schema, hidden);
     },
 
-    async delete(id: number, userId: number) {
+    async delete(id: bigint, userId: bigint) {
         logger.info(`delete project id: ${id} for user: ${userId}`);
 
-        // Start transaction to handle tasks and project deletion
-        const result = await prisma.$transaction(async (prisma: any) => {
-            // First, update all tasks to remove project reference
-            await prisma.task.updateMany({
-                where: {
-                    projectId: id,
-                    userId: userId,
-                },
-                data: { projectId: null },
-            });
+        // First, update all tasks to remove project reference
+        await db.update(tasks)
+            .set({ projectId: null })
+            .where(and(eq(tasks.projectId, id), eq(tasks.userId, userId)));
 
-            // Then delete the project
-            const deleted = await prisma.project.deleteMany({
-                where: {
-                    id,
-                    userId,
-                },
-            });
+        // Then delete the project
+        const deleted = await db.delete(projects)
+            .where(and(eq(projects.id, id), eq(projects.userId, userId)));
 
-            if (deleted.count === 0) {
-                throw new Error('Project not found or access denied');
-            }
-
-            return deleted;
-        });
-
-        return result;
-    },
-
-    async archive(id: number, userId: number) {
-        logger.info(`archive project id: ${id} for user: ${userId}`);
-
-        const result = await prisma.project.updateMany({
-            where: {
-                id,
-                userId,
-            },
-            data: {
-                status: ProjectStatus.archived,
-                isActive: false,
-                endDate: new Date(),
-                updatedAt: DateTime.now().toISO(),
-            },
-        });
-
-        if (result.count === 0) {
+        const checkDeleted = await db.select({ count: sql<number>`count(*)` })
+            .from(projects)
+            .where(and(eq(projects.id, id), eq(projects.userId, userId)));
+        
+        if (checkDeleted[0]?.count === 0) {
             throw new Error('Project not found or access denied');
         }
 
-        const archivedProject = await prisma.project.findUnique({
-            where: { id },
-            include: {
-                tasks: {
-                    select: {
-                        id: true,
-                        title: true,
-                        status: true,
-                        progress: true,
-                        isCompleted: true,
-                    },
-                },
-            },
-        });
-
-        return serializeModel(archivedProject, schema, hidden);
+        return deleted;
     },
 
-    async getProjectTasks(id: number, userId: number) {
+    async archive(id: bigint, userId: bigint) {
+        logger.info(`archive project id: ${id} for user: ${userId}`);
+
+        await db.update(projects)
+            .set({
+                status: 'archived',
+                isActive: false,
+                endDate: new Date(),
+                updatedAt: new Date(),
+            })
+            .where(and(eq(projects.id, id), eq(projects.userId, userId)));
+
+        const archivedProject = await db.select()
+            .from(projects)
+            .where(eq(projects.id, id))
+            .limit(1);
+
+        if (archivedProject.length === 0) {
+            throw new Error('Project not found or access denied');
+        }
+
+        // Get tasks for the project
+        const projectTasks = await db.select({
+            id: tasks.id,
+            title: tasks.title,
+            status: tasks.status,
+            progress: tasks.progress,
+            isCompleted: tasks.isCompleted,
+        })
+            .from(tasks)
+            .where(eq(tasks.projectId, id));
+
+        return serializeModel({ ...archivedProject[0], tasks: projectTasks }, schema, hidden);
+    },
+
+    async getProjectTasks(id: bigint, userId: bigint) {
         logger.info(`get tasks for project id: ${id} for user: ${userId}`);
 
         // First verify project belongs to user
-        const project = await prisma.project.findFirst({
-            where: { id, userId },
-        });
+        const project = await db.select()
+            .from(projects)
+            .where(and(eq(projects.id, id), eq(projects.userId, userId)))
+            .limit(1);
 
-        if (!project) {
+        if (project.length === 0) {
             throw new Error('Project not found or access denied');
         }
 
-        const tasks = await prisma.task.findMany({
-            where: {
-                projectId: id,
-                userId: userId,
-            },
-            include: {
-                subTasks: true,
-                parentTask: true,
-            },
-            orderBy: { createdAt: 'desc' },
-        });
+        const projectTasks = await db.select()
+            .from(tasks)
+            .where(and(eq(tasks.projectId, id), eq(tasks.userId, userId)))
+            .orderBy(desc(tasks.createdAt));
 
-        return tasks;
+        return projectTasks;
     },
 
-    async getProjectStatistics(id: number, userId: number) {
+    async getProjectStatistics(id: bigint, userId: bigint) {
         logger.info(`get statistics for project id: ${id} for user: ${userId}`);
 
-        const project = await prisma.project.findFirst({
-            where: {
-                id,
-                userId,
-            },
-            include: { tasks: true },
-        });
+        const project = await db.select()
+            .from(projects)
+            .where(and(eq(projects.id, id), eq(projects.userId, userId)))
+            .limit(1);
 
-        if (!project) {
+        if (project.length === 0) {
             throw new Error('Project not found or access denied');
         }
 
-        const tasks = project.tasks;
-        const totalTasks = tasks.length;
-        const completedTasks = tasks.filter(
-            (task: any) => task.isCompleted,
-        ).length;
-        const inProgressTasks = tasks.filter(
-            (task: any) => task.status === 'IN_PROGRESS',
-        ).length;
-        const todoTasks = tasks.filter(
-            (task: any) => task.status === 'TODO',
-        ).length;
-        const onHoldTasks = tasks.filter(
-            (task: any) => task.status === 'ON_HOLD',
-        ).length;
-        const cancelledTasks = tasks.filter(
-            (task: any) => task.status === 'CANCELLED',
-        ).length;
+        const projectTasks = await db.select()
+            .from(tasks)
+            .where(eq(tasks.projectId, id));
 
-        const totalEstimatedHours = tasks.reduce(
-            (sum: number, task: any) => sum + (task.estimatedHours || 0),
+        const totalTasks = projectTasks.length;
+        const completedTasks = projectTasks.filter((task: any) => task.isCompleted).length;
+        const inProgressTasks = projectTasks.filter((task: any) => task.status === 'IN_PROGRESS').length;
+        const todoTasks = projectTasks.filter((task: any) => task.status === 'TODO').length;
+        const onHoldTasks = projectTasks.filter((task: any) => task.status === 'ON_HOLD').length;
+        const cancelledTasks = projectTasks.filter((task: any) => task.status === 'CANCELLED').length;
+
+        const totalEstimatedHours = projectTasks.reduce(
+            (sum: number, task: any) => sum + (Number(task.estimatedHours) || 0),
             0,
         );
-        const totalActualHours = tasks.reduce(
-            (sum: number, task: any) => sum + (task.actualHours || 0),
+        const totalActualHours = projectTasks.reduce(
+            (sum: number, task: any) => sum + (Number(task.actualHours) || 0),
             0,
         );
         const averageProgress =
             totalTasks > 0
-                ? tasks.reduce(
-                      (sum: number, task: any) => sum + task.progress,
-                      0,
-                  ) / totalTasks
+                ? projectTasks.reduce((sum: number, task: any) => sum + Number(task.progress), 0) / totalTasks
                 : 0;
 
-        const overdueTasks = tasks.filter(
+        const overdueTasks = projectTasks.filter(
             (task: any) =>
                 task.dueDate &&
                 new Date(task.dueDate) < new Date() &&
@@ -347,35 +301,32 @@ export default {
             onHoldTasks,
             cancelledTasks,
             overdueTasks,
-            completionRate:
-                totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0,
+            completionRate: totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0,
             averageProgress: Math.round(averageProgress),
             totalEstimatedHours,
             totalActualHours,
             timeVariance:
                 totalEstimatedHours > 0
-                    ? ((totalActualHours - totalEstimatedHours) /
-                          totalEstimatedHours) *
-                      100
+                    ? ((totalActualHours - totalEstimatedHours) / totalEstimatedHours) * 100
                     : 0,
         };
 
         return {
-            project: serializeModel(project, schema, hidden),
+            project: serializeModel(project[0], schema, hidden),
             statistics,
         };
     },
 
     query() {
-        return prisma.project;
+        return db.select().from(projects);
     },
 
     serialize(project: any) {
         return serializeModel(project, schema, hidden);
     },
 
-    serializeArray(projects: any) {
-        return projects.map((project: any) =>
+    serializeArray(projectsData: any) {
+        return projectsData.map((project: any) =>
             serializeModel(project, schema, hidden),
         );
     },

@@ -23,7 +23,7 @@ export interface Contact {
     contact: {
         id: bigint;
         name: string;
-    };
+    } | null;
     lastMessage?: {
         id: bigint;
         content: string;

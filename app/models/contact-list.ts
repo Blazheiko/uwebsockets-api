@@ -1,4 +1,6 @@
-import { prisma } from '#database/prisma.js';
+import { db } from '#database/db.js';
+import { contactList, users } from '#database/schema.js';
+import { eq, and } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import { serializeModel } from '#vendor/utils/serialization/serialize-model.js';
 import logger from '#logger';
@@ -24,33 +26,41 @@ export default {
         }
 
         // Check if contact already exists
-        const existingContact = await prisma.contactList.findUnique({
-            where: {
-                userId_contactId: {
-                    userId: payload.userId,
-                    contactId: payload.contactId,
-                },
-            },
-        });
+        const existingContact = await db
+            .select()
+            .from(contactList)
+            .where(
+                and(
+                    eq(contactList.userId, BigInt(payload.userId)),
+                    eq(contactList.contactId, BigInt(payload.contactId)),
+                ),
+            )
+            .limit(1);
 
-        if (existingContact) {
+        if (existingContact.length > 0) {
             throw new Error('Contact already exists in contact list');
         }
-        let contact = null;
 
+        let contact = null;
         try {
-            contact = await prisma.contactList.create({
-                data: {
-                    userId: payload.userId,
-                    contactId: payload.contactId,
-                    status: payload.status || 'pending',
-                    rename: payload.rename || null,
-                },
-                include: {
-                    user: false,
-                    contact: true,
-                },
+            const now = new Date();
+            const [result] = await db.insert(contactList).values({
+                userId: BigInt(payload.userId),
+                contactId: BigInt(payload.contactId),
+                status: payload.status || 'pending',
+                rename: payload.rename || null,
+                createdAt: now,
+                updatedAt: now,
             });
+
+            // Get created contact with user data
+            const createdContact = await db
+                .select()
+                .from(contactList)
+                .where(eq(contactList.id, BigInt(result.insertId)))
+                .limit(1);
+
+            contact = createdContact[0];
         } catch (e) {
             logger.error({ err: e });
             throw new Error('Error creating contact');
@@ -59,58 +69,55 @@ export default {
         return serializeModel(contact, schema, hidden);
     },
 
-    async findById(id: number) {
-        const contact = await prisma.contactList.findUnique({
-            where: { id },
-            include: {
-                user: true,
-                contact: true,
-            },
-        });
+    async findById(id: bigint) {
+        const contact = await db
+            .select()
+            .from(contactList)
+            .where(eq(contactList.id, id))
+            .limit(1);
 
-        if (!contact) {
+        if (contact.length === 0) {
             throw new Error(`Contact list entry with id ${id} not found`);
         }
 
-        return serializeModel(contact, schema, hidden);
+        return serializeModel(contact[0], schema, hidden);
     },
 
-    async update(id: number, payload: any) {
+    async update(id: bigint, payload: any) {
         const updateData = {
             ...payload,
-            updatedAt: DateTime.now().toISO(),
+            updatedAt: new Date(),
         };
 
-        const contact = await prisma.contactList.update({
-            where: { id },
-            data: updateData,
-            include: {
-                user: true,
-                contact: true,
-            },
-        });
-        return serializeModel(contact, schema, hidden);
+        await db
+            .update(contactList)
+            .set(updateData)
+            .where(eq(contactList.id, id));
+        const contact = await db
+            .select()
+            .from(contactList)
+            .where(eq(contactList.id, id))
+            .limit(1);
+        return serializeModel(contact[0], schema, hidden);
     },
 
-    async delete(id: number) {
-        const result = await prisma.contactList.delete({
-            where: { id },
-        });
+    async delete(id: bigint) {
+        const result = await db
+            .delete(contactList)
+            .where(eq(contactList.id, id));
         return result;
     },
 
-    async findByUserId(userId: number) {
-        const contacts = await prisma.contactList.findMany({
-            where: { userId },
-            include: {
-                contact: true,
-            },
-        });
+    async findByUserId(userId: bigint) {
+        const contacts = await db
+            .select()
+            .from(contactList)
+            .where(eq(contactList.userId, userId));
         return this.serializeArray(contacts);
     },
 
     query() {
-        return prisma.contactList;
+        return db.select().from(contactList);
     },
 
     serialize(contact: any) {

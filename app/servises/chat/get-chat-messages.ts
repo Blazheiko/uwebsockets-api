@@ -1,10 +1,10 @@
-import { prisma } from '#database/prisma.js';
+import { db } from '#database/db.js';
+import { messages, contactList, users } from '#database/schema.js';
+import { eq, and, or, desc } from 'drizzle-orm';
 import { getOnlineUser } from '#vendor/utils/network/ws-handlers.js';
 
-type Message = Awaited<ReturnType<typeof prisma.message.findMany>>[0];
-type ContactListWithContact = Awaited<
-    ReturnType<typeof prisma.contactList.findFirst>
-> & { contact: any };
+type Message = typeof messages.$inferSelect;
+type ContactListWithContact = typeof contactList.$inferSelect & { contact: any };
 
 export default async (
     userId: bigint,
@@ -16,48 +16,42 @@ export default async (
 } | null> => {
     if (!userId || !contactId) return null;
 
-    const contact = await prisma.contactList.findFirst({
-        where: {
-            userId: userId,
-            contactId: contactId,
-        },
-        include: {
-            contact: true,
-        },
-    });
-    if (!contact) return null;
+    const contactData = await db.select()
+        .from(contactList)
+        .leftJoin(users, eq(contactList.contactId, users.id))
+        .where(and(
+            eq(contactList.userId, userId),
+            eq(contactList.contactId, contactId)
+        ))
+        .limit(1);
+
+    if (contactData.length === 0) return null;
+
+    const contact = {
+        ...contactData[0].contact_list,
+        contact: contactData[0].users,
+    };
+
     if (contact.unreadCount > 0) {
-        await prisma.contactList.update({
-            where: {
-                userId_contactId: {
-                    userId: userId,
-                    contactId: contactId,
-                },
-            },
-            data: {
-                unreadCount: 0,
-            },
-        });
+        await db.update(contactList)
+            .set({ unreadCount: 0 })
+            .where(and(
+                eq(contactList.userId, userId),
+                eq(contactList.contactId, contactId)
+            ));
         contact.unreadCount = 0;
     }
-    const messages = await prisma.message.findMany({
-        where: {
-            OR: [
-                {
-                    AND: [{ senderId: userId }, { receiverId: contactId }],
-                },
-                {
-                    AND: [{ senderId: contactId }, { receiverId: userId }],
-                },
-            ],
-        },
-        orderBy: {
-            createdAt: 'desc',
-        },
-        take: 50,
-    });
+
+    const messagesData = await db.select()
+        .from(messages)
+        .where(or(
+            and(eq(messages.senderId, userId), eq(messages.receiverId, contactId)),
+            and(eq(messages.senderId, contactId), eq(messages.receiverId, userId))
+        ))
+        .orderBy(desc(messages.createdAt))
+        .limit(50);
 
     const onlineUsers = getOnlineUser([String(contact.contactId)]);
 
-    return { messages, contact, onlineUsers };
+    return { messages: messagesData, contact, onlineUsers };
 };

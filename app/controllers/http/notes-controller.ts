@@ -78,7 +78,7 @@ export default {
 
         try {
             const userId = auth.getUserId();
-            const note = await Notes.findById(parseInt(noteId), userId);
+            const note = await Notes.findById(BigInt(noteId), userId);
             return { status: 'ok', data: note };
         } catch (error) {
             logger.error({ err: error }, 'Error getting note:');
@@ -105,7 +105,7 @@ export default {
 
         try {
             const userId = auth.getUserId();
-            const note = await Notes.update(parseInt(noteId), userId, {
+            const note = await Notes.update(BigInt(noteId), userId, {
                 title,
                 description,
             });
@@ -134,7 +134,7 @@ export default {
 
         try {
             const userId = auth.getUserId();
-            await Notes.delete(parseInt(noteId), userId);
+            await Notes.delete(BigInt(noteId), userId);
             return { status: 'ok', message: 'Note deleted successfully' };
         } catch (error) {
             logger.error({ err: error }, 'Error deleting note:');
@@ -163,7 +163,7 @@ export default {
             // Verify note belongs to user
             const userId = auth.getUserId();
             const hasAccess = await Notes.verifyOwnership(
-                parseInt(noteId),
+                BigInt(noteId),
                 userId,
             );
             if (!hasAccess) {
@@ -209,7 +209,7 @@ export default {
             // Verify note belongs to user
             const userId = auth.getUserId();
             const hasAccess = await Notes.verifyOwnership(
-                parseInt(noteId),
+                BigInt(noteId),
                 userId,
             );
             if (!hasAccess) {
@@ -219,7 +219,7 @@ export default {
                 };
             }
 
-            await NotesPhoto.delete(parseInt(photoId), parseInt(noteId));
+            await NotesPhoto.delete(BigInt(photoId), BigInt(noteId));
             return { status: 'ok', message: 'Photo deleted successfully' };
         } catch (error) {
             logger.error({ err: error }, 'Error deleting photo:');

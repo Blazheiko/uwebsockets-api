@@ -79,7 +79,7 @@ export default {
 
         try {
             const project = await Project.findById(
-                parseInt(projectId),
+                BigInt(projectId),
                 auth.getUserId(),
             );
             return { status: 'success', data: project };
@@ -118,7 +118,7 @@ export default {
 
         try {
             const project = await Project.update(
-                parseInt(projectId),
+                BigInt(projectId),
                 auth.getUserId(),
                 {
                     title,
@@ -157,7 +157,7 @@ export default {
         const { projectId } = httpData.params as { projectId: string };
 
         try {
-            await Project.delete(parseInt(projectId), auth.getUserId());
+            await Project.delete(BigInt(projectId), auth.getUserId());
             return {
                 status: 'success',
                 message: 'Project deleted successfully',
@@ -189,7 +189,7 @@ export default {
 
         try {
             const tasks = await Project.getProjectTasks(
-                parseInt(projectId),
+                BigInt(projectId),
                 auth.getUserId(),
             );
             return { status: 'success', data: tasks };
@@ -220,7 +220,7 @@ export default {
 
         try {
             const data = await Project.getProjectStatistics(
-                parseInt(projectId),
+                BigInt(projectId),
                 auth.getUserId(),
             );
             return { status: 'success', data };
@@ -251,7 +251,7 @@ export default {
 
         try {
             const archivedProject = await Project.archive(
-                parseInt(projectId),
+                BigInt(projectId),
                 auth.getUserId(),
             );
             return { status: 'success', data: archivedProject };

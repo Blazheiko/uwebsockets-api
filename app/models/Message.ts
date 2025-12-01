@@ -1,8 +1,8 @@
-import { prisma } from '#database/prisma.js';
+import { db } from '#database/db.js';
+import { messages, contactList, users } from '#database/schema.js';
+import { eq, and, or, sql } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import { serializeModel } from '#vendor/utils/serialization/serialize-model.js';
-import pkg from '@prisma/client';
-const { Prisma, MessageType } = pkg;
 
 const schema = {
     created_at: (value: Date) => DateTime.fromJSDate(value).toISO(),
@@ -11,6 +11,8 @@ const schema = {
 
 const required = ['senderId', 'receiverId', 'content', 'type'];
 const hidden: string[] = [];
+
+const messageTypes = ['TEXT', 'IMAGE', 'VIDEO', 'AUDIO'] as const;
 
 export default {
     async create(payload: any) {
@@ -25,236 +27,235 @@ export default {
         }
 
         // Validate message type
-        if (!Object.values(MessageType).includes(payload.type)) {
+        if (!messageTypes.includes(payload.type)) {
             throw new Error('Invalid message type');
         }
 
         // Validate src for media types
-        if (payload.type !== MessageType.TEXT && !payload.src) {
+        if (payload.type !== 'TEXT' && !payload.src) {
             throw new Error('Source URL is required for media messages');
         }
 
-        // Start transaction to create message and update unread count
-        const result = await prisma.$transaction(async (prisma: any) => {
-            // Create message
-            const message = await prisma.message.create({
-                data: {
-                    senderId: payload.senderId,
-                    receiverId: payload.receiverId,
-                    type: payload.type,
-                    content: payload.content,
-                    src: payload.src,
-                    isRead: false,
-                },
-                include: {
-                    sender: true,
-                    receiver: true,
-                },
-            });
-
-            // Update unread count in contact list
-            await prisma.contactList.update({
-                where: {
-                    userId_contactId: {
-                        userId: payload.receiverId,
-                        contactId: payload.senderId,
-                    },
-                },
-                data: {
-                    unreadCount: {
-                        increment: 1,
-                    },
-                },
-            });
-
-            return message;
+        // Create message and update unread count
+        const now = new Date();
+        const [message] = await db.insert(messages).values({
+            senderId: BigInt(payload.senderId),
+            receiverId: BigInt(payload.receiverId),
+            type: payload.type,
+            content: payload.content,
+            src: payload.src || null,
+            isRead: false,
+            createdAt: now,
+            updatedAt: now,
         });
 
-        return serializeModel(result, schema, hidden);
+        // Update unread count in contact list
+        await db
+            .update(contactList)
+            .set({ unreadCount: sql`${contactList.unreadCount} + 1` })
+            .where(
+                and(
+                    eq(contactList.userId, BigInt(payload.receiverId)),
+                    eq(contactList.contactId, BigInt(payload.senderId)),
+                ),
+            );
+
+        // Get created message with relations
+        const createdMessage = await db
+            .select({
+                message: messages,
+                sender: users,
+            })
+            .from(messages)
+            .leftJoin(users, eq(messages.senderId, users.id))
+            .where(eq(messages.id, BigInt(message.insertId)))
+            .limit(1);
+
+        return serializeModel(createdMessage[0].message, schema, hidden);
     },
 
-    async findById(id: number) {
-        const message = await prisma.message.findUnique({
-            where: { id },
-            include: {
-                sender: true,
-                receiver: true,
-            },
-        });
+    async findById(id: bigint) {
+        const message = await db
+            .select()
+            .from(messages)
+            .where(eq(messages.id, id))
+            .limit(1);
 
-        if (!message) {
+        if (message.length === 0) {
             throw new Error(`Message with id ${id} not found`);
         }
 
-        return serializeModel(message, schema, hidden);
+        return serializeModel(message[0], schema, hidden);
     },
 
-    async update(id: number, payload: any) {
+    async update(id: bigint, payload: any) {
         const updateData = {
             ...payload,
-            updatedAt: DateTime.now().toISO(),
+            updatedAt: new Date(),
         };
 
-        const message = await prisma.message.update({
-            where: { id },
-            data: updateData,
-            include: {
-                sender: true,
-                receiver: true,
-            },
-        });
-        return serializeModel(message, schema, hidden);
+        await db.update(messages).set(updateData).where(eq(messages.id, id));
+        const message = await db
+            .select()
+            .from(messages)
+            .where(eq(messages.id, id))
+            .limit(1);
+
+        return serializeModel(message[0], schema, hidden);
     },
 
-    async delete(id: number) {
-        const result = await prisma.message.delete({
-            where: { id },
-        });
+    async delete(id: bigint) {
+        const result = await db.delete(messages).where(eq(messages.id, id));
         return result;
     },
 
-    async findConversation(userId1: number, userId2: number) {
-        const messages = await prisma.message.findMany({
-            where: {
-                OR: [
-                    { senderId: userId1, receiverId: userId2 },
-                    { senderId: userId2, receiverId: userId1 },
-                ],
-            },
-            include: {
-                sender: true,
-                receiver: true,
-            },
-            orderBy: {
-                createdAt: 'asc',
-            },
-        });
-        return this.serializeArray(messages);
+    async findConversation(userId1: bigint, userId2: bigint) {
+        const messagesData = await db
+            .select()
+            .from(messages)
+            .where(
+                or(
+                    and(
+                        eq(messages.senderId, userId1),
+                        eq(messages.receiverId, userId2),
+                    ),
+                    and(
+                        eq(messages.senderId, userId2),
+                        eq(messages.receiverId, userId1),
+                    ),
+                ),
+            )
+            .orderBy(messages.createdAt);
+
+        return this.serializeArray(messagesData);
     },
 
-    async markAsRead(messageId: number, userId: number) {
-        // Start transaction to update message and contact list
-        const result = await prisma.$transaction(async (prisma: any) => {
-            // Get message to find sender
-            const message = await prisma.message.findUnique({
-                where: { id: messageId },
-            });
+    async markAsRead(messageId: bigint, userId: bigint) {
+        // Get message to find sender
+        const message = await db
+            .select()
+            .from(messages)
+            .where(eq(messages.id, messageId))
+            .limit(1);
 
-            if (!message) {
-                throw new Error(`Message with id ${messageId} not found`);
-            }
+        if (message.length === 0) {
+            throw new Error(`Message with id ${messageId} not found`);
+        }
 
-            if (Number(message.receiverId) !== userId) {
-                throw new Error('User is not the receiver of this message');
-            }
+        if (message[0].receiverId !== userId) {
+            throw new Error('User is not the receiver of this message');
+        }
 
-            // Update message status
-            const updatedMessage = await prisma.message.update({
-                where: { id: messageId },
-                data: { isRead: true },
-                include: {
-                    sender: true,
-                    receiver: true,
-                },
-            });
+        // Update message status
+        await db
+            .update(messages)
+            .set({ isRead: true })
+            .where(eq(messages.id, messageId));
 
-            // Update unread count in contact list
-            await prisma.contactList.update({
-                where: {
-                    userId_contactId: {
-                        userId: userId,
-                        contactId: message.senderId,
-                    },
-                },
-                data: {
-                    unreadCount: {
-                        decrement: 1,
-                    },
-                },
-            });
+        // Update unread count in contact list
+        await db
+            .update(contactList)
+            .set({ unreadCount: sql`${contactList.unreadCount} - 1` })
+            .where(
+                and(
+                    eq(contactList.userId, userId),
+                    eq(contactList.contactId, message[0].senderId),
+                ),
+            );
 
-            return updatedMessage;
-        });
-
-        return serializeModel(result, schema, hidden);
+        const updatedMessage = await db
+            .select()
+            .from(messages)
+            .where(eq(messages.id, messageId))
+            .limit(1);
+        return serializeModel(updatedMessage[0], schema, hidden);
     },
 
-    async getUnreadCount(userId: number) {
-        const count = await prisma.message.count({
-            where: {
-                receiverId: userId,
-                isRead: false,
-            },
-        });
-        return count;
+    async getUnreadCount(userId: bigint) {
+        const result = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(messages)
+            .where(
+                and(
+                    eq(messages.receiverId, userId),
+                    eq(messages.isRead, false),
+                ),
+            );
+
+        return result[0]?.count || 0;
     },
 
     query() {
-        return prisma.message;
+        return db.select().from(messages);
     },
 
     serialize(message: any) {
         return serializeModel(message, schema, hidden);
     },
 
-    serializeArray(messages: any) {
-        return messages.map((message: any) =>
+    serializeArray(messagesData: any) {
+        return messagesData.map((message: any) =>
             serializeModel(message, schema, hidden),
         );
     },
 
     async findByIdAndUserId(
-        messageId: number,
-        userId: number,
+        messageId: bigint,
+        userId: bigint,
         userType: 'sender' | 'receiver',
     ) {
         const whereCondition =
             userType === 'sender'
-                ? { id: messageId, senderId: userId }
-                : { id: messageId, receiverId: userId };
+                ? and(eq(messages.id, messageId), eq(messages.senderId, userId))
+                : and(
+                      eq(messages.id, messageId),
+                      eq(messages.receiverId, userId),
+                  );
 
-        const message = await prisma.message.findFirst({
-            where: whereCondition,
-            include: {
-                sender: true,
-                receiver: true,
-            },
-        });
+        const message = await db
+            .select()
+            .from(messages)
+            .where(whereCondition)
+            .limit(1);
 
-        if (!message) {
+        if (message.length === 0) {
             return null;
         }
 
-        return serializeModel(message, schema, hidden);
+        return serializeModel(message[0], schema, hidden);
     },
 
-    async deleteById(messageId: number) {
-        const result = await prisma.message.delete({
-            where: { id: messageId },
-        });
+    async deleteById(messageId: bigint) {
+        const result = await db
+            .delete(messages)
+            .where(eq(messages.id, messageId));
         return result;
     },
 
-    async updateContent(userId: number, messageId: number, content: string) {
+    async updateContent(userId: bigint, messageId: bigint, content: string) {
         try {
-            const updatedMessage = await prisma.message.update({
-                where: { id: messageId, senderId: userId },
-                data: {
-                    content,
-                    updatedAt: new Date(),
-                },
-                include: {
-                    sender: true,
-                    receiver: true,
-                },
-            });
-            return serializeModel(updatedMessage, schema, hidden);
-        } catch (error: any) {
-            // If record not found for update
-            if (error.code === 'P2025') {
+            await db
+                .update(messages)
+                .set({ content, updatedAt: new Date() })
+                .where(
+                    and(
+                        eq(messages.id, messageId),
+                        eq(messages.senderId, userId),
+                    ),
+                );
+
+            const updatedMessage = await db
+                .select()
+                .from(messages)
+                .where(eq(messages.id, messageId))
+                .limit(1);
+
+            if (updatedMessage.length === 0) {
                 return null;
             }
-            // Throw other errors further
+
+            return serializeModel(updatedMessage[0], schema, hidden);
+        } catch (error: any) {
             throw error;
         }
     },

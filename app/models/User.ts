@@ -1,4 +1,6 @@
-import { prisma } from '#database/prisma.js';
+import { db } from '#database/db.js';
+import { users } from '#database/schema.js';
+import { eq, and, ne } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import { serializeModel } from '#vendor/utils/serialization/serialize-model.js';
 import logger from '#logger';
@@ -8,14 +10,12 @@ const schema = {
     created_at: (value: Date) => DateTime.fromJSDate(value).toISO(),
     updated_at: (value: Date) => DateTime.fromJSDate(value).toISO(),
 };
-//const fields = ['name', 'password', 'email'];
 const required = ['name', 'password', 'email'];
 const hidden = ['password', 'isAdmin'];
 
 export default {
     async create(payload: any) {
         logger.info('create user');
-        // console.log(payload);
         if (!payload || typeof payload !== 'object')
             return new Error('Payload must be object');
         const keys = Object.keys(payload);
@@ -27,54 +27,62 @@ export default {
 
         // Check phone uniqueness during creation
         if (payload.phone) {
-            const existingUser = await prisma.user.findFirst({
-                where: { phone: payload.phone },
-            });
-            if (existingUser) {
+            const existingUser = await db
+                .select()
+                .from(users)
+                .where(eq(users.phone, payload.phone))
+                .limit(1);
+            if (existingUser.length > 0) {
                 throw new Error('Phone number already exists');
             }
         }
 
-        const user = await prisma.user.create({
-            data: {
-                name: payload.name,
-                password: payload.password,
-                email: payload.email,
-                phone: payload.phone || null,
-            },
+        const now = new Date();
+        const [user] = await db.insert(users).values({
+            name: payload.name,
+            password: payload.password,
+            email: payload.email,
+            phone: payload.phone || null,
+            createdAt: now,
+            updatedAt: now,
         });
-        // return user;
-        return serializeModel(user, schema, hidden);
+
+        const createdUser = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, BigInt(user.insertId)));
+        return serializeModel(createdUser[0], schema, hidden);
     },
 
-    async findById(id: number) {
+    async findById(id: bigint) {
         logger.info(`find user by id: ${id}`);
-        const user = await prisma.user.findUnique({
-            where: { id },
-        });
+        const user = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, id))
+            .limit(1);
 
-        if (!user) {
+        if (user.length === 0) {
             throw new Error(`User with id ${id} not found`);
         }
 
-        return serializeModel(user, schema, hidden);
+        return serializeModel(user[0], schema, hidden);
     },
 
-    async update(id: number, payload: any) {
-        const updateData = {
+    async update(id: bigint, payload: any) {
+        const updateData: any = {
             ...payload,
-            updatedAt: DateTime.now().toISO(),
+            updatedAt: new Date(),
         };
 
         // Check phone uniqueness during update
         if (payload.phone) {
-            const existingUser = await prisma.user.findFirst({
-                where: {
-                    phone: payload.phone,
-                    NOT: { id }, // Exclude current user
-                },
-            });
-            if (existingUser) {
+            const existingUser = await db
+                .select()
+                .from(users)
+                .where(and(eq(users.phone, payload.phone), ne(users.id, id)))
+                .limit(1);
+            if (existingUser.length > 0) {
                 throw new Error('Phone number already exists');
             }
         }
@@ -83,28 +91,32 @@ export default {
             delete updateData.phone;
         }
 
-        const user = await prisma.user.update({
-            where: { id },
-            data: updateData,
-        });
-        return serializeModel(user, schema, hidden);
+        await db.update(users).set(updateData).where(eq(users.id, id));
+        const updatedUser = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, id))
+            .limit(1);
+        return serializeModel(updatedUser[0], schema, hidden);
     },
 
-    async delete(id: number) {
+    async delete(id: bigint) {
         logger.info(`delete user with id: ${id}`);
-        const result = await prisma.user.delete({
-            where: { id },
-        });
+        const result = await db.delete(users).where(eq(users.id, id));
         return result;
     },
 
     query() {
-        return prisma.user;
+        return db.select().from(users);
     },
+
     serialize(user: any) {
         return serializeModel(user, schema, hidden);
     },
-    serializeArray(users: any) {
-        return users.map((user: any) => serializeModel(user, schema, hidden));
+
+    serializeArray(usersData: any) {
+        return usersData.map((user: any) =>
+            serializeModel(user, schema, hidden),
+        );
     },
 };

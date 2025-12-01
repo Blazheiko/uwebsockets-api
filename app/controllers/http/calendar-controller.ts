@@ -1,5 +1,7 @@
 import { HttpContext } from '../../../vendor/types/types.js';
-import { prisma } from '#database/prisma.js';
+import { db } from '#database/db.js';
+import { calendar } from '#database/schema.js';
+import { eq, and, or, gte, lte, asc, sql } from 'drizzle-orm';
 import type {
     GetEventsResponse,
     CreateEventResponse,
@@ -20,10 +22,10 @@ export default {
         }
 
         try {
-            const events = await prisma.calendar.findMany({
-                where: { userId: auth.user.id },
-                orderBy: { startTime: 'asc' },
-            });
+            const events = await db.select()
+                .from(calendar)
+                .where(eq(calendar.userId, auth.user.id))
+                .orderBy(asc(calendar.startTime));
             return { status: 'success', data: events };
         } catch (error) {
             logger.error({ err: error }, 'Error getting events:');
@@ -42,16 +44,23 @@ export default {
         const { title, description, startTime, endTime } = httpData.payload;
 
         try {
-            const event = await prisma.calendar.create({
-                data: {
-                    title,
-                    description,
-                    startTime: new Date(startTime),
-                    endTime: new Date(endTime),
-                    userId: auth.user.id,
-                },
+            const now = new Date();
+            const [eventResult] = await db.insert(calendar).values({
+                title,
+                description,
+                startTime: new Date(startTime),
+                endTime: new Date(endTime),
+                userId: auth.user.id,
+                createdAt: now,
+                updatedAt: now,
             });
-            return { status: 'success', data: event };
+
+            const createdEvent = await db.select()
+                .from(calendar)
+                .where(eq(calendar.id, BigInt(eventResult.insertId)))
+                .limit(1);
+
+            return { status: 'success', data: createdEvent[0] };
         } catch (error) {
             logger.error({ err: error }, 'Error creating event:');
             return { status: 'error', message: 'Failed to create event' };
@@ -69,18 +78,19 @@ export default {
         const { eventId } = httpData.params as { eventId: string };
 
         try {
-            const event = await prisma.calendar.findFirst({
-                where: {
-                    id: parseInt(eventId),
-                    userId: auth.user.id,
-                },
-            });
+            const event = await db.select()
+                .from(calendar)
+                .where(and(
+                    eq(calendar.id, BigInt(eventId)),
+                    eq(calendar.userId, auth.user.id)
+                ))
+                .limit(1);
 
-            if (!event) {
+            if (event.length === 0) {
                 return { status: 'error', message: 'Event not found' };
             }
 
-            return { status: 'success', data: event };
+            return { status: 'success', data: event[0] };
         } catch (error) {
             logger.error({ err: error }, 'Error getting event:');
             return { status: 'error', message: 'Failed to get event' };
@@ -99,28 +109,29 @@ export default {
         const { title, description, startTime, endTime } = httpData.payload;
 
         try {
-            const event = await prisma.calendar.updateMany({
-                where: {
-                    id: parseInt(eventId),
-                    userId: auth.user.id,
-                },
-                data: {
-                    title,
-                    description,
-                    startTime: startTime ? new Date(startTime) : undefined,
-                    endTime: endTime ? new Date(endTime) : undefined,
-                },
-            });
+            const updateData: any = {};
+            if (title !== undefined) updateData.title = title;
+            if (description !== undefined) updateData.description = description;
+            if (startTime !== undefined) updateData.startTime = new Date(startTime);
+            if (endTime !== undefined) updateData.endTime = new Date(endTime);
 
-            if (event.count === 0) {
+            await db.update(calendar)
+                .set(updateData)
+                .where(and(
+                    eq(calendar.id, BigInt(eventId)),
+                    eq(calendar.userId, auth.user.id)
+                ));
+
+            const updatedEvent = await db.select()
+                .from(calendar)
+                .where(eq(calendar.id, BigInt(eventId)))
+                .limit(1);
+
+            if (updatedEvent.length === 0) {
                 return { status: 'error', message: 'Event not found' };
             }
 
-            const updatedEvent = await prisma.calendar.findUnique({
-                where: { id: parseInt(eventId) },
-            });
-
-            return { status: 'success', data: updatedEvent };
+            return { status: 'success', data: updatedEvent[0] };
         } catch (error) {
             logger.error({ err: error }, 'Error updating event:');
             return { status: 'error', message: 'Failed to update event' };
@@ -138,14 +149,18 @@ export default {
         const { eventId } = httpData.params as { eventId: string };
 
         try {
-            const deleted = await prisma.calendar.deleteMany({
-                where: {
-                    id: parseInt(eventId),
-                    userId: auth.user.id,
-                },
-            });
+            await db.delete(calendar)
+                .where(and(
+                    eq(calendar.id, BigInt(eventId)),
+                    eq(calendar.userId, auth.user.id)
+                ));
 
-            if (deleted.count === 0) {
+            // Verify deletion
+            const checkDeleted = await db.select({ count: sql<number>`count(*)` })
+                .from(calendar)
+                .where(eq(calendar.id, BigInt(eventId)));
+
+            if (checkDeleted[0]?.count > 0) {
                 return { status: 'error', message: 'Event not found' };
             }
 
@@ -175,32 +190,26 @@ export default {
             const endOfDay = new Date(date);
             endOfDay.setHours(23, 59, 59, 999);
 
-            const events = await prisma.calendar.findMany({
-                where: {
-                    userId: auth.user.id,
-                    OR: [
-                        {
-                            startTime: {
-                                gte: startOfDay,
-                                lte: endOfDay,
-                            },
-                        },
-                        {
-                            endTime: {
-                                gte: startOfDay,
-                                lte: endOfDay,
-                            },
-                        },
-                        {
-                            AND: [
-                                { startTime: { lte: startOfDay } },
-                                { endTime: { gte: endOfDay } },
-                            ],
-                        },
-                    ],
-                },
-                orderBy: { startTime: 'asc' },
-            });
+            const events = await db.select()
+                .from(calendar)
+                .where(and(
+                    eq(calendar.userId, auth.user.id),
+                    or(
+                        and(
+                            gte(calendar.startTime, startOfDay),
+                            lte(calendar.startTime, endOfDay)
+                        ),
+                        and(
+                            gte(calendar.endTime, startOfDay),
+                            lte(calendar.endTime, endOfDay)
+                        ),
+                        and(
+                            lte(calendar.startTime, startOfDay),
+                            gte(calendar.endTime, endOfDay)
+                        )
+                    )
+                ))
+                .orderBy(asc(calendar.startTime));
 
             return { status: 'success', data: events };
         } catch (error) {
@@ -222,32 +231,26 @@ export default {
         const { startDate, endDate } = httpData.payload;
 
         try {
-            const events = await prisma.calendar.findMany({
-                where: {
-                    userId: auth.user.id,
-                    OR: [
-                        {
-                            startTime: {
-                                gte: new Date(startDate),
-                                lte: new Date(endDate),
-                            },
-                        },
-                        {
-                            endTime: {
-                                gte: new Date(startDate),
-                                lte: new Date(endDate),
-                            },
-                        },
-                        {
-                            AND: [
-                                { startTime: { lte: new Date(startDate) } },
-                                { endTime: { gte: new Date(endDate) } },
-                            ],
-                        },
-                    ],
-                },
-                orderBy: { startTime: 'asc' },
-            });
+            const events = await db.select()
+                .from(calendar)
+                .where(and(
+                    eq(calendar.userId, auth.user.id),
+                    or(
+                        and(
+                            gte(calendar.startTime, new Date(startDate)),
+                            lte(calendar.startTime, new Date(endDate))
+                        ),
+                        and(
+                            gte(calendar.endTime, new Date(startDate)),
+                            lte(calendar.endTime, new Date(endDate))
+                        ),
+                        and(
+                            lte(calendar.startTime, new Date(startDate)),
+                            gte(calendar.endTime, new Date(endDate))
+                        )
+                    )
+                ))
+                .orderBy(asc(calendar.startTime));
 
             return { status: 'success', data: events };
         } catch (error) {

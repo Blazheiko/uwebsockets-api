@@ -1,8 +1,8 @@
-import { prisma } from '#database/prisma.js';
+import { db } from '#database/db.js';
+import { notesPhotos } from '#database/schema.js';
+import { eq, and, desc, gte } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 import { serializeModel } from '#vendor/utils/serialization/serialize-model.js';
-import pkg from '@prisma/client';
-const { Prisma } = pkg;
 import logger from '#logger';
 
 const schema = {
@@ -28,125 +28,121 @@ export default {
             }
         }
 
-        const photo = await prisma.notesPhoto.create({
-            data: {
-                noteId: payload.noteId,
-                src: payload.src,
-                filename: payload.filename,
-                size: payload.size,
-            },
+        const now = new Date();
+        const [photo] = await db.insert(notesPhotos).values({
+            noteId: BigInt(payload.noteId),
+            src: payload.src,
+            filename: payload.filename || null,
+            size: payload.size || null,
+            createdAt: now,
+            updatedAt: now,
         });
 
-        return serializeModel(photo, schema, hidden);
+        const createdPhoto = await db.select()
+            .from(notesPhotos)
+            .where(eq(notesPhotos.id, BigInt(photo.insertId)))
+            .limit(1);
+
+        return serializeModel(createdPhoto[0], schema, hidden);
     },
 
-    async findById(id: number) {
+    async findById(id: bigint) {
         logger.info(`find notes photo by id: ${id}`);
 
-        const photo = await prisma.notesPhoto.findUnique({
-            where: { id },
-        });
+        const photo = await db.select()
+            .from(notesPhotos)
+            .where(eq(notesPhotos.id, id))
+            .limit(1);
 
-        if (!photo) {
+        if (photo.length === 0) {
             throw new Error(`Photo with id ${id} not found`);
         }
 
-        return serializeModel(photo, schema, hidden);
+        return serializeModel(photo[0], schema, hidden);
     },
 
-    async findByNoteId(noteId: number) {
+    async findByNoteId(noteId: bigint) {
         logger.info(`find all photos for note: ${noteId}`);
 
-        const photos = await prisma.notesPhoto.findMany({
-            where: { noteId },
-            orderBy: { createdAt: 'desc' },
-        });
+        const photos = await db.select()
+            .from(notesPhotos)
+            .where(eq(notesPhotos.noteId, noteId))
+            .orderBy(desc(notesPhotos.createdAt));
 
         return this.serializeArray(photos);
     },
 
-    async update(id: number, payload: any) {
+    async update(id: bigint, payload: any) {
         logger.info(`update notes photo id: ${id}`);
 
         const updateData: any = {
-            updatedAt: DateTime.now().toISO(),
+            updatedAt: new Date(),
         };
 
         if (payload.src !== undefined) updateData.src = payload.src;
-        if (payload.filename !== undefined)
-            updateData.filename = payload.filename;
+        if (payload.filename !== undefined) updateData.filename = payload.filename;
         if (payload.size !== undefined) updateData.size = payload.size;
 
-        const photo = await prisma.notesPhoto.update({
-            where: { id },
-            data: updateData,
-        });
+        await db.update(notesPhotos).set(updateData).where(eq(notesPhotos.id, id));
+        const photo = await db.select().from(notesPhotos).where(eq(notesPhotos.id, id)).limit(1);
 
-        return serializeModel(photo, schema, hidden);
+        return serializeModel(photo[0], schema, hidden);
     },
 
-    async delete(id: number, noteId: number) {
+    async delete(id: bigint, noteId: bigint) {
         logger.info(`delete notes photo id: ${id} from note: ${noteId}`);
 
-        const deleted = await prisma.notesPhoto.deleteMany({
-            where: {
-                id,
-                noteId,
-            },
-        });
+        const deleted = await db.delete(notesPhotos)
+            .where(and(eq(notesPhotos.id, id), eq(notesPhotos.noteId, noteId)));
 
-        if (deleted.count === 0) {
+        if (!deleted || deleted[0]?.affectedRows === 0) {
             throw new Error('Photo not found or access denied');
         }
 
         return deleted;
     },
 
-    async deleteByNoteId(noteId: number) {
+    async deleteByNoteId(noteId: bigint) {
         logger.info(`delete all photos for note: ${noteId}`);
 
-        const deleted = await prisma.notesPhoto.deleteMany({
-            where: { noteId },
-        });
-
+        const deleted = await db.delete(notesPhotos).where(eq(notesPhotos.noteId, noteId));
         return deleted;
     },
 
-    async verifyPhotoInNote(photoId: number, noteId: number): Promise<boolean> {
+    async verifyPhotoInNote(photoId: bigint, noteId: bigint): Promise<boolean> {
         logger.info(`verify photo ${photoId} belongs to note ${noteId}`);
 
-        const photo = await prisma.notesPhoto.findFirst({
-            where: {
-                id: photoId,
-                noteId,
-            },
-        });
+        const photo = await db.select()
+            .from(notesPhotos)
+            .where(and(eq(notesPhotos.id, photoId), eq(notesPhotos.noteId, noteId)))
+            .limit(1);
 
-        return !!photo;
+        return photo.length > 0;
     },
 
-    async getPhotoStatistics(noteId?: number) {
+    async getPhotoStatistics(noteId?: bigint) {
         logger.info(
             `get photo statistics${noteId ? ` for note: ${noteId}` : ' for all notes'}`,
         );
 
-        const where = noteId ? { noteId } : {};
-
-        const photos = await prisma.notesPhoto.findMany({
-            where,
-        });
+        let photos;
+        if (noteId) {
+            photos = await db.select().from(notesPhotos).where(eq(notesPhotos.noteId, noteId));
+        } else {
+            photos = await db.select().from(notesPhotos);
+        }
 
         const totalPhotos = photos.length;
         const totalSize = photos.reduce(
-            (sum: number, photo: any) => sum + (photo.size || 0),
+            (sum: number, photo: any) => sum + (Number(photo.size) || 0),
             0,
         );
         const averageSize = totalPhotos > 0 ? totalSize / totalPhotos : 0;
 
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
         const recentPhotos = photos.filter((photo: any) => {
             const photoDate = new Date(photo.createdAt);
-            const weekAgo = new Date();
-            weekAgo.setDate(weekAgo.getDate() - 7);
             return photoDate >= weekAgo;
         }).length;
 
@@ -159,7 +155,7 @@ export default {
     },
 
     query() {
-        return prisma.notesPhoto;
+        return db.select().from(notesPhotos);
     },
 
     serialize(photo: any) {
