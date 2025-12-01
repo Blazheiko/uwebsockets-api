@@ -1,21 +1,18 @@
 import { defineConfig } from 'drizzle-kit';
-import { env } from 'node:process';
-import { config } from 'dotenv';
-
-config();
+import dbConfig from '#config/database.js';
 
 export default defineConfig({
     schema: './database/schema.ts',
     out: './drizzle',
     dialect: 'mysql',
     dbCredentials: {
-        host: env.MYSQL_HOST || 'localhost',
-        port: Number(env.MYSQL_PORT) || 3306,
-        user: env.MYSQL_USER || 'root',
-        password: env.MYSQL_PASSWORD || '',
-        database: env.MYSQL_DB_NAME || 'test',
+        host: dbConfig.host || '127.0.0.1',
+        port: dbConfig.port || 3306,
+        user: dbConfig.user || 'root',
+        // Only include password if it's set
+        ...(dbConfig.password ? { password: dbConfig.password } : {}),
+        database: dbConfig.database || 'uapi',
     },
     verbose: true,
     strict: true,
 });
-
