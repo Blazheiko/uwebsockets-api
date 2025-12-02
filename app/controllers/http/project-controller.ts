@@ -1,5 +1,5 @@
 import { HttpContext } from '../../../vendor/types/types.js';
-import Project from '#app/models/Project.js';
+import Project from '#app/models/project.js';
 import type {
     GetProjectsResponse,
     CreateProjectResponse,

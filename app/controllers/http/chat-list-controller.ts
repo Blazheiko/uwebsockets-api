@@ -1,7 +1,7 @@
 import { HttpContext } from './../../../vendor/types/types.js';
 import { getOnlineUser } from '#vendor/utils/network/ws-handlers.js';
 import ContactList from '#app/models/contact-list.js';
-import User from '#app/models/User.js';
+import User from '#app/models/user.js';
 import type {
     GetContactListResponse,
     CreateChatResponse,
@@ -34,13 +34,19 @@ export default {
         }
 
         // Get chat list with contacts
-        const contactListData = await ContactList.findByUserIdWithDetails(BigInt(userId));
+        const contactListData = await ContactList.findByUserIdWithDetails(
+            BigInt(userId),
+        );
 
         const onlineUsers = getOnlineUser(
             contactListData.map((contact: any) => String(contact.contactId)),
         );
 
-        return { status: 'ok', contactList: contactListData as any, onlineUsers };
+        return {
+            status: 'ok',
+            contactList: contactListData as any,
+            onlineUsers,
+        };
     },
 
     async createChat({
@@ -71,13 +77,20 @@ export default {
         }
 
         // Check if chat already exists
-        const existingChat = await ContactList.findExistingChat(BigInt(userId), BigInt(participantId));
+        const existingChat = await ContactList.findExistingChat(
+            BigInt(userId),
+            BigInt(participantId),
+        );
 
         if (existingChat) {
             return { status: 'ok', chat: existingChat as any };
         }
 
-        const createdChat = await ContactList.createWithUserInfo(BigInt(userId), BigInt(participantId), 'accepted');
+        const createdChat = await ContactList.createWithUserInfo(
+            BigInt(userId),
+            BigInt(participantId),
+            'accepted',
+        );
 
         return { status: 'ok', chat: createdChat as any };
     },
@@ -102,7 +115,10 @@ export default {
             return { status: 'error', message: 'Chat ID is required' };
         }
 
-        const chat = await ContactList.findByIdAndUserId(BigInt(chatId), BigInt(userId));
+        const chat = await ContactList.findByIdAndUserId(
+            BigInt(chatId),
+            BigInt(userId),
+        );
 
         if (!chat) {
             return {

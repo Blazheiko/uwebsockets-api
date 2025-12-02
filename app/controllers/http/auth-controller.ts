@@ -1,4 +1,4 @@
-import User from '#app/models/User.js';
+import userModel from '#app/models/user.js';
 import { HttpContext } from '../../../vendor/types/types.js';
 import { hashPassword, validatePassword } from 'metautil';
 import inventionAccept from '#app/servises/invention-accept.js';
@@ -16,21 +16,21 @@ export default {
         logger.info('register handler');
         const { name, email, password, token } = httpData.payload;
 
-        const exist = await User.findByEmail(email);
+        const exist = await userModel.findByEmail(email);
         if (exist) {
             return { status: 'error', message: 'Email already exist' };
         }
 
         const hash = await hashPassword(password);
 
-        const userCreated = await User.create({
+        const userCreated = await userModel.create({
             name: name,
             email: email,
             password: hash,
         });
 
         // Get raw user data for auth.login
-        const rawUser = await User.findByEmail(email);
+        const rawUser = await userModel.findByEmail(email);
         if (!rawUser) {
             return { status: 'error', message: 'Failed to create user' };
         }
@@ -53,7 +53,7 @@ export default {
         logger.info('login handler');
         const { email, password, token } = httpData.payload;
 
-        const user = await User.findByEmail(email);
+        const user = await userModel.findByEmail(email);
 
         if (user) {
             const valid = await validatePassword(password, user.password);
@@ -72,7 +72,7 @@ export default {
 
                 return {
                     status: res ? 'success' : 'error',
-                    user: User.serialize(user),
+                    user: userModel.serialize(user),
                     wsUrl: wsToken ? getWsUrl(wsToken) : '',
                 };
             }

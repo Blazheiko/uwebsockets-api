@@ -1,4 +1,4 @@
-import User from '#app/models/User.js';
+import userModel from '#app/models/user.js';
 import { HttpContext } from './../../../vendor/types/types.js';
 import configApp from '#config/app.js';
 import generateWsToken from '#app/servises/generate-ws-token.js';
@@ -119,7 +119,7 @@ export default {
             responseData.status = 401;
             return { status: 'unauthorized', message: 'Session expired' };
         }
-        const user = await User.findById(BigInt(userId));
+        const user = await userModel.findById(BigInt(userId));
         if (!user) {
             return { status: 'unauthorized', message: 'Session expired' };
         }
@@ -135,10 +135,8 @@ export default {
 
         return {
             status: 'ok',
-            user: User.serialize(user),
-            wsUrl: wsToken
-                ? getWsUrl(wsToken)
-                : '',
+            user: user.serialize(user),
+            wsUrl: wsToken ? getWsUrl(wsToken) : '',
         };
     },
 
@@ -159,15 +157,24 @@ export default {
         responseData.setCookie('cookieTest2', 'test');
         return { status: 'ok' };
     },
-    async testMiddleware({ responseData, logger }: HttpContext): Promise<TestMiddlewareResponse> {
+    async testMiddleware({
+        responseData,
+        logger,
+    }: HttpContext): Promise<TestMiddlewareResponse> {
         logger.info('testMiddleware controller');
         return { middlewares: responseData.middlewareData, status: 'ok' };
     },
-    async testMiddleware2({ responseData, logger }: HttpContext): Promise<TestMiddlewareResponse> {
+    async testMiddleware2({
+        responseData,
+        logger,
+    }: HttpContext): Promise<TestMiddlewareResponse> {
         logger.info('testMiddleware2 controller');
         return { middlewares: responseData.middlewareData, status: 'ok' };
     },
-    async testMiddleware3({ responseData, logger }: HttpContext): Promise<TestMiddlewareResponse> {
+    async testMiddleware3({
+        responseData,
+        logger,
+    }: HttpContext): Promise<TestMiddlewareResponse> {
         logger.info('testMiddleware3 controller');
         return { middlewares: responseData.middlewareData, status: 'ok' };
     },
@@ -177,7 +184,7 @@ export default {
     }: HttpContext): Promise<SaveUserResponse> {
         logger.info('saveUser');
         const { payload } = httpData;
-        const user = await User.create({
+        const user = await userModel.create({
             name: payload.name,
             email: payload.email,
             password: payload.password,

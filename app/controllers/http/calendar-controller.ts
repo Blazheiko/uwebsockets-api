@@ -1,5 +1,5 @@
 import { HttpContext } from '../../../vendor/types/types.js';
-import Calendar from '#app/models/Calendar.js';
+import calendarModel from '#app/models/calendar.js';
 import type {
     GetEventsResponse,
     CreateEventResponse,
@@ -20,7 +20,7 @@ export default {
         }
 
         try {
-            const events = await Calendar.findByUserId(auth.user.id);
+            const events = await calendarModel.findByUserId(auth.user.id);
             return { status: 'success', data: events };
         } catch (error) {
             logger.error({ err: error }, 'Error getting events:');
@@ -39,7 +39,7 @@ export default {
         const { title, description, startTime, endTime } = httpData.payload;
 
         try {
-            const createdEvent = await Calendar.create({
+            const createdEvent = await calendarModel.create({
                 title,
                 description,
                 startTime,
@@ -65,7 +65,7 @@ export default {
         const { eventId } = httpData.params as { eventId: string };
 
         try {
-            const event = await Calendar.findById(
+            const event = await calendarModel.findById(
                 BigInt(eventId),
                 auth.user.id,
             );
@@ -88,7 +88,7 @@ export default {
         const { title, description, startTime, endTime } = httpData.payload;
 
         try {
-            const updatedEvent = await Calendar.update(
+            const updatedEvent = await calendarModel.update(
                 BigInt(eventId),
                 auth.user.id,
                 {
@@ -117,7 +117,7 @@ export default {
         const { eventId } = httpData.params as { eventId: string };
 
         try {
-            await Calendar.delete(BigInt(eventId), auth.user.id);
+            await calendarModel.delete(BigInt(eventId), auth.user.id);
             return { status: 'success', message: 'Event deleted successfully' };
         } catch (error) {
             logger.error({ err: error }, 'Error deleting event:');
@@ -138,7 +138,7 @@ export default {
         const { date } = httpData.params as { date: string };
 
         try {
-            const events = await Calendar.findByDate(
+            const events = await calendarModel.findByDate(
                 auth.user.id,
                 new Date(date),
             );
@@ -162,7 +162,7 @@ export default {
         const { startDate, endDate } = httpData.payload;
 
         try {
-            const events = await Calendar.findByRange(
+            const events = await calendarModel.findByRange(
                 auth.user.id,
                 new Date(startDate),
                 new Date(endDate),

@@ -1,6 +1,6 @@
-import Project from '#app/models/Project.js';
+import Project from '#app/models/project.js';
 import { HttpContext } from '../../../vendor/types/types.js';
-import Task from '#app/models/Task.js';
+import taskModel from '#app/models/task.js';
 import type {
     GetTasksResponse,
     CreateTaskResponse,
@@ -16,7 +16,7 @@ import type {
 
 export default {
     async testTasks(context: HttpContext): Promise<TestTasksResponse> {
-        const allTasks = await Task.query();
+        const allTasks = await taskModel.query();
         return { status: 'ok', tasks: allTasks };
     },
     async getTasks(context: HttpContext): Promise<GetTasksResponse> {
@@ -29,7 +29,7 @@ export default {
 
         try {
             const userId = auth.getUserId();
-            const tasks = await Task.findByUserId(userId);
+            const tasks = await taskModel.findByUserId(userId);
             const projects = await Project.getShortProjects(userId);
             return { status: 'success', tasks, projects };
         } catch (error) {
@@ -66,7 +66,7 @@ export default {
         } = httpData.payload;
 
         try {
-            const task = await Task.create({
+            const task = await taskModel.create({
                 title,
                 description,
                 userId: auth.getUserId(),
@@ -103,10 +103,7 @@ export default {
         const { taskId } = httpData.params as { taskId: string };
 
         try {
-            const task = await Task.findById(
-                BigInt(taskId),
-                auth.getUserId(),
-            );
+            const task = await taskModel.findById(BigInt(taskId), auth.getUserId());
             return { status: 'success', task };
         } catch (error) {
             logger.error({ err: error }, 'Error getting task:');
@@ -144,7 +141,7 @@ export default {
         } = httpData.payload;
 
         try {
-            const task = await Task.update(BigInt(taskId), auth.getUserId(), {
+            const task = await taskModel.update(BigInt(taskId), auth.getUserId(), {
                 title,
                 description,
                 projectId,
@@ -182,7 +179,7 @@ export default {
         const { taskId } = httpData.params as { taskId: string };
 
         try {
-            await Task.delete(BigInt(taskId), auth.getUserId());
+            await taskModel.delete(BigInt(taskId), auth.getUserId());
             return { status: 'success', message: 'Task deleted successfully' };
         } catch (error) {
             logger.error({ err: error }, 'Error deleting task:');
@@ -210,7 +207,7 @@ export default {
         const { status } = httpData.payload;
 
         try {
-            const task = await Task.updateStatus(
+            const task = await taskModel.updateStatus(
                 BigInt(taskId),
                 auth.getUserId(),
                 status,
@@ -242,7 +239,7 @@ export default {
         const { progress } = httpData.payload;
 
         try {
-            const task = await Task.updateProgress(
+            const task = await taskModel.updateProgress(
                 BigInt(taskId),
                 auth.getUserId(),
                 parseInt(progress),
@@ -273,7 +270,7 @@ export default {
         const { projectId } = httpData.params as { projectId: string };
 
         try {
-            const tasks = await Task.findByProjectId(
+            const tasks = await taskModel.findByProjectId(
                 BigInt(projectId),
                 auth.getUserId(),
             );
@@ -301,7 +298,7 @@ export default {
         const { parentTaskId } = httpData.params as { parentTaskId: string };
 
         try {
-            const subTasks = await Task.findSubTasks(
+            const subTasks = await taskModel.findSubTasks(
                 BigInt(parentTaskId),
                 auth.getUserId(),
             );

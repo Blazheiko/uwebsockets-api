@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import { HttpContext } from '../../../vendor/types/types.js';
 import inventionAccept from '#app/servises/invention-accept.js';
-import Invitation from '#app/models/Invitation.js';
+import Invitation from '#app/models/invitation.js';
 import type {
     CreateInvitationResponse,
     GetUserInvitationsResponse,

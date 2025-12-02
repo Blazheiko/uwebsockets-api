@@ -1,5 +1,5 @@
 import { HttpContext } from '../../../vendor/types/types.js';
-import Notes from '#app/models/Notes.js';
+import Notes from '#app/models/notes.js';
 import NotesPhoto from '#app/models/notes-photo.js';
 import type {
     GetNotesResponse,
