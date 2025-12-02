@@ -3,7 +3,7 @@ import { messages, contactList, users } from '#database/schema.js';
 import { eq, and, or, desc } from 'drizzle-orm';
 import { getOnlineUser } from '#vendor/utils/network/ws-handlers.js';
 import ContactList from '#app/models/contact-list.js';
-import readMessages from './read-messages.js';
+import readMessages from '#app/servises/chat/read-messages.js';
 
 type Message = typeof messages.$inferSelect;
 type ContactListWithContact = typeof contactList.$inferSelect & { contact: any };
@@ -17,6 +17,7 @@ export default async (
     onlineUsers: string[];
 } | null> => {
     if (!userId || !contactId) return null;
+    await readMessages(userId, contactId);
 
     const contactData = await db.select()
         .from(contactList)
@@ -41,8 +42,8 @@ export default async (
         //         eq(contactList.userId, userId),
         //         eq(contactList.contactId, contactId)
         //     ));
-        await readMessages(userId, contactId);
-        await ContactList.resetUnreadCount(userId, contactId);
+        
+        // await ContactList.resetUnreadCount(userId, contactId);
         
         contact.unreadCount = 0;
     }
