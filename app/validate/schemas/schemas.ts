@@ -179,6 +179,24 @@ const schemas: Record<string, any> = {
             content: vine.string().minLength(1).maxLength(10000),
         })
     },
+    readMessages: {
+        doc: {
+            userId: {
+                description: 'Positive integer ID of user',
+                type: 'number',
+                required: true,
+            },
+            contactId: {
+                description: 'Positive integer ID user of contact',
+                type: 'number',
+                required: true,
+            },
+        },
+        validator: vine.object({
+            userId: vine.number().positive(),
+            contactId: vine.number().positive(),
+        })
+    },
     markMessageAsRead: {
         doc: {
             messageId: {

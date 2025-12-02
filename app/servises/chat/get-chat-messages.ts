@@ -2,6 +2,8 @@ import { db } from '#database/db.js';
 import { messages, contactList, users } from '#database/schema.js';
 import { eq, and, or, desc } from 'drizzle-orm';
 import { getOnlineUser } from '#vendor/utils/network/ws-handlers.js';
+import ContactList from '#app/models/contact-list.js';
+import readMessages from './read-messages.js';
 
 type Message = typeof messages.$inferSelect;
 type ContactListWithContact = typeof contactList.$inferSelect & { contact: any };
@@ -33,12 +35,15 @@ export default async (
     };
 
     if (contact.unreadCount > 0) {
-        await db.update(contactList)
-            .set({ unreadCount: 0 })
-            .where(and(
-                eq(contactList.userId, userId),
-                eq(contactList.contactId, contactId)
-            ));
+        // await db.update(contactList)
+        //     .set({ unreadCount: 0 })
+        //     .where(and(
+        //         eq(contactList.userId, userId),
+        //         eq(contactList.contactId, contactId)
+        //     ));
+        await readMessages(userId, contactId);
+        await ContactList.resetUnreadCount(userId, contactId);
+        
         contact.unreadCount = 0;
     }
 

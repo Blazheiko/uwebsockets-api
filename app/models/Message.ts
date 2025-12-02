@@ -103,9 +103,14 @@ export default {
 
         return serializeModel(message[0], schema, hidden);
     },
-
-    async delete(id: bigint) {
-        const result = await db.delete(messages).where(eq(messages.id, id));
+    async readedMessages(userId: bigint, contactId: bigint) {
+        const result = await db
+            .update(messages)
+            .set({ isRead: true })
+            .where( and(
+                eq(messages.senderId, contactId), 
+                eq(messages.receiverId, userId))
+            );
         return result;
     },
 

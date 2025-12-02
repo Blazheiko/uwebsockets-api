@@ -14,6 +14,13 @@ export default [
                 },
             },
             {
+                url: 'read_message',
+                handler: WSApiController.readMessage,
+                typeResponse: 'WSApiController.ReadMessageResponse',
+                validator: 'readMessages',
+                description: 'Handle read message events',
+            },
+            {
                 url: 'incoming_call',
                 handler: WSApiController.incomingCall,
                 typeResponse: 'WSApiController.IncomingCallResponse',

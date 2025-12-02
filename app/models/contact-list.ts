@@ -83,6 +83,18 @@ export default {
         return serializeModel(contact[0], schema, hidden);
     },
 
+    async resetUnreadCount(userId: bigint, contactId: bigint) {
+        const result = await db
+            .update(contactList)
+            .set({ unreadCount: 0 })
+            .where(and(
+                eq(contactList.userId, BigInt(userId)),
+                eq(contactList.contactId, BigInt(contactId))
+            ));
+            
+        return result;
+    },
+
     async update(id: bigint, payload: any) {
         const updateData = {
             ...payload,

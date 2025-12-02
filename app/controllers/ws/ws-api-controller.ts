@@ -7,6 +7,7 @@ import {
 } from '../../../vendor/types/types.js';
 import { broadcastMessage } from '#vendor/start/server.js';
 import broadcastig from '#app/servises/broadcastig.js';
+import readMessages from '#app/servises/chat/read-messages.js';
 export default {
     eventTyping({ wsData }: WsContext) {
         // logger.info('ws eventTyping');
@@ -20,6 +21,13 @@ export default {
         );
 
         return { status: 'ok' };
+    },
+    async readMessage({ wsData }: WsContext) {
+        logger.info('ws readMessage');
+        const { payload } = wsData;
+        logger.info(payload);
+        await readMessages(BigInt(payload.userId), BigInt(payload.contactId));
+        return { status: 'ok', message: 'Read message event sent' };
     },
     async incomingCall({ wsData }: WsContext) {
         // logger.info('ws incomingCall');

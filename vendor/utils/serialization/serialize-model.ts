@@ -19,4 +19,14 @@ const serializeModel = (model: any, schema: any, hidden: string[]) => {
     }
 };
 
-export { serializeModel };
+const serializeArray = (array: any, schema: any, hidden: string[]) => {
+    try {
+        if (!schema || !array) return array;
+        return array.map((item: any) => serializeModel(item, schema, hidden));
+    } catch (e) {
+        logger.error({ err: e });
+        throw new Error('Error serializeArray');
+    }
+};
+
+export { serializeModel, serializeArray };

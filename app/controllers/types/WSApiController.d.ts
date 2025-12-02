@@ -6,6 +6,11 @@ export interface EventTypingResponse {
     status: 'ok' | 'error';
 }
 
+export interface ReadMessageResponse {
+    status: 'ok' | 'error';
+    message: string;
+}
+
 export interface IncomingCallResponse {
     status: 'ok' | 'error';
     message: string;

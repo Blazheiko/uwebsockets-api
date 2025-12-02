@@ -2,7 +2,8 @@ import { db } from '#database/db.js';
 import { calendar } from '#database/schema.js';
 import { eq, and, or, gte, lte, asc, sql } from 'drizzle-orm';
 import { DateTime } from 'luxon';
-import { serializeModel } from '#vendor/utils/serialization/serialize-model.js';
+import { serializeArray, serializeModel} from '#vendor/utils/serialization/serialize-model.js';
+
 import logger from '#logger';
 
 const schema = {
@@ -190,7 +191,7 @@ export default {
     },
 
     serializeArray(events: any) {
-        return events.map((event: any) => serializeModel(event, schema, hidden));
+        return serializeArray(events, schema, hidden);
     },
 };
 
