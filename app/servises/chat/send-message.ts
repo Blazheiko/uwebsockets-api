@@ -39,7 +39,10 @@ export default async (content: string, userId: string, contactId: string) => {
            unreadCount: sql`${contactList.unreadCount} + 1`,
            lastMessageId: BigInt(message.insertId)
        })
-       .where(eq(contactList.id, contact[0].id));
+       .where(and(
+        eq(contactList.userId, BigInt(contactId)),
+        eq(contactList.contactId, BigInt(userId))
+    ));
 
    const updated = await db.update(contactList)
        .set({

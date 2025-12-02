@@ -135,7 +135,7 @@ export default {
 
         return {
             status: 'ok',
-            user: user.serialize(user),
+            user: userModel.serialize(user),
             wsUrl: wsToken ? getWsUrl(wsToken) : '',
         };
     },
