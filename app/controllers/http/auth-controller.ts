@@ -1,4 +1,4 @@
-import userModel from '#app/models/user.js';
+import userModel from '#app/models/User.js';
 import { HttpContext } from '../../../vendor/types/types.js';
 import { hashPassword, validatePassword } from 'metautil';
 import inventionAccept from '#app/servises/invention-accept.js';

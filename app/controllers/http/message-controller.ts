@@ -1,7 +1,7 @@
 import { HttpContext } from './../../../vendor/types/types.js';
 import sendMessage from '#app/servises/chat/send-message.js';
 import getChatMessages from '#app/servises/chat/get-chat-messages.js';
-import Message from '#app/models/message.js';
+import Message from '#app/models/Message.js';
 import type {
     GetMessagesResponse,
     SendMessageResponse,

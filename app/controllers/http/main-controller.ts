@@ -1,4 +1,4 @@
-import userModel from '#app/models/user.js';
+import userModel from '#app/models/User.js';
 import { HttpContext } from './../../../vendor/types/types.js';
 import configApp from '#config/app.js';
 import generateWsToken from '#app/servises/generate-ws-token.js';

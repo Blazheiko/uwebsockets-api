@@ -1,5 +1,5 @@
 import logger from '#logger';
-import User from '#app/models/user.js';
+import User from '#app/models/User.js';
 import {
     WsContext,
     WsData,
