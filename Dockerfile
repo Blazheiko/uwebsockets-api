@@ -30,10 +30,12 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/public-test ./public-test
 
-# Копируем конфигурационные файлы
+# Копируем конфигурационные файлы (исходный TS файл для drizzle-kit)
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 # Копируем миграции drizzle
 COPY --from=builder /app/drizzle ./drizzle
 
 # Запускаем миграции и приложение
-CMD ["sh", "-c", "npm run db:migrate && node /app/dist/index.js"]
+# Используем относительный путь, так как WORKDIR уже установлен в /app
+# Drizzle-kit автоматически обработает TypeScript конфиг через tsx (установлен в devDependencies)
+CMD ["sh", "-c", "npm run db:migrate && node dist/index.js"]
