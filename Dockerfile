@@ -36,4 +36,4 @@ COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=builder /app/drizzle ./drizzle
 
 # Запускаем миграции и приложение
-CMD ["sh", "-c", "npm run db:migrate" , "&&" , "node /app/dist/index.js"]
+CMD ["sh", "-c", "npm run db:migrate && node /app/dist/index.js"]
