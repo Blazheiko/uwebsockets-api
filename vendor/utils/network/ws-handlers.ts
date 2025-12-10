@@ -130,6 +130,14 @@ const onMessage = async (
     // logger.info('new onMessage');
     
     const jsonMessage = ab2str(wsMessage);
+    const token = ws.getUserData().token;
+    if (token) {
+        await updateExpiration(token)
+        .then()
+        .catch(error => {
+            logger.error({ err: error }, 'Error update expiration');
+        });
+    }
     if (jsonMessage === 'ping'){
         try {
             ws.send('pong');
@@ -225,8 +233,8 @@ const onClose = async (ws: MyWebSocket, code: number, message: any) => {
     }
 };
 
-const updateExpiration = (token: string) => {
-    redis.expire(`auth:ws:${token}`, 120);
+const updateExpiration = async (token: string) => {
+    await redis.expire(`auth:ws:${token}`, 120);
 };
 
 // const updateTimeout = (ws: MyWebSocket) => {

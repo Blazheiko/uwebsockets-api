@@ -114,18 +114,18 @@ export default {
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
             responseData.status = 401;
-            return { status: 'unauthorized', message: 'Session not found', wsToken: '' };
+            return { status: 'unauthorized', message: 'Session not found', wsUrl: '' };
         }
         const userId = sessionInfo.data?.userId;
         if (!userId) {
             responseData.status = 401;
-            return { status: 'unauthorized', message: 'Session expired', wsToken: '' };
+            return { status: 'unauthorized', message: 'Session expired', wsUrl: '' };
         }
         
         let wsToken = '';
         if (sessionInfo)
             wsToken = await generateWsToken(sessionInfo, Number(userId));
-        return { status: 'ok', wsToken: wsToken || '' };
+        return { status: 'ok', wsUrl: wsToken ? getWsUrl(wsToken) : '' };
     },
     async init({
         responseData,

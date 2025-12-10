@@ -78,5 +78,5 @@ export interface TestMiddlewareResponse {
 export interface UpdateWsTokenResponse {
     status: string;
     message?: string;
-    wsToken: string;
+    wsUrl?: string;
 }
