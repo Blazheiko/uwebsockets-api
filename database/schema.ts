@@ -55,6 +55,7 @@ export const contactList = mysqlTable(
             .notNull()
             .default(new Date())
             .$onUpdate(() => new Date()),
+        lastMessageAt: datetime('last_message_at').notNull().default(new Date()),
         rename: varchar('rename', { length: 100 }),
         lastMessageId: bigint('last_message_id', {
             mode: 'bigint',

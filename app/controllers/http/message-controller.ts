@@ -39,12 +39,12 @@ export default {
         return { status: 'ok', ...data };
     },
 
-    async sendMessage({
+    async sendChatMessage({
         session,
         httpData,
         logger,
     }: HttpContext): Promise<SendMessageResponse> {
-        logger.info('sendMessage');
+        logger.info('sendChatMessage');
         const sessionInfo = session?.sessionInfo;
         if (!sessionInfo) {
             return { status: 'error', message: 'Session not found' };
@@ -57,10 +57,10 @@ export default {
         const { contactId, content, userId } = httpData.payload;
         logger.info(httpData.payload);
         logger.info({ userId });
-        if (!contactId || !content || +userId !== +sessionUserId) {
+        if (!contactId || !content || +userId !== +sessionUserId || !userId) {
             return {
                 status: 'error',
-                message: 'Contact ID and content are required',
+                message: 'Contact ID, content and user ID are required',
             };
         }
 

@@ -13,6 +13,10 @@ export default defineConfig({
         ...(dbConfig.password ? { password: dbConfig.password } : {}),
         database: dbConfig.database || 'uapi',
     },
+    migrations: {
+        table: "__drizzle_migrations",
+        schema: "drizzle", // по умолчанию schema=drizzle в PostgreSQL
+      },
     verbose: true,
     strict: true,
 });

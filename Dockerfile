@@ -20,7 +20,8 @@ ENV NODE_ENV=production
 
 # Копируем только нужное
 COPY package*.json ./
-RUN npm ci --omit=dev
+# Нужны dev-зависимости, чтобы выполнять миграции drizzle
+RUN npm ci
 
 # Копируем собранный код
 COPY --from=builder /app/dist ./dist
@@ -31,6 +32,8 @@ COPY --from=builder /app/public-test ./public-test
 
 # Копируем конфигурационные файлы
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
+# Копируем миграции drizzle
+COPY --from=builder /app/drizzle ./drizzle
 
-# Запуск приложения
-CMD ["node", "dist/index.js"]
+# Запускаем миграции и приложение
+CMD ["sh", "-c", "npm run db:migrate && node dist/index.js"]

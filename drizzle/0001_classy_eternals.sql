@@ -1,0 +1,25 @@
+ALTER TABLE `calendar` MODIFY COLUMN `created_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.688';--> statement-breakpoint
+ALTER TABLE `calendar` MODIFY COLUMN `updated_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.688';--> statement-breakpoint
+ALTER TABLE `contact_list` MODIFY COLUMN `created_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.688';--> statement-breakpoint
+ALTER TABLE `contact_list` MODIFY COLUMN `updated_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.688';--> statement-breakpoint
+ALTER TABLE `invitations` MODIFY COLUMN `created_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.688';--> statement-breakpoint
+ALTER TABLE `invitations` MODIFY COLUMN `updated_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.688';--> statement-breakpoint
+ALTER TABLE `messages` MODIFY COLUMN `created_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.688';--> statement-breakpoint
+ALTER TABLE `messages` MODIFY COLUMN `updated_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.688';--> statement-breakpoint
+ALTER TABLE `notes` MODIFY COLUMN `created_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.688';--> statement-breakpoint
+ALTER TABLE `notes` MODIFY COLUMN `updated_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.688';--> statement-breakpoint
+ALTER TABLE `notes_photos` MODIFY COLUMN `created_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.688';--> statement-breakpoint
+ALTER TABLE `notes_photos` MODIFY COLUMN `updated_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.688';--> statement-breakpoint
+ALTER TABLE `project_assignees` MODIFY COLUMN `created_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.689';--> statement-breakpoint
+ALTER TABLE `project_assignees` MODIFY COLUMN `updated_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.689';--> statement-breakpoint
+ALTER TABLE `project_tags` MODIFY COLUMN `created_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.689';--> statement-breakpoint
+ALTER TABLE `projects` MODIFY COLUMN `created_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.688';--> statement-breakpoint
+ALTER TABLE `projects` MODIFY COLUMN `updated_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.688';--> statement-breakpoint
+ALTER TABLE `push_notifications_log` MODIFY COLUMN `sent_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.689';--> statement-breakpoint
+ALTER TABLE `push_subscriptions` MODIFY COLUMN `created_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.689';--> statement-breakpoint
+ALTER TABLE `push_subscriptions` MODIFY COLUMN `updated_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.689';--> statement-breakpoint
+ALTER TABLE `tasks` MODIFY COLUMN `created_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.688';--> statement-breakpoint
+ALTER TABLE `tasks` MODIFY COLUMN `updated_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.688';--> statement-breakpoint
+ALTER TABLE `users` MODIFY COLUMN `created_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.687';--> statement-breakpoint
+ALTER TABLE `users` MODIFY COLUMN `updated_at` datetime NOT NULL DEFAULT '2025-12-10 10:47:25.687';--> statement-breakpoint
+ALTER TABLE `contact_list` ADD `last_message_at` datetime DEFAULT '2025-12-10 10:47:25.688' NOT NULL;

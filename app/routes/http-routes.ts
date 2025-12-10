@@ -109,7 +109,7 @@ export default [
             {
                 url: '/send-chat-messages',
                 method: 'post',
-                handler: MessageController.sendMessage,
+                handler: MessageController.sendChatMessage,
                 validator: 'sendMessage',
                 typeResponse: 'ChatListController.SendMessageResponse',
                 description: 'Send a message',

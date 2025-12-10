@@ -8,6 +8,7 @@ import logger from '#logger';
 const schema = {
     created_at: (value: Date) => DateTime.fromJSDate(value).toISO(),
     updated_at: (value: Date) => DateTime.fromJSDate(value).toISO(),
+    last_message_at: (value: Date) => DateTime.fromJSDate(value).toISO(),
 };
 
 const required = ['userId', 'contactId'];
@@ -141,6 +142,7 @@ export default {
             updatedAt: contactList.updatedAt,
             rename: contactList.rename,
             lastMessageId: contactList.lastMessageId,
+            lastMessageAt: contactList.lastMessageAt,
             contact: {
                 id: users.id,
                 name: users.name,
