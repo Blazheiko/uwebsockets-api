@@ -16,12 +16,13 @@ RUN npm run build:docker
 FROM node:22 AS production
 WORKDIR /app
 
-ENV NODE_ENV=production
-
 # Копируем только нужное
 COPY package*.json ./
 # Нужны dev-зависимости, чтобы выполнять миграции drizzle
-RUN npm ci
+# Устанавливаем все зависимости включая devDependencies для drizzle-kit
+RUN npm ci --include=dev
+
+ENV NODE_ENV=production
 
 # Копируем собранный код
 COPY --from=builder /app/dist ./dist
