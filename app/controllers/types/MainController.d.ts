@@ -74,3 +74,9 @@ export interface TestMiddlewareResponse {
     middlewares: string[];
     status: string;
 }
+
+export interface UpdateWsTokenResponse {
+    status: string;
+    message?: string;
+    wsToken: string;
+}

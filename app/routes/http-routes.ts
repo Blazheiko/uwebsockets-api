@@ -179,6 +179,14 @@ export default [
                 middlewares: ['auth_guard'],
             },
             {
+                url: '/update-ws-token',
+                method: 'get',
+                handler: MainController.updateWsToken,
+                typeResponse: 'MainController.UpdateWsTokenResponse',
+                description: 'Update the WebSocket token',
+                middlewares: ['auth_guard'],
+            },
+            {
                 url: '/test-header/:testParam/param2/:testParam2',
                 method: 'get',
                 handler: MainController.testHeaders,        

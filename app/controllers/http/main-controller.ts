@@ -11,6 +11,7 @@ import type {
     TestSessionResponse,
     SaveUserResponse,
     TestMiddlewareResponse,
+    UpdateWsTokenResponse,
 } from '../types/MainController.js';
 // import middlewares from '#app/middlewares/kernel.js';
 import getWsUrl from '#app/servises/getWsUrl.js';
@@ -104,6 +105,28 @@ export default {
         return { params, query, status: 'ok' };
     },
 
+    async updateWsToken({
+        responseData,
+        session,
+        logger,
+    }: HttpContext): Promise<UpdateWsTokenResponse> {
+        logger.info('updateWsToken');
+        const sessionInfo = session?.sessionInfo;
+        if (!sessionInfo) {
+            responseData.status = 401;
+            return { status: 'unauthorized', message: 'Session not found', wsToken: '' };
+        }
+        const userId = sessionInfo.data?.userId;
+        if (!userId) {
+            responseData.status = 401;
+            return { status: 'unauthorized', message: 'Session expired', wsToken: '' };
+        }
+        
+        let wsToken = '';
+        if (sessionInfo)
+            wsToken = await generateWsToken(sessionInfo, Number(userId));
+        return { status: 'ok', wsToken: wsToken || '' };
+    },
     async init({
         responseData,
         session,
