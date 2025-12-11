@@ -459,15 +459,22 @@ const configureHttp = async (server: TemplatedApp) => {
 
     server.any('/*', (res, req) => {
         const url = req.getUrl();
-
-        if (appConfig.serveStatic && req.getMethod() === 'get') {
-            staticHandler(res, req);
-        } else if (corsConfig.enabled && req.getMethod() === 'options') {
+        const method = req.getMethod();
+        if (corsConfig.enabled && method === 'options') {
             //'OPTIONS' method === 'OPTIONS'
             res.cork(() => {
                 if (corsConfig.enabled) setCorsHeader(res);
                 res.writeStatus('200').end();
             });
+        }else if (url.startsWith(`/${appConfig.pathPrefix}/`) && method !== 'options') {
+            res.cork(() => {
+                let data = '404 Not Found';
+                let statusCode = '404';
+                res.writeStatus(statusCode);
+                res.end(data);
+            });
+        }else if (appConfig.serveStatic && method === 'get') {
+            staticHandler(res, req);
         } else {
             res.cork(() => {
                 let data = '404 Not Found';
