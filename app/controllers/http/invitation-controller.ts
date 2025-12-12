@@ -85,6 +85,7 @@ export default {
             responseData.status = 400;
             return { status: 'error', message: 'Token are required' };
         }
+        let status: 'success' | 'error' | 'awaiting' = 'awaiting';
 
         const sessionInfo = session?.sessionInfo;
         if (sessionInfo) {
@@ -92,10 +93,14 @@ export default {
             if (userId) {
                 await inventionAccept(token, Number(userId));
                 logger.info('inventionAccept');
-                return { status: 'success' };
+                status = 'success';
+            }else{
+                session.updateSessionData({
+                    inventionToken: token,
+                });
             }
         }
 
-        return { status: 'awaiting' };
+        return { status };
     },
 };

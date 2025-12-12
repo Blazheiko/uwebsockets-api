@@ -293,7 +293,7 @@ export const wsSessionHandler = async (
         }
 
         // Normalize userId from session and strictly compare
-        const sessionUserId = normalizeUserId(sessionInfo.data?.userId);
+        const sessionUserId = normalizeUserId(sessionInfo.data?.userId );
 
         // CRITICAL: use strict comparison !== for protection against type coercion
         if (sessionUserId !== normalizedUserId) {

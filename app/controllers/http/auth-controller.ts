@@ -21,6 +21,8 @@ export default {
             return { status: 'error', message: 'Email already exist' };
         }
 
+        const oldSessionData = session.sessionInfo?.data;
+
         const hash = await hashPassword(password);
 
         const userCreated = await userModel.create({
@@ -35,6 +37,11 @@ export default {
             return { status: 'error', message: 'Failed to create user' };
         }
 
+        if (oldSessionData && oldSessionData.inventionToken ) {
+            await inventionAccept(oldSessionData.inventionToken, Number(rawUser.id));
+            logger.info('inventionAccept register');
+        }
+        
         await session.destroySession();
         const res = await auth.login(rawUser);
         const sessionInfo = session.sessionInfo;
@@ -58,6 +65,11 @@ export default {
         if (user) {
             const valid = await validatePassword(password, user.password);
             if (valid) {
+                const oldSessionData = session.sessionInfo?.data;
+                if (oldSessionData && oldSessionData.inventionToken ) {
+                    await inventionAccept(oldSessionData.inventionToken, Number(user.id));
+                    logger.info('inventionAccept login');
+                }
                 const res = await auth.login(user);
                 const sessionInfo = session.sessionInfo;
                 logger.info(sessionInfo);

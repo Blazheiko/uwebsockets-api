@@ -13,7 +13,7 @@ export default [
     {
         group: [
             {
-                url: '/test-route',
+                url: '/test-route-4',
                 method: 'get',
                 handler: MainController.testRoute,
                 typeResponse: 'MainController.TestRouteResponse',
@@ -24,7 +24,7 @@ export default [
                 method: 'get',
                 handler: TaskController.testTasks,
                 typeResponse: 'TaskController.TestTasksResponse',
-                description: 'Get all tasks',
+                description: 'Get all tasks 4',
             },
         ],
         description: 'Test routes',
@@ -155,14 +155,6 @@ export default [
                 typeResponse: 'InvitationController.GetUserInvitationsResponse',
                 description: 'Get user invitations',
             },
-            {
-                url: '/invitations/use',
-                method: 'post',
-                handler: InvitationController.useInvitation,
-                validator: 'useInvitation',
-                typeResponse: 'InvitationController.UseInvitationResponse',
-                description: 'Use an invitation',
-            },
         ],
         description: 'Chat routes',
         middlewares: ['session_web', 'auth_guard'],
@@ -185,6 +177,14 @@ export default [
                 typeResponse: 'MainController.UpdateWsTokenResponse',
                 description: 'Update the WebSocket token',
                 middlewares: ['auth_guard'],
+            },
+            {
+                url: '/invitations/use',
+                method: 'post',
+                handler: InvitationController.useInvitation,
+                validator: 'useInvitation',
+                typeResponse: 'InvitationController.UseInvitationResponse',
+                description: 'Use an invitation',
             },
             {
                 url: '/test-header/:testParam/param2/:testParam2',
