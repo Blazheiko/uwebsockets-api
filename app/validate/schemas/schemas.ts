@@ -1,6 +1,21 @@
 import vine from '@vinejs/vine';
 
-const schemas: Record<string, any> = {
+interface FieldDoc {
+    description: string;
+    type: 'string' | 'number';
+    required: boolean;
+}
+
+interface SchemaDoc {
+    [fieldName: string]: FieldDoc;
+}
+
+interface Schema {
+    doc: SchemaDoc;
+    validator: ReturnType<typeof vine.object>;
+}
+
+const schemas: Record<string, Schema> = {
     register: {
         doc: {
             name: {
@@ -29,7 +44,7 @@ const schemas: Record<string, any> = {
             email: vine.string().email().minLength(1).maxLength(255),
             password: vine.string().minLength(8).maxLength(32),
             token: vine.string().maxLength(60).optional(),
-        })
+        }),
     },
     login: {
         doc: {
@@ -53,7 +68,7 @@ const schemas: Record<string, any> = {
             email: vine.string().email().maxLength(255),
             password: vine.string().minLength(8).maxLength(32),
             token: vine.string().maxLength(60).optional(),
-        })
+        }),
     },
 
     // Chat List schemas
@@ -67,7 +82,7 @@ const schemas: Record<string, any> = {
         },
         validator: vine.object({
             participantId: vine.number().positive(),
-        })
+        }),
     },
     deleteChat: {
         doc: {
@@ -79,7 +94,7 @@ const schemas: Record<string, any> = {
         },
         validator: vine.object({
             chatId: vine.number().positive(),
-        })
+        }),
     },
 
     // Message schemas
@@ -99,7 +114,7 @@ const schemas: Record<string, any> = {
         validator: vine.object({
             userId: vine.number().positive(),
             contactId: vine.number().positive(),
-        })
+        }),
     },
     sendMessage: {
         doc: {
@@ -135,7 +150,7 @@ const schemas: Record<string, any> = {
             content: vine.string().minLength(1).maxLength(10000),
             type: vine.enum(['TEXT', 'IMAGE', 'VIDEO', 'AUDIO']).optional(),
             src: vine.string().optional(),
-        })
+        }),
     },
     deleteMessage: {
         doc: {
@@ -153,7 +168,7 @@ const schemas: Record<string, any> = {
         validator: vine.object({
             userId: vine.number().positive(),
             messageId: vine.number().positive(),
-        })
+        }),
     },
     editMessage: {
         doc: {
@@ -177,7 +192,7 @@ const schemas: Record<string, any> = {
             userId: vine.number().positive(),
             messageId: vine.number().positive(),
             content: vine.string().minLength(1).maxLength(10000),
-        })
+        }),
     },
     readMessages: {
         doc: {
@@ -195,7 +210,7 @@ const schemas: Record<string, any> = {
         validator: vine.object({
             userId: vine.number().positive(),
             contactId: vine.number().positive(),
-        })
+        }),
     },
     markMessageAsRead: {
         doc: {
@@ -207,7 +222,7 @@ const schemas: Record<string, any> = {
         },
         validator: vine.object({
             messageId: vine.number().positive(),
-        })
+        }),
     },
     createInvitation: {
         doc: {
@@ -225,7 +240,7 @@ const schemas: Record<string, any> = {
         validator: vine.object({
             userId: vine.number().positive(),
             name: vine.string().minLength(1).maxLength(100),
-        })
+        }),
     },
     getUserInvitations: {
         doc: {
@@ -237,7 +252,7 @@ const schemas: Record<string, any> = {
         },
         validator: vine.object({
             userId: vine.number().positive(),
-        })
+        }),
     },
     useInvitation: {
         doc: {
@@ -249,7 +264,7 @@ const schemas: Record<string, any> = {
         },
         validator: vine.object({
             token: vine.string().minLength(1).maxLength(50),
-        })
+        }),
     },
 };
 

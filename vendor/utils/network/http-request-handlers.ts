@@ -1,10 +1,16 @@
 import logger from '#logger';
 import { HttpRequest, HttpResponse } from 'uWebSockets.js';
+import { validateHeader } from '#app/validate/checkers/header-checker.js';
+import { validateParameter } from '#app/validate/checkers/parameter-checker.js';
 
 const getHeaders = (req: HttpRequest): Map<string, string> => {
     const headers: Map<string, string> = new Map();
     req.forEach((key, value) => {
-        headers.set(key, value.trim());
+        if (validateHeader(key, value)) {
+            headers.set(key, value.trim());
+        } else {
+            logger.warn(`Invalid header detected and skipped: ${key}`);
+        }
     });
 
     return headers;
@@ -82,8 +88,10 @@ const getData = async (res: HttpResponse, contentType: string) => {
 const normalizePath = (path: string) => {
     if (!path) return '';
     let normalizedPath = path;
-    if (normalizedPath.endsWith('/')) normalizedPath = normalizedPath.slice(0, -1);
-    if (normalizedPath.startsWith('/')) normalizedPath = normalizedPath.slice(1);
+    if (normalizedPath.endsWith('/'))
+        normalizedPath = normalizedPath.slice(0, -1);
+    if (normalizedPath.startsWith('/'))
+        normalizedPath = normalizedPath.slice(1);
     return normalizedPath;
 };
 
@@ -95,7 +103,15 @@ const isValidUrl = (url: string): boolean => {
 const extractParameters = (paramNames: string[], req: HttpRequest) => {
     const params: Record<string, string> = {};
     for (let i = 0; i < paramNames.length; i++) {
-        params[paramNames[i]] = req.getParameter(i) || '';
+        const paramName = paramNames[i];
+        const paramValue = req.getParameter(i) || '';
+        try {
+            validateParameter(paramValue);
+            params[paramName] = paramValue;
+        } catch (error) {
+            logger.warn(`Invalid parameter detected: ${paramName}`, error);
+            throw error;
+        }
     }
     return params;
 };

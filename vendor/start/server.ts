@@ -55,7 +55,11 @@ import getIP from '#vendor/utils/network/get-ip.js';
 import { getApiTypesForDocumentation } from '#vendor/utils/tooling/parse-types-from-dts.js';
 import { serializeRoutes } from '#vendor/utils/routing/serialize-routes.js';
 import path from 'path';
-import { makeBroadcastJson, makeJson } from '#vendor/utils/helpers/json-handlers.js';
+import {
+    makeBroadcastJson,
+    makeJson,
+} from '#vendor/utils/helpers/json-handlers.js';
+import { validateCookie } from '#app/validate/checkers/cookie-checker.js';
 
 const server: TemplatedApp = uWS.App();
 
@@ -107,12 +111,6 @@ const configureWebsockets = (server: TemplatedApp) => {
         close: (ws, code, message) => onClose(ws as MyWebSocket, code, message),
     });
 };
-const checkCookie = (key: string, value: string): boolean =>
-    Boolean(value) &&
-    value.length < appConfig.reasonableCookieLimit &&
-    /^[a-zA-Z0-9_-]+$/.test(key) &&
-    key.length < appConfig.reasonableCookieKeyLimit;
-
 const parseCookies = (cookieHeader: string): Map<string, string> => {
     const list = new Map<string, string>();
     if (cookieHeader) {
@@ -122,8 +120,7 @@ const parseCookies = (cookieHeader: string): Map<string, string> => {
             try {
                 const key = cookie.slice(0, separatorIndex).trim();
                 const value = cookie.slice(separatorIndex + 1).trim();
-                if (checkCookie(key, value)) {
-                    // Reasonable limit
+                if (validateCookie(key, value)) {
                     list.set(key, decodeURIComponent(value));
                 }
             } catch (error) {
@@ -282,7 +279,7 @@ const sendResponse = (
     if (responseData.payload) {
         // const transformedData = transformBigInts(responseData.payload);
         // res.end(JSON.stringify(transformedData));
-        res.end( makeJson(responseData.payload) );
+        res.end(makeJson(responseData.payload));
     } else res.end(`${responseData.status}`);
 };
 
@@ -314,7 +311,7 @@ const handleError = (res: HttpResponse, error: unknown) => {
                 ? 'Internal server error'
                 : String(error);
         res.writeStatus('500');
-        res.end( makeJson(errorMessage) );
+        res.end(makeJson(errorMessage));
     }
 };
 
@@ -367,9 +364,7 @@ const docRoutesHandler = async (res: HttpResponse, req: HttpRequest) => {
     } else {
         logger.warn('We just refuse if already shutting down');
         res.cork(() => {
-            res.writeStatus('404').end(
-                makeJson({ message: 'Not found' }),
-            );
+            res.writeStatus('404').end(makeJson({ message: 'Not found' }));
         });
     }
 };
@@ -466,14 +461,17 @@ const configureHttp = async (server: TemplatedApp) => {
                 if (corsConfig.enabled) setCorsHeader(res);
                 res.writeStatus('200').end();
             });
-        }else if (url.startsWith(`/${appConfig.pathPrefix}/`) && method !== 'options') {
+        } else if (
+            url.startsWith(`/${appConfig.pathPrefix}/`) &&
+            method !== 'options'
+        ) {
             res.cork(() => {
                 let data = '404 Not Found';
                 let statusCode = '404';
                 res.writeStatus(statusCode);
                 res.end(data);
             });
-        }else if (appConfig.serveStatic && method === 'get') {
+        } else if (appConfig.serveStatic && method === 'get') {
             staticHandler(res, req);
         } else {
             res.cork(() => {
