@@ -24,6 +24,7 @@ import {
     normalizePath,
     isValidUrl,
 } from '../utils/network/http-request-handlers.js';
+import { ParameterValidationError } from '#app/validate/checkers/parameter-checker.js';
 import logger from '#logger';
 import { getListRoutes } from './router.js';
 
@@ -303,6 +304,17 @@ const handleError = (res: HttpResponse, error: unknown) => {
             JSON.stringify({
                 message: 'Validation failure',
                 messages: validationError.messages,
+            }),
+        );
+    } else if (error instanceof ParameterValidationError) {
+        // Handle parameter validation errors with 400 Bad Request
+        res.writeStatus('400');
+        res.end(
+            JSON.stringify({
+                message: 'Invalid parameter',
+                parameter: error.parameterName,
+                value: error.parameterValue,
+                error: error.message,
             }),
         );
     } else {

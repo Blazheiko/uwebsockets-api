@@ -105,13 +105,8 @@ const extractParameters = (paramNames: string[], req: HttpRequest) => {
     for (let i = 0; i < paramNames.length; i++) {
         const paramName = paramNames[i];
         const paramValue = req.getParameter(i) || '';
-        try {
-            validateParameter(paramValue);
-            params[paramName] = paramValue;
-        } catch (error) {
-            logger.warn(`Invalid parameter detected: ${paramName}`, error);
-            throw error;
-        }
+        validateParameter(paramValue, paramName);
+        params[paramName] = paramValue;
     }
     return params;
 };
