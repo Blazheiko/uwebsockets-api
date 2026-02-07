@@ -60,6 +60,7 @@ import {
     makeJson,
 } from '#vendor/utils/helpers/json-handlers.js';
 import { validateCookie } from '#app/validate/checkers/cookie-checker.js';
+import { type } from 'arktype';
 
 const server: TemplatedApp = uWS.App();
 
@@ -249,7 +250,19 @@ const getHttpData = async (
         isJson && contentType ? await getData(res, contentType) : null;
     if (payload && route.validator) {
         const validator = validators.get(route.validator);
-        if (validator) payload = await validator.validate(payload);
+        if (validator) {
+            const result = validator(payload);
+            if (result instanceof type.errors) {
+                const error: any = new Error('Validation failure');
+                error.code = 'E_VALIDATION_ERROR';
+                error.messages = result.map((e: any) => ({
+                    field: e.path.join('.'),
+                    message: e.toString(),
+                }));
+                throw error;
+            }
+            payload = result;
+        }
     }
 
     return Object.freeze({

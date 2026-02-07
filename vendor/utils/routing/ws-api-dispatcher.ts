@@ -9,6 +9,7 @@ import {
     WsRoutes,
     MyWebSocket,
 } from '../../types/types.js';
+import { type } from 'arktype';
 import createWsContext from '../context/ws-context.js';
 import checkRateLimitWs, {
     createWsRateLimitErrorResponse,
@@ -26,7 +27,9 @@ export default async (
     const responseData: WsResponseData = {
         data: {},
         event: message.event,
-        timestamp: message.timestamp,
+        ...(message.timestamp !== undefined && {
+            timestamp: message.timestamp,
+        }),
         status: 200,
         error: null,
     };
@@ -54,7 +57,19 @@ export default async (
             let payload = message.payload ? message.payload : null;
             if (route.validator) {
                 const validator: any = validators.get(route.validator);
-                if (validator) payload = await validator.validate(payload);
+                if (validator) {
+                    const result = validator(payload);
+                    if (result instanceof type.errors) {
+                        const error: any = new Error('Validation failure');
+                        error.code = 'E_VALIDATION_ERROR';
+                        error.messages = result.map((e: any) => ({
+                            field: e.path.join('.'),
+                            message: e.toString(),
+                        }));
+                        throw error;
+                    }
+                    payload = result;
+                }
             }
             const wsData: WsData = {
                 middlewareData: { userData },
@@ -81,9 +96,9 @@ export default async (
         }
         responseData.status = 404;
         responseData.error = {
-                code: 404,
-                message: 'Route not found',
-            };
+            code: 404,
+            message: 'Route not found',
+        };
     } catch (e: any) {
         if (e.code === 'E_VALIDATION_ERROR') {
             // logger.error('WS E_VALIDATION_ERROR');

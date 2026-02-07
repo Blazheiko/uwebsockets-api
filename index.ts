@@ -1,7 +1,6 @@
 import process from 'node:process';
 // import { isMainThread, parentPort } from 'node:worker_threads';
 import 'dotenv/config';
-import vine from '@vinejs/vine';
 import logger from '#logger';
 import { initServer, stopServer } from '#vendor/start/server.js';
 import configApp from '#config/app.js';
@@ -28,10 +27,10 @@ const testRedis = async () => {
     }
 };
 
-const compileValidateSchema = () => {
+const registerValidators = () => {
     const schemaKeys = Object.keys(schemas);
     schemaKeys.forEach((key: string) => {
-        validators.set(key, vine.compile(schemas[key].validator));
+        validators.set(key, schemas[key].validator);
     });
 };
 
@@ -49,7 +48,7 @@ const start = async () => {
                 process.versions.modules +
                 '.node',
         );
-        compileValidateSchema();
+        registerValidators();
         await testRedis();
         logger.info('test redis success');
         routesHandler(httpRoutes, false);
