@@ -255,10 +255,7 @@ const getHttpData = async (
             if (result instanceof type.errors) {
                 const error: any = new Error('Validation failure');
                 error.code = 'E_VALIDATION_ERROR';
-                error.messages = result.map((e: any) => ({
-                    field: e.path.join('.'),
-                    message: e.toString(),
-                }));
+                error.messages = result.summary;
                 throw error;
             }
             payload = result;
