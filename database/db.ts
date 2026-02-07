@@ -1,5 +1,5 @@
 import { drizzle } from 'drizzle-orm/mysql2';
-import mysql from 'mysql2/promise';
+import mysql, { PoolOptions } from 'mysql2/promise';
 import databaseConfig from '#config/database.js';
 import appConfig from '#config/app.js';
 import * as schema from './schema.js';
@@ -16,7 +16,7 @@ const pool = mysql.createPool({
     queueLimit: 0,
     enableKeepAlive: true,
     keepAliveInitialDelay: 0,
-});
+} as PoolOptions);
 
 const db = drizzle(pool, {
     schema,
