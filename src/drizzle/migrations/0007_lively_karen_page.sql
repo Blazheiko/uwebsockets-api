@@ -1,0 +1,2 @@
+ALTER TABLE "teacher_settings" ADD COLUMN "proficiency_level" varchar(20) DEFAULT 'beginner' NOT NULL;--> statement-breakpoint
+ALTER TABLE "teacher_settings" ADD COLUMN "learning_goal" varchar(255) DEFAULT '' NOT NULL;

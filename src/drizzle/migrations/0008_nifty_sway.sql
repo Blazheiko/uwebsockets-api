@@ -1,0 +1,1 @@
+ALTER TABLE "llm_text_usage" ADD COLUMN "final_prompt" text DEFAULT '' NOT NULL;

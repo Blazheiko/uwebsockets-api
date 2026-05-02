@@ -1,0 +1,5 @@
+-- Add TEACHER_SYNTAX_LESSON to llm_prompt_type enum
+ALTER TYPE "llm_prompt_type" ADD VALUE IF NOT EXISTS 'TEACHER_SYNTAX_LESSON';
+
+-- Add TEACHER_SYNTAX_LESSON to llm_text_feature enum
+ALTER TYPE "llm_text_feature" ADD VALUE IF NOT EXISTS 'TEACHER_SYNTAX_LESSON';

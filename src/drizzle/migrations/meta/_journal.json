@@ -1,0 +1,265 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1773234781807,
+      "tag": "0000_wild_boom_boom",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1741737600000,
+      "tag": "0001_teacher_jsonb_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773331200000,
+      "tag": "0002_teacher_vocabulary",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773403200000,
+      "tag": "0003_teacher_vocabulary_purpose_description",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773406800000,
+      "tag": "0004_teacher_vocabulary_usage_enums",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1773410400000,
+      "tag": "0005_teacher_vocabulary_prompt_type",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1773411000000,
+      "tag": "0006_seed_teacher_vocabulary_prompt",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1773493835713,
+      "tag": "0007_lively_karen_page",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1773502484407,
+      "tag": "0008_nifty_sway",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1773550410017,
+      "tag": "0009_skinny_blue_shield",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1773636810000,
+      "tag": "0010_teacher_syntax_lessons",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1773723210000,
+      "tag": "0011_teacher_syntax_lesson_enums",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1773752318607,
+      "tag": "0012_cynical_fixer",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1773760889648,
+      "tag": "0013_breezy_ares",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1773863314856,
+      "tag": "0014_unknown_barracuda",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1773913379182,
+      "tag": "0015_tired_paladin",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1774418171854,
+      "tag": "0016_strong_sentry",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1774520285330,
+      "tag": "0017_wide_marvex",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1774600000000,
+      "tag": "0018_video_calls",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1774707800433,
+      "tag": "0019_blue_gateway",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1774708800000,
+      "tag": "0020_support_schema_backfill",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1774775197668,
+      "tag": "0021_massive_magik",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1775388116708,
+      "tag": "0022_tan_randall_flagg",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1775405421108,
+      "tag": "0023_eager_thor",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1775406276338,
+      "tag": "0024_brainy_chimera",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1775408256814,
+      "tag": "0025_futuristic_havok",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1775469555597,
+      "tag": "0026_safe_spitfire",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1775480400000,
+      "tag": "0027_admin_users_promo_code",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1775540038690,
+      "tag": "0028_elite_sharon_carter",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1775623200000,
+      "tag": "0029_teacher_syntax_m2m_embeddings",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1776643200000,
+      "tag": "0030_vocabulary_shared_embeddings",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1777161600000,
+      "tag": "0031_teacher_vocabulary_progress_context_idx",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1777424400000,
+      "tag": "0032_teacher_syntax_pronunciation",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1777485600000,
+      "tag": "0033_shared_study_audio",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1777543754125,
+      "tag": "0034_tranquil_natasha_romanoff",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1777610840507,
+      "tag": "0035_solid_ken_ellis",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1777693784936,
+      "tag": "0036_aromatic_bastion",
+      "breakpoints": true
+    }
+  ]
+}

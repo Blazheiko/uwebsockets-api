@@ -1,0 +1,1 @@
+ALTER TABLE "translator_sessions" ADD COLUMN "teacher_vocabulary_collection_id" bigint;

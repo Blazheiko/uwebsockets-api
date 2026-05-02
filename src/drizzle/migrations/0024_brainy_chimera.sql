@@ -1,0 +1,1 @@
+ALTER TABLE "promo_codes" ADD COLUMN "discount_percent" integer DEFAULT 0 NOT NULL;

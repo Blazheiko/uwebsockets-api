@@ -1,0 +1,1 @@
+ALTER TABLE "users" DROP COLUMN "premium_discount_percent";
